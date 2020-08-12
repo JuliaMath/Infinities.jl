@@ -38,8 +38,6 @@ using Infinities, Test
 
         @test string(∞) == "∞"
 
-        @test Base.OneTo(∞) == OneToInf()
-
         @test isinf(∞)
         @test !isfinite(∞)
 
@@ -142,9 +140,6 @@ using Infinities, Test
 
         @test (-∞)*2 ≡ 2*(-∞) ≡ -2 * ∞ ≡ ∞ * (-2) ≡ (-2) * RealInfinity() ≡ -∞
         @test (-∞)*2.3 ≡ 2.3*(-∞) ≡ -2.3 * ∞ ≡ ∞ * (-2.3) ≡ (-2.3) * RealInfinity() ≡ -∞
-
-        @test Base.OneTo(1*∞) == OneToInf()
-        @test_throws ArgumentError Base.OneTo(-∞)
 
         @test isinf(-∞)
         @test !isfinite(-∞)

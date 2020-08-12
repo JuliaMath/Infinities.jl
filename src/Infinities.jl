@@ -1,8 +1,10 @@
 module Infinities
 
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, zero, isless, 
-                +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, string, show
+                +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit, 
+                string, show, promote_rule, convert
 
+export ∞, Infinity, RealInfinity, ComplexInfinity, NotANumber
 
 """
 NotANumber()
@@ -290,19 +292,19 @@ angle(x::ComplexInfinity) = π*x.signbit
 mod(::ComplexInfinity{<:Integer}, ::Integer) = NotANumber()
 
 
-show(io::IO, x::ComplexInfinity) = print(io, "$(exp(im*π*x.angle))∞")
+show(io::IO, x::ComplexInfinity) = print(io, "$(exp(im*π*x.signbit))∞")
 
 ==(x::ComplexInfinity, y::Infinity) = x.signbit == 0
 ==(y::Infinity, x::ComplexInfinity) = x.signbit == 0
 ==(x::ComplexInfinity, y::RealInfinity) = x.signbit == signbit(y)
 ==(y::RealInfinity, x::ComplexInfinity) = x.signbit == signbit(y)
-==(x::ComplexInfinity, y::ComplexInfinity) = x.signbit == y.angle
+==(x::ComplexInfinity, y::ComplexInfinity) = x.signbit == y.signbit
 
 ==(x::ComplexInfinity, y::Number) = isinf(y) && angle(y) == angle(x)
 ==(y::Number, x::ComplexInfinity) = x == y
 
-isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.signbit && !y.angle
-isless(x::Number, y::ComplexInfinity{Bool}) = !y.angle && x ≠ ∞
+isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.signbit && !y.signbit
+isless(x::Number, y::ComplexInfinity{Bool}) = !y.signbit && x ≠ ∞
 isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
@@ -323,8 +325,8 @@ end
 
 
 # ⊻ is xor
-*(a::ComplexInfinity{Bool}, b::ComplexInfinity{Bool}) = ComplexInfinity(a.angle ⊻ b.angle)
-*(a::ComplexInfinity, b::ComplexInfinity) = ComplexInfinity(a.angle + b.angle)
+*(a::ComplexInfinity{Bool}, b::ComplexInfinity{Bool}) = ComplexInfinity(a.signbit ⊻ b.signbit)
+*(a::ComplexInfinity, b::ComplexInfinity) = ComplexInfinity(a.signbit + b.signbit)
 *(a::Infinity, b::ComplexInfinity) = ComplexInfinity(a)*b
 *(a::ComplexInfinity, b::Infinity) = a*ComplexInfinity(b)
 *(a::RealInfinity, b::ComplexInfinity) = ComplexInfinity(a)*b
@@ -333,7 +335,7 @@ end
 *(a::Real, y::ComplexInfinity) = a > 0 ? y : (-y)
 *(y::ComplexInfinity, a::Real) = a*y
 
-*(a::Number, y::ComplexInfinity) = ComplexInfinity(y.angle+angle(a)/π)
+*(a::Number, y::ComplexInfinity) = ComplexInfinity(y.signbit+angle(a)/π)
 *(y::ComplexInfinity, a::Number) = a*y
 
 *(a::Number, y::Infinity) = a*ComplexInfinity(y)
