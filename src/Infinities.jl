@@ -253,8 +253,16 @@ max(::Infinity, x::RealInfinity) = ∞
 #######
 
 # angle is π*a where a is (false==0) and (true==1)
+
+"""
+ComplexInfinity(signbit)
+
+represents an infinity in the complex plane with the angle
+specified by `π * signbit`. The use of the name `signbit` is
+for consistency with `RealInfinity`.
+"""
 struct ComplexInfinity{T<:Real} <: Number
-    angle::T
+    signbit::T
 end
 
 ComplexInfinity{T}() where T = ComplexInfinity(zero(T))
@@ -277,31 +285,31 @@ convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T
 convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
 
 
-sign(y::ComplexInfinity{<:Integer}) = mod(y.angle,2) == 0 ? 1 : -1
-angle(x::ComplexInfinity) = π*x.angle
+sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
+angle(x::ComplexInfinity) = π*x.signbit
 mod(::ComplexInfinity{<:Integer}, ::Integer) = NotANumber()
 
 
 show(io::IO, x::ComplexInfinity) = print(io, "$(exp(im*π*x.angle))∞")
 
-==(x::ComplexInfinity, y::Infinity) = x.angle == 0
-==(y::Infinity, x::ComplexInfinity) = x.angle == 0
-==(x::ComplexInfinity, y::RealInfinity) = x.angle == signbit(y)
-==(y::RealInfinity, x::ComplexInfinity) = x.angle == signbit(y)
-==(x::ComplexInfinity, y::ComplexInfinity) = x.angle == y.angle
+==(x::ComplexInfinity, y::Infinity) = x.signbit == 0
+==(y::Infinity, x::ComplexInfinity) = x.signbit == 0
+==(x::ComplexInfinity, y::RealInfinity) = x.signbit == signbit(y)
+==(y::RealInfinity, x::ComplexInfinity) = x.signbit == signbit(y)
+==(x::ComplexInfinity, y::ComplexInfinity) = x.signbit == y.angle
 
 ==(x::ComplexInfinity, y::Number) = isinf(y) && angle(y) == angle(x)
 ==(y::Number, x::ComplexInfinity) = x == y
 
-isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.angle && !y.angle
+isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.signbit && !y.angle
 isless(x::Number, y::ComplexInfinity{Bool}) = !y.angle && x ≠ ∞
-isless(x::ComplexInfinity{Bool}, y::Number) = x.angle && y ≠ -∞
+isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 
 function +(x::ComplexInfinity, y::ComplexInfinity)
     x == y || throw(ArgumentError("Angles must be the same to add ∞"))
-    promote_type(typeof(x),typeof(y))(x.angle)
+    promote_type(typeof(x),typeof(y))(x.signbit)
 end
 
 +(x::ComplexInfinity, y::Infinity) = x+ComplexInfinity(y)
