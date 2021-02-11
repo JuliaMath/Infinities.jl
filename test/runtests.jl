@@ -11,18 +11,22 @@ import Infinities: Infinity
 
         @test +∞ ≡ ∞
 
-        @test isless(1, ∞)
-        @test !isless(Inf, ∞)
-        @test !isless(∞, Inf)
-        @test !isless(∞, 1)
-        @test !isless(∞, ∞)
-        @test !(∞ < ∞)
-        @test ∞ ≤ ∞
-        @test !(∞ > ∞)
-        @test ∞ ≥ ∞
+        @testset "inequalities" begin
+            @test isless(1, ∞)
+            @test !isless(Inf, ∞)
+            @test !isless(∞, Inf)
+            @test !isless(∞, 1)
+            @test !isless(∞, ∞)
+            @test !(∞ < ∞)
+            @test ∞ ≤ ∞
+            @test !(∞ > ∞)
+            @test ∞ ≥ ∞
 
-        @test 5 < ∞ && 5 ≤ ∞
-        @test !(5 > ∞) && !(5 ≥ ∞)
+            @test 5 < ∞ && 5 ≤ ∞
+            @test !(∞ < 5) && !(∞ ≤ 5)
+            @test ∞ > 5 && ∞ ≥ 5
+            @test !(5 > ∞) && !(5 ≥ ∞)
+        end
 
         @test ∞ + ∞ ≡ ∞
         @test ∞ + 1 ≡ 1 + ∞ ≡ ∞ + 1.0 ≡ 1.0 + ∞ ≡ ∞
@@ -82,7 +86,7 @@ import Infinities: Infinity
             @test convert(Float64, ∞) ≡ Float64(∞) ≡ Inf
             @test convert(Float32, ∞) ≡ Float32(∞) ≡ Inf32
             @test convert(Float16, ∞) ≡ Float16(∞) ≡ Inf16
-            @test convert(BigFloat, ∞)::BigFloat == BigFloat(Inf)
+            @test convert(BigFloat, ∞)::BigFloat == BigFloat(∞)::BigFloat == BigFloat(Inf)
         end
 
         @testset "checked" begin
@@ -95,6 +99,7 @@ import Infinities: Infinity
         @test RealInfinity(∞) ≡ convert(RealInfinity, ∞) ≡ RealInfinity() ≡ 
                 RealInfinity(false) ≡ RealInfinity(RealInfinity())
 
+        @test promote_type(Infinity, RealInfinity) == RealInfinity
         @test promote(∞, RealInfinity()) ≡ (RealInfinity(),RealInfinity())
 
         @test -∞ ≡ RealInfinity(true)
@@ -196,7 +201,8 @@ import Infinities: Infinity
             @test checked_sub(5, ∞) ≡ checked_sub(5, RealInfinity()) ≡ -∞
             @test checked_sub(-∞, 5) ≡ -∞
             @test checked_add(5, -∞) ≡ checked_add(-∞, 5) ≡ -∞
-            @test checked_mul(-5, ∞) ≡ -∞
+            @test checked_mul(-5, ∞) ≡ checked_mul(∞, -5) ≡ -∞
+            @test checked_mul(-5, -∞) ≡ checked_mul(-∞, -5) ≡ RealInfinity()
         end
     end
 
@@ -211,6 +217,7 @@ import Infinities: Infinity
         @test !isfinite(ComplexInfinity())
 
         @test promote(∞, RealInfinity(), ComplexInfinity()) ≡ ntuple(_ -> ComplexInfinity(), 3)
+        @test promote_type(Infinity, ComplexInfinity{Bool}) == promote_type(RealInfinity, ComplexInfinity{Bool}) == ComplexInfinity{Bool}
         
 
         @test ComplexInfinity(∞) == ∞
@@ -223,6 +230,8 @@ import Infinities: Infinity
         @test RealInfinity() + im ≡ im + RealInfinity() ≡ RealInfinity() + 1.0im ≡ 1.0im + RealInfinity() ≡ RealInfinity() - im ≡ RealInfinity() - 1.0im ≡ ComplexInfinity()
         
         @test im - ∞ ≡ 1.0im - ∞ ≡ -ComplexInfinity()
+        @test im - ComplexInfinity() ≡ 1.0im - ComplexInfinity() ≡ -ComplexInfinity()
+        @test ComplexInfinity() - im ≡ ComplexInfinity() - 1.0im ≡ ComplexInfinity()
 
         @test ComplexInfinity() + ∞ ≡ ComplexInfinity() + RealInfinity() ≡ 
                 ∞ + ComplexInfinity() ≡ RealInfinity() + ComplexInfinity() ≡ ComplexInfinity()
@@ -235,6 +244,7 @@ import Infinities: Infinity
              ComplexInfinity() * ∞ ≡ ComplexInfinity() * RealInfinity() ≡ ComplexInfinity()
 
         @test  2.0im*∞ ≡ ∞*2.0im ≡ 2.0im * RealInfinity() ≡ RealInfinity() * 2.0im ≡ ComplexInfinity(1/2)
+        @test 2ComplexInfinity() ≡ ComplexInfinity()*2 ≡ ComplexInfinity()
 
         @test exp(im*π/4)*∞ == Inf+im*Inf
         @test exp(im*π/4)+∞ == ∞
@@ -247,7 +257,9 @@ import Infinities: Infinity
         @test !isless(ComplexInfinity(), 5)
 
         @test 5 < ComplexInfinity() && 5 ≤ ComplexInfinity()
+        @test !(ComplexInfinity() < 5) && !(ComplexInfinity() ≤ 5)
         @test 5 > -ComplexInfinity() && 5 ≥ -ComplexInfinity()
+        @test ComplexInfinity() > 5 && ComplexInfinity() ≥  5
 
         @test 1 + ComplexInfinity() ≡ 1.0 + ComplexInfinity() ≡ ComplexInfinity() + 1 ≡ ComplexInfinity() + 1.0 ≡ ComplexInfinity()
         @test 5 * ComplexInfinity() ≡ ComplexInfinity()
@@ -264,6 +276,11 @@ import Infinities: Infinity
             @test max(ComplexInfinity(), -ComplexInfinity()) ≡ ComplexInfinity()
             @test min(ComplexInfinity(), 5) ≡ min(5,ComplexInfinity())  ≡ 5
             @test max(ComplexInfinity(), 5) ≡ max(5,ComplexInfinity())  ≡ ComplexInfinity()
+        end
+
+        @testset "fld/cld/div" begin
+            @test div(ComplexInfinity(), 5) ≡ fld(ComplexInfinity(), 5) ≡ ComplexInfinity()
+            @test div(-ComplexInfinity(),2) ≡ -ComplexInfinity()
         end
     end
 end

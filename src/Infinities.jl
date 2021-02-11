@@ -31,10 +31,10 @@ string(::Infinity) = "∞"
 convert(::Type{Float64}, ::Infinity) = Inf64
 convert(::Type{Float32}, ::Infinity) = Inf32
 convert(::Type{Float16}, ::Infinity) = Inf16
-Float64(::Infinity) = convert(Float64, ∞)
-Float32(::Infinity) = convert(Float32, ∞)
-Float16(::Infinity) = convert(Float16, ∞)
-BigFloat(::Infinity) = BigFloat(Inf)
+Base.Float64(::Infinity) = convert(Float64, ∞)
+Base.Float32(::Infinity) = convert(Float32, ∞)
+Base.Float16(::Infinity) = convert(Float16, ∞)
+Base.BigFloat(::Infinity) = BigFloat(Inf)
 convert(::Type{AF}, ::Infinity) where AF<:AbstractFloat = convert(AF, Inf)
 
 
@@ -358,10 +358,6 @@ end
 *(a::Number, y::ComplexInfinity) = ComplexInfinity(y.signbit+angle(a)/π)
 *(y::ComplexInfinity, a::Number) = a*y
 
-*(a::Number, y::Infinity) = a*ComplexInfinity(y)
-*(y::Infinity, a::Number) = ComplexInfinity(y)*a
-*(y::RealInfinity, a::Number) = ComplexInfinity(y)*a
-
 *(a::Complex, y::Infinity) = a*ComplexInfinity(y)
 *(y::Infinity, a::Complex) = ComplexInfinity(y)*a
 
@@ -409,8 +405,8 @@ Base.Checked.checked_add(x::RealInfinity, ::Integer) = x
 
 Base.Checked.checked_mul(x::Integer, ::Infinity) = sign(x)*∞
 Base.Checked.checked_mul(::Infinity, x::Integer) = sign(x)*∞
-Base.Checked.checked_mul(x::Integer, ::RealInfinity) = sign(x)*∞
-Base.Checked.checked_mul(::RealInfinity, x::Integer) = sign(x)*∞
+Base.Checked.checked_mul(x::Integer, y::RealInfinity) = sign(x)*y
+Base.Checked.checked_mul(y::RealInfinity, x::Integer) = y*sign(x)
 
 
 

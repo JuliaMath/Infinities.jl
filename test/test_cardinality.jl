@@ -17,6 +17,7 @@ using Infinities, Base64, Test
     @test 5 < ℵ₀ && 5 ≤ ℵ₀
     @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
     @test ℵ₀ > 5 && ℵ₀ ≥ 5
+    @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
 
     @test string(ℵ₀) == stringmime("text/plain", ℵ₀) == "ℵ₀"
     @test string(ℵ₁) == stringmime("text/plain", ℵ₁) == "ℵ₁"
