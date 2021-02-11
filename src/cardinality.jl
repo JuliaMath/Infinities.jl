@@ -29,6 +29,7 @@ end
 
 abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
+one(::InfiniteCardinal) = 1
 
 for OP in (:<, :≤)
     @eval begin
@@ -50,7 +51,5 @@ const ℵ₁ = InfiniteCardinal{1}()
 string(::InfiniteCardinal{0}) = "ℵ₀"
 string(::InfiniteCardinal{1}) = "ℵ₁"
 
-show(io::IO, F::InfiniteCardinal{0}) where N =
-    print(io, "ℵ₀")
-show(io::IO, F::InfiniteCardinal{1}) where N =
-    print(io, "ℵ₁")
+show(io::IO, F::InfiniteCardinal{0}) where N = print(io, "ℵ₀")
+show(io::IO, F::InfiniteCardinal{1}) where N = print(io, "ℵ₁")

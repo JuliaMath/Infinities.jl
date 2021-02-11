@@ -4,7 +4,9 @@ import Base: angle, isone, iszero, isinf, isfinite, abs, one, zero, isless,
                 +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit, 
                 string, show, promote_rule, convert
 
-export ∞, Infinity, RealInfinity, ComplexInfinity, NotANumber
+export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, NotANumber
+# The following is commented out for now to avoid conflicts with Infinity.jl
+# export Infinity 
 
 """
 NotANumber()
@@ -29,6 +31,10 @@ string(::Infinity) = "∞"
 convert(::Type{Float64}, ::Infinity) = Inf64
 convert(::Type{Float32}, ::Infinity) = Inf32
 convert(::Type{Float16}, ::Infinity) = Inf16
+Float64(::Infinity) = convert(Float64, ∞)
+Float32(::Infinity) = convert(Float32, ∞)
+Float16(::Infinity) = convert(Float16, ∞)
+BigFloat(::Infinity) = BigFloat(Inf)
 convert(::Type{AF}, ::Infinity) where AF<:AbstractFloat = convert(AF, Inf)
 
 
@@ -54,20 +60,15 @@ isless(x::AbstractFloat, y::Infinity) = isless(x, convert(typeof(x), y))
 isless(x::Infinity, y::AbstractFloat) = false
 isless(x::Infinity, y::Real) = false
 
++(::Infinity) = ∞
 +(::Infinity, ::Infinity) = ∞
 +(::Number, y::Infinity) = ∞
 +(::Infinity, ::Number) = ∞
 -(::Infinity, ::Number) = ∞
--(x::Number, ::Infinity) = x + (-∞)
 
 +(::Integer, y::Infinity) = ∞
 +(::Infinity, ::Integer) = ∞
 -(::Infinity, ::Integer) = ∞
--(x::Integer, ::Infinity) = x + (-∞)
-+(::Complex, y::Infinity) = ∞
-+(::Infinity, ::Complex) = ∞
--(::Infinity, ::Complex) = ∞
--(x::Complex, ::Infinity) = x + (-∞)
 
 -(::Infinity, ::Infinity) = NotANumber()
 
@@ -131,7 +132,11 @@ RealInfinity(::Infinity) = RealInfinity()
 RealInfinity(x::RealInfinity) = x
 
 -(::Infinity) = RealInfinity(true)
-+(::Infinity) = ∞
+-(x::Number, ::Infinity) = x + (-∞)
+-(x::Integer, ::Infinity) = x + (-∞)
+-(x::Complex, ::Infinity) = x + (-∞)
+-(x::Complex{Bool}, ::Infinity) = x + (-∞)
+
 
 isinf(::RealInfinity) = true
 isfinite(::RealInfinity) = false
@@ -239,8 +244,8 @@ end
 
 min(x::RealInfinity, y::RealInfinity) = RealInfinity(x.signbit | y.signbit)
 max(x::RealInfinity, y::RealInfinity) = RealInfinity(x.signbit & y.signbit)
-min(x::Real, y::RealInfinity) = y.signbit ? x : y
-max(x::Real, y::RealInfinity) = y.signbit ? y : x
+min(x::Real, y::RealInfinity) = y.signbit ? y : x
+max(x::Real, y::RealInfinity) = y.signbit ? x : y
 min(x::RealInfinity, y::Real) = x.signbit ? x : y
 max(x::RealInfinity, y::Real) = x.signbit ? y : x
 min(x::RealInfinity, ::Infinity) = x
@@ -281,6 +286,7 @@ isfinite(::ComplexInfinity) = false
 
 
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
+promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
 convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T}(x)
@@ -292,7 +298,7 @@ angle(x::ComplexInfinity) = π*x.signbit
 mod(::ComplexInfinity{<:Integer}, ::Integer) = NotANumber()
 
 
-show(io::IO, x::ComplexInfinity) = print(io, "$(exp(im*π*x.signbit))∞")
+show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
 ==(x::ComplexInfinity, y::Infinity) = x.signbit == 0
 ==(y::Infinity, x::ComplexInfinity) = x.signbit == 0
@@ -322,6 +328,20 @@ end
 +(y::ComplexInfinity, ::Number) = y
 -(y::ComplexInfinity, ::Number) = y
 -(::Number, y::ComplexInfinity) = -y
+
++(::Complex, ::Infinity) = ComplexInfinity()
++(::Infinity, ::Complex) = ComplexInfinity()
+-(::Infinity, ::Complex) = ComplexInfinity()
++(::Complex{Bool}, ::Infinity) = ComplexInfinity()
++(::Infinity, ::Complex{Bool}) = ComplexInfinity()
+-(::Infinity, ::Complex{Bool}) = ComplexInfinity()
+
++(::Complex, y::RealInfinity) = ComplexInfinity(y)
++(y::RealInfinity, ::Complex) = ComplexInfinity(y)
+-(y::RealInfinity, ::Complex) = ComplexInfinity(y)
++(::Complex{Bool}, y::RealInfinity) = ComplexInfinity(y)
++(y::RealInfinity, ::Complex{Bool}) = ComplexInfinity(y)
+-(y::RealInfinity, ::Complex{Bool}) = ComplexInfinity(y)
 
 
 # ⊻ is xor
@@ -386,6 +406,12 @@ Base.Checked.checked_sub(::Integer, x::RealInfinity) = -x
 Base.Checked.checked_sub(x::RealInfinity, ::Integer) = x
 Base.Checked.checked_add(::Integer, x::RealInfinity) = x
 Base.Checked.checked_add(x::RealInfinity, ::Integer) = x
+
+Base.Checked.checked_mul(x::Integer, ::Infinity) = sign(x)*∞
+Base.Checked.checked_mul(::Infinity, x::Integer) = sign(x)*∞
+Base.Checked.checked_mul(x::Integer, ::RealInfinity) = sign(x)*∞
+Base.Checked.checked_mul(::RealInfinity, x::Integer) = sign(x)*∞
+
 
 
 Base.to_index(::Infinity) = ∞
