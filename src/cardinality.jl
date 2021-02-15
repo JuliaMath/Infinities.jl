@@ -38,6 +38,12 @@ Integer(::Infinity) = InfiniteCardinal{0}()
 ==(::InfiniteCardinal, ::InfiniteCardinal)= false
 ==(::InfiniteCardinal, ::Int) = false
 ==(::Int, ::InfiniteCardinal) = false
+==(x::InfiniteCardinal, ::Infinity) = x == ℵ₀
+==(::Infinity, y::InfiniteCardinal) = ℵ₀ == y
+==(::InfiniteCardinal{0}, y::RealInfinity) = ∞ == y
+==(x::RealInfinity, ::InfiniteCardinal{0}) = x == ∞
+==(::InfiniteCardinal, y::Real) = ∞ == y
+==(x::Real, ::InfiniteCardinal) = x == ∞
 
 isless(x::InfiniteCardinal, y::InfiniteCardinal) = false
 isless(x::Real, y::InfiniteCardinal) = isfinite(x) || sign(y) == -1
@@ -54,6 +60,8 @@ for OP in (:<, :≤)
     @eval begin
         $OP(::Real, ::InfiniteCardinal) = true
         $OP(::InfiniteCardinal, ::Real) = false
+        $OP(x::RealInfinity, ::InfiniteCardinal) = $OP(x, ∞)
+        $OP(::InfiniteCardinal, y::RealInfinity) = $OP(∞, y)
     end
 end
 
@@ -61,6 +69,8 @@ for OP in (:>, :≥)
     @eval begin
         $OP(::Real, ::InfiniteCardinal) = false
         $OP(::InfiniteCardinal, ::Real) = true
+        $OP(x::RealInfinity, ::InfiniteCardinal) = $OP(x, ∞)
+        $OP(::InfiniteCardinal, y::RealInfinity) = $OP(∞, y)
     end
 end
 
@@ -70,6 +80,12 @@ min(x::Real, ::InfiniteCardinal) = x
 max(::Real, ::InfiniteCardinal) = ∞
 min(::InfiniteCardinal, x::Real) = x
 max(::InfiniteCardinal, ::Real) = ∞
+
+min(x::RealInfinity, ::InfiniteCardinal) = min(x, ∞)
+max(x::RealInfinity, ::InfiniteCardinal) = max(x, ∞)
+min(::InfiniteCardinal, y::RealInfinity) = min(∞, x)
+max(::InfiniteCardinal, y::RealInfinity) = max(∞, y)
+
 
 min(::Infinity, ::InfiniteCardinal) = ∞
 min(::InfiniteCardinal, ::Infinity) = ∞
