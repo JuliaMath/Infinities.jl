@@ -4,7 +4,7 @@ import Base: angle, isone, iszero, isinf, isfinite, abs, one, zero, isless,
                 +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit, 
                 string, show, promote_rule, convert
 
-export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, NotANumber
+export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber
 # The following is commented out for now to avoid conflicts with Infinity.jl
 # export Infinity 
 
@@ -41,24 +41,47 @@ convert(::Type{AF}, ::Infinity) where AF<:AbstractFloat = convert(AF, Inf)
 sign(y::Infinity) = 1
 angle(x::Infinity) = 0
 
-==(x::Infinity, y::Infinity) = true
-
 one(::Type{Infinity}) = 1
 zero(::Infinity) = 0
 
 isinf(::Infinity) = true
 isfinite(::Infinity) = false
 
+==(x::Infinity, y::Infinity) = true
 ==(x::Infinity, y::Number) = isinf(y) && angle(y) == angle(x)
 ==(y::Number, x::Infinity) = x == y
-
-
 
 isless(x::Infinity, y::Infinity) = false
 isless(x::Real, y::Infinity) = isfinite(x) || sign(y) == -1
 isless(x::AbstractFloat, y::Infinity) = isless(x, convert(typeof(x), y))
 isless(x::Infinity, y::AbstractFloat) = false
 isless(x::Infinity, y::Real) = false
+
+≤(::Infinity, ::Infinity) = true
+<(::Infinity, ::Infinity) = false
+≥(::Infinity, ::Infinity) = true
+>(::Infinity, ::Infinity) = false
+
+for OP in (:<, :≤)
+    @eval begin
+        $OP(::Real, ::Infinity) = true
+        $OP(::Infinity, ::Real) = false
+    end
+end
+
+for OP in (:>, :≥)
+    @eval begin
+        $OP(::Real, ::Infinity) = false
+        $OP(::Infinity, ::Real) = true
+    end
+end
+
+min(::Infinity, ::Infinity) = ∞
+max(::Infinity, ::Infinity) = ∞
+min(x::Real, ::Infinity) = x
+max(::Real, ::Infinity) = ∞
+min(::Infinity, x::Real) = x
+max(::Infinity, ::Real) = ∞
 
 +(::Infinity) = ∞
 +(::Infinity, ::Infinity) = ∞
@@ -96,31 +119,6 @@ function mod(x::Real, ::Infinity)
     x
 end
 
-min(::Infinity, ::Infinity) = ∞
-max(::Infinity, ::Infinity) = ∞
-min(x::Real, ::Infinity) = x
-max(::Real, ::Infinity) = ∞
-min(::Infinity, x::Real) = x
-max(::Infinity, ::Real) = ∞
-
-≤(::Infinity, ::Infinity) = true
-<(::Infinity, ::Infinity) = false
-≥(::Infinity, ::Infinity) = true
->(::Infinity, ::Infinity) = false
-
-for OP in (:<, :≤)
-    @eval begin
-        $OP(::Real, ::Infinity) = true
-        $OP(::Infinity, ::Real) = false
-    end
-end
-
-for OP in (:>, :≥)
-    @eval begin
-        $OP(::Real, ::Infinity) = false
-        $OP(::Infinity, ::Real) = true
-    end
-end
 
 
 struct RealInfinity <: Real
@@ -389,28 +387,8 @@ for OP in (:>, :≥)
     end
 end
 
-##
-# Checked
-##
+Base.hash(::Infinity) = 0x020113134b21797f # made up
 
-Base.Checked.checked_sub(::Integer, ::Infinity) = -∞
-Base.Checked.checked_sub(::Infinity, ::Integer) = ∞
-Base.Checked.checked_add(::Integer, ::Infinity) = ∞
-Base.Checked.checked_add(::Infinity, ::Integer) = ∞
-
-Base.Checked.checked_sub(::Integer, x::RealInfinity) = -x
-Base.Checked.checked_sub(x::RealInfinity, ::Integer) = x
-Base.Checked.checked_add(::Integer, x::RealInfinity) = x
-Base.Checked.checked_add(x::RealInfinity, ::Integer) = x
-
-Base.Checked.checked_mul(x::Integer, ::Infinity) = sign(x)*∞
-Base.Checked.checked_mul(::Infinity, x::Integer) = sign(x)*∞
-Base.Checked.checked_mul(x::Integer, y::RealInfinity) = sign(x)*y
-Base.Checked.checked_mul(y::RealInfinity, x::Integer) = y*sign(x)
-
-
-
-Base.to_index(::Infinity) = ∞
 
 include("cardinality.jl")
 end # module

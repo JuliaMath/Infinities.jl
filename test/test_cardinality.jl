@@ -21,4 +21,13 @@ using Infinities, Base64, Test
 
     @test string(ℵ₀) == stringmime("text/plain", ℵ₀) == "ℵ₀"
     @test string(ℵ₁) == stringmime("text/plain", ℵ₁) == "ℵ₁"
+
+    @testset "Set" begin
+        s = Set([ℵ₀,ℵ₁,∞,1])
+        @test 1 ∈ s
+        @test ∞ ∈ s
+        @test ℵ₀ ∈ s
+        @test ℵ₁ ∈ s
+        @test 2 ∉ s
+    end
 end
