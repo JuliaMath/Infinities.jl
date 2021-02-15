@@ -29,6 +29,11 @@ abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
 one(::InfiniteCardinal) = 1
 
+isinf(::InfiniteCardinal) = true
+isfinite(::InfiniteCardinal) = false
+
+Integer(::Infinity) = InfiniteCardinal{0}()
+
 ==(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = true
 ==(::InfiniteCardinal, ::InfiniteCardinal)= false
 ==(::InfiniteCardinal, ::Int) = false
