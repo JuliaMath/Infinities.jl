@@ -49,7 +49,7 @@ import Infinities: Infinity
         @test isinf(∞)
         @test !isfinite(∞)
 
-        @test Base.to_index(∞) ≡ ∞
+        @test Base.to_index(∞) ≡ ℵ₀
 
         @testset "min/max" begin
             @test max(1,∞) ≡ max(∞,1) ≡ ∞
@@ -87,11 +87,6 @@ import Infinities: Infinity
             @test convert(Float32, ∞) ≡ Float32(∞) ≡ Inf32
             @test convert(Float16, ∞) ≡ Float16(∞) ≡ Inf16
             @test convert(BigFloat, ∞)::BigFloat == BigFloat(∞)::BigFloat == BigFloat(Inf)
-        end
-
-        @testset "checked" begin
-            @test checked_add(5, ∞) ≡ checked_add(∞, 5) ≡ ∞
-            @test checked_sub(∞, 5) ≡ ∞
         end
     end
 
@@ -195,14 +190,6 @@ import Infinities: Infinity
             @test min(5, -∞) ≡ min(-∞, 5) ≡ -∞
             @test max(5, RealInfinity()) ≡ max(RealInfinity(), 5) ≡ RealInfinity()
             @test max(5, -∞) ≡ max(-∞, 5) ≡ 5
-        end
-
-        @testset "Checked" begin
-            @test checked_sub(5, ∞) ≡ checked_sub(5, RealInfinity()) ≡ -∞
-            @test checked_sub(-∞, 5) ≡ -∞
-            @test checked_add(5, -∞) ≡ checked_add(-∞, 5) ≡ -∞
-            @test checked_mul(-5, ∞) ≡ checked_mul(∞, -5) ≡ -∞
-            @test checked_mul(-5, -∞) ≡ checked_mul(-∞, -5) ≡ RealInfinity()
         end
     end
 
