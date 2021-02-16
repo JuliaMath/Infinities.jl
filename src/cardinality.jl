@@ -23,8 +23,9 @@ show(io::IO, F::InfiniteCardinal{1}) where N = print(io, "ℵ₁")
 isone(::InfiniteCardinal) = false
 iszero(::InfiniteCardinal) = false
 
-sign(y::InfiniteCardinal) = 1
-angle(x::InfiniteCardinal) = 0
+signbit(::InfiniteCardinal) = false
+sign(::InfiniteCardinal) = 1
+angle(::InfiniteCardinal) = 0
 abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
 one(::InfiniteCardinal) = 1
@@ -45,60 +46,78 @@ Integer(::Infinity) = InfiniteCardinal{0}()
 ==(::InfiniteCardinal, y::Real) = ∞ == y
 ==(x::Real, ::InfiniteCardinal) = x == ∞
 
-isless(x::InfiniteCardinal{N}, y::InfiniteCardinal{M}) where {N,M} = isless(N, M)
-isless(x::InfiniteCardinal{0}, y::InfiniteCardinal{0}) = false
+@generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
+isless(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 isless(x::Real, ::InfiniteCardinal{0}) = isfinite(x)
 isless(x::Real, ::InfiniteCardinal) = true
 isless(x::AbstractFloat, ::InfiniteCardinal{0}) = isfinite(x)
 isless(x::AbstractFloat, ::InfiniteCardinal) = true
 isless(::InfiniteCardinal, y::Real) = false
 isless(x::InfiniteCardinal, y::AbstractFloat) = false
-isless(x::InfiniteCardinal, y::Real) = false
 
-<(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
-≤(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = true
->(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
-≥(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = true
+@generated <(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N < M))
+@generated ≤(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≤ M))
+@generated >(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N > M))
+@generated ≥(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≥ M))
+
+≤(::InfiniteCardinal{0}, ::InfiniteCardinal) = true
+>(::InfiniteCardinal{0}, ::InfiniteCardinal) = false
+≥(::InfiniteCardinal, ::InfiniteCardinal{0}) = true
+<(::InfiniteCardinal, ::InfiniteCardinal{0}) = false
+
 
 <(x::Real, ::InfiniteCardinal{0}) = x < ∞
+<(x::Real, ::InfiniteCardinal) = true
+≤(x::Real, ::InfiniteCardinal) = true
+<(::InfiniteCardinal, x::Real) = false
+≤(::InfiniteCardinal{0}, x::Real) = ∞ ≤ x
+≤(::InfiniteCardinal, x::Real) = false
+>(::InfiniteCardinal{0}, y::Real) = ∞ > y
+>(::InfiniteCardinal, ::Real) = true
+≥(::InfiniteCardinal, ::Real) = true
+>(::Real, ::InfiniteCardinal) = false
+≥(x::Real, ::InfiniteCardinal{0}) = x ≥ ∞
+≥(x::Real, ::InfiniteCardinal) = false
 
-for OP in (:<, :≤)
-    @eval begin
-        $OP(x::InfiniteCardinal{N}, y::InfiniteCardinal{M}) where {N,M} = $OP(N, M)
-        $OP(::Real, ::InfiniteCardinal) = true
-        $OP(::InfiniteCardinal, ::Real) = false
-        $OP(x::RealInfinity, ::InfiniteCardinal) = $OP(x, ∞)
-        $OP(::InfiniteCardinal, y::RealInfinity) = $OP(∞, y)
-    end
-end
 
-for OP in (:>, :≥)
-    @eval begin
-        $OP(x::InfiniteCardinal{N}, y::InfiniteCardinal{M}) where {N,M} = $OP(N, M)
-        $OP(::Real, ::InfiniteCardinal) = false
-        $OP(::InfiniteCardinal, ::Real) = true
-        $OP(x::RealInfinity, ::InfiniteCardinal) = $OP(x, ∞)
-        $OP(::InfiniteCardinal, y::RealInfinity) = $OP(∞, y)
-    end
-end
+<(::Infinity, ::InfiniteCardinal{0}) = false
+<(::Infinity, ::InfiniteCardinal) = true
+≤(::Infinity, ::InfiniteCardinal) = true
+<(::InfiniteCardinal, ::Infinity) = false
+≤(::InfiniteCardinal{0}, ::Infinity) = true
+≤(::InfiniteCardinal, ::Infinity) = false
+>(::InfiniteCardinal{0}, ::Infinity) = false
+>(::InfiniteCardinal, ::Infinity) = true
+≥(::InfiniteCardinal, ::Infinity) = true
+>(::Infinity, ::InfiniteCardinal) = false
+≥(::Infinity, ::InfiniteCardinal{0}) = true
+≥(::Infinity, ::InfiniteCardinal) = false
+
+
+<(x::RealInfinity, ::InfiniteCardinal{0}) = x < ∞
+<(x::RealInfinity, ::InfiniteCardinal) = true
+≤(x::RealInfinity, ::InfiniteCardinal) = true
+>(::InfiniteCardinal{0}, y::RealInfinity) = ∞ > y
+>(::InfiniteCardinal, ::RealInfinity) = true
+≥(::InfiniteCardinal, ::RealInfinity) = true
+
 
 @generated min(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(min(N,M))}())
 @generated max(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(max(N,M))}())
 min(x::Real, ::InfiniteCardinal) = x
-max(::Real, ::InfiniteCardinal) = ∞
+max(::Real, ℵ::InfiniteCardinal) = ℵ
 min(::InfiniteCardinal, x::Real) = x
-max(::InfiniteCardinal, ::Real) = ∞
+max(ℵ::InfiniteCardinal, ::Real) = ℵ
 
 min(x::RealInfinity, ::InfiniteCardinal) = min(x, ∞)
-max(x::RealInfinity, ::InfiniteCardinal) = max(x, ∞)
+max(::RealInfinity, ℵ::InfiniteCardinal) = ℵ
 min(::InfiniteCardinal, y::RealInfinity) = min(∞, y)
-max(::InfiniteCardinal, y::RealInfinity) = max(∞, y)
-
+max(ℵ::InfiniteCardinal, ::RealInfinity) = ℵ
 
 min(::Infinity, ::InfiniteCardinal) = ∞
 min(::InfiniteCardinal, ::Infinity) = ∞
-max(::Infinity, ::InfiniteCardinal) = ∞
-max(::InfiniteCardinal, ::Infinity) = ∞
+max(::Infinity, ℵ::InfiniteCardinal) = ℵ
+max(ℵ::InfiniteCardinal, ::Infinity) = ℵ
 
 *(x::InfiniteCardinal) = x
 *(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()

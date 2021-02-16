@@ -4,12 +4,13 @@ using Infinities, Base64, Base.Checked, Test
     @testset "basics" begin
         @test !isone(ℵ₀)
         @test !iszero(ℵ₀)
-        @test sign(ℵ₀) ≡ 1
+        @test sign(ℵ₀) ≡ 1 && !signbit(ℵ₀)
         @test angle(ℵ₀) ≡ 0
-        @test Integer(ℵ₀) ≡ convert(Integer, ℵ₀) ≡ ℵ₀
+        @test Integer(∞) ≡ convert(Integer,∞) ≡ Integer(ℵ₀) ≡ convert(Integer, ℵ₀) ≡ ℵ₀
         @test abs(ℵ₀) ≡ ℵ₀
         @test zero(ℵ₀) ≡ 0
         @test one(ℵ₀) ≡ 1
+        @test isinf(ℵ₀) && !isfinite(ℵ₀)
     end
 
     @testset "equality" begin
@@ -28,7 +29,8 @@ using Infinities, Base64, Base.Checked, Test
         @test isless(Inf, ℵ₁) && !isless(ℵ₁, Inf)
         @test !isless(Inf, ℵ₀) && !isless(ℵ₀, Inf)
         @test isless(5, ℵ₀) && !isless(ℵ₀, 5)
-        
+        @test isless(5, ℵ₁) && !isless(ℵ₁, 5)
+
         @test !(ℵ₀ < ℵ₀) && !(ℵ₀ > ℵ₀)
         @test ℵ₀ ≤ ℵ₀ && ℵ₀ ≥ ℵ₀
         @test ℵ₀ < ℵ₁ && ℵ₀ ≤ ℵ₁
@@ -40,6 +42,14 @@ using Infinities, Base64, Base.Checked, Test
         @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
         @test ℵ₀ > 5 && ℵ₀ ≥ 5
         @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
+
+        @test !(∞ < ℵ₀) && ∞ ≤ ℵ₀
+        @test !(∞ > ℵ₀) && ∞ ≥ ℵ₀
+        @test ∞ < ℵ₁ && ∞ ≤ ℵ₁
+        @test !(∞ > ℵ₁) && !(∞ ≥ ℵ₁)
+
+        @test -∞ < ℵ₀ && -∞ ≤ ℵ₀
+        @test !(-∞ > ℵ₀) && !(-∞ ≥ ℵ₀)
     end
 
     @testset "min/max" begin
@@ -47,9 +57,11 @@ using Infinities, Base64, Base.Checked, Test
         @test @inferred(min(ℵ₀,ℵ₁)) ≡ min(ℵ₁,ℵ₀) ≡ ℵ₀
         @test @inferred(max(ℵ₀,ℵ₁)) ≡ max(ℵ₁,ℵ₀) ≡ ℵ₁
         @test min(∞,ℵ₀) ≡ min(ℵ₀,∞) ≡ ∞
-        @test max(∞,ℵ₀) ≡ max(ℵ₀,∞) ≡ ∞
+        @test max(∞,ℵ₀) ≡ max(ℵ₀,∞) ≡ ℵ₀
         @test min(-∞,ℵ₀) ≡ min(ℵ₀,-∞) ≡ -∞
-        @test max(-∞,ℵ₀) ≡ max(ℵ₀,-∞) ≡ ∞
+        @test max(-∞,ℵ₀) ≡ max(ℵ₀,-∞) ≡ ℵ₀
+        @test min(5,ℵ₀) ≡ min(ℵ₀,5) ≡ 5
+        @test max(5,ℵ₀) ≡ max(ℵ₀,5) ≡ ℵ₀
     end
 
     @testset "algebra" begin
@@ -84,7 +96,7 @@ using Infinities, Base64, Base.Checked, Test
     @test string(ℵ₀) == stringmime("text/plain", ℵ₀) == "ℵ₀"
     @test string(ℵ₁) == stringmime("text/plain", ℵ₁) == "ℵ₁"
     @test Base.to_index(ℵ₀) ≡ Base.to_shape(ℵ₀) ≡ ℵ₀
-    @test Base.to_shape((ℵ₀,)) ≡ (ℵ₀,)
+    @test Base.to_shape((∞,)) ≡ (ℵ₀,)
 
     @testset "Set" begin
         s = Set([ℵ₀,ℵ₁,∞,1])
