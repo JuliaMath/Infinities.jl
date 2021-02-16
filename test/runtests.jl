@@ -1,4 +1,4 @@
-using Infinities, Base64, Base.Checked, Test
+using Infinities, Base64, Test
 import Infinities: Infinity
 
 @testset "∞" begin

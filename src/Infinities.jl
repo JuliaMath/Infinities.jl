@@ -52,7 +52,7 @@ isfinite(::Infinity) = false
 ==(y::Number, x::Infinity) = x == y
 
 isless(x::Infinity, y::Infinity) = false
-isless(x::Real, y::Infinity) = isfinite(x) || sign(y) == -1
+isless(x::Real, y::Infinity) = isfinite(x) || signbit(x)
 isless(x::AbstractFloat, y::Infinity) = isless(x, convert(typeof(x), y))
 isless(x::Infinity, y::AbstractFloat) = false
 isless(x::Infinity, y::Real) = false
@@ -62,19 +62,16 @@ isless(x::Infinity, y::Real) = false
 ≥(::Infinity, ::Infinity) = true
 >(::Infinity, ::Infinity) = false
 
-for OP in (:<, :≤)
-    @eval begin
-        $OP(::Real, ::Infinity) = true
-        $OP(::Infinity, ::Real) = false
-    end
-end
+<(x::Real, ::Infinity) = isfinite(x) || signbit(x)
+≤(::Real, ::Infinity) = true
+<(::Infinity, ::Real) = false
+≤(::Infinity, y::Real) = isinf(y) && !signbit(y)
 
-for OP in (:>, :≥)
-    @eval begin
-        $OP(::Real, ::Infinity) = false
-        $OP(::Infinity, ::Real) = true
-    end
-end
+>(::Real, ::Infinity) = false
+≥(x::Real, ::Infinity) = isinf(x) && !signbit(x)
+>(::Infinity, y::Real) = isfinite(y) || signbit(y)
+≥(::Infinity, y::Real) = true
+
 
 min(::Infinity, ::Infinity) = ∞
 max(::Infinity, ::Infinity) = ∞

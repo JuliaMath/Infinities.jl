@@ -45,9 +45,13 @@ Integer(::Infinity) = InfiniteCardinal{0}()
 ==(::InfiniteCardinal, y::Real) = ∞ == y
 ==(x::Real, ::InfiniteCardinal) = x == ∞
 
-isless(x::InfiniteCardinal, y::InfiniteCardinal) = false
-isless(x::Real, y::InfiniteCardinal) = isfinite(x) || sign(y) == -1
-isless(x::AbstractFloat, y::InfiniteCardinal) = isless(x, convert(typeof(x), y))
+isless(x::InfiniteCardinal{N}, y::InfiniteCardinal{M}) where {N,M} = isless(N, M)
+isless(x::InfiniteCardinal{0}, y::InfiniteCardinal{0}) = false
+isless(x::Real, ::InfiniteCardinal{0}) = isfinite(x)
+isless(x::Real, ::InfiniteCardinal) = true
+isless(x::AbstractFloat, ::InfiniteCardinal{0}) = isfinite(x)
+isless(x::AbstractFloat, ::InfiniteCardinal) = true
+isless(::InfiniteCardinal, y::Real) = false
 isless(x::InfiniteCardinal, y::AbstractFloat) = false
 isless(x::InfiniteCardinal, y::Real) = false
 
@@ -56,8 +60,11 @@ isless(x::InfiniteCardinal, y::Real) = false
 >(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 ≥(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = true
 
+<(x::Real, ::InfiniteCardinal{0}) = x < ∞
+
 for OP in (:<, :≤)
     @eval begin
+        $OP(x::InfiniteCardinal{N}, y::InfiniteCardinal{M}) where {N,M} = $OP(N, M)
         $OP(::Real, ::InfiniteCardinal) = true
         $OP(::InfiniteCardinal, ::Real) = false
         $OP(x::RealInfinity, ::InfiniteCardinal) = $OP(x, ∞)
@@ -67,6 +74,7 @@ end
 
 for OP in (:>, :≥)
     @eval begin
+        $OP(x::InfiniteCardinal{N}, y::InfiniteCardinal{M}) where {N,M} = $OP(N, M)
         $OP(::Real, ::InfiniteCardinal) = false
         $OP(::InfiniteCardinal, ::Real) = true
         $OP(x::RealInfinity, ::InfiniteCardinal) = $OP(x, ∞)
@@ -74,8 +82,8 @@ for OP in (:>, :≥)
     end
 end
 
-min(::InfiniteCardinal, ::InfiniteCardinal) = ∞
-max(::InfiniteCardinal, ::InfiniteCardinal) = ∞
+@generated min(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(min(N,M))}())
+@generated max(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(max(N,M))}())
 min(x::Real, ::InfiniteCardinal) = x
 max(::Real, ::InfiniteCardinal) = ∞
 min(::InfiniteCardinal, x::Real) = x
@@ -83,7 +91,7 @@ max(::InfiniteCardinal, ::Real) = ∞
 
 min(x::RealInfinity, ::InfiniteCardinal) = min(x, ∞)
 max(x::RealInfinity, ::InfiniteCardinal) = max(x, ∞)
-min(::InfiniteCardinal, y::RealInfinity) = min(∞, x)
+min(::InfiniteCardinal, y::RealInfinity) = min(∞, y)
 max(::InfiniteCardinal, y::RealInfinity) = max(∞, y)
 
 
@@ -107,24 +115,16 @@ end
 *(a::InfiniteCardinal, b::Number) = b*a
 
 +(x::InfiniteCardinal) = x
-+(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
-+(::Number, y::InfiniteCardinal) = y
-+(x::InfiniteCardinal, ::Number) = x
--(x::InfiniteCardinal, ::Number) = x
++(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
 
 +(::Integer, y::InfiniteCardinal) = y
 +(x::InfiniteCardinal, ::Integer) = x
 -(x::InfiniteCardinal, ::Integer) = x
 
--(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
+-(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = NotANumber()
 
 -(::InfiniteCardinal) = -∞
--(x::Number, ::InfiniteCardinal) = x - ∞
 -(x::Integer, ::InfiniteCardinal) = x - ∞
--(x::Complex, ::InfiniteCardinal) = x - ∞
--(x::Complex{Bool}, ::InfiniteCardinal) = x - ∞
-
-
 
 for OP in (:fld,:cld,:div)
   @eval begin
