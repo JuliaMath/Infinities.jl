@@ -34,22 +34,31 @@ using Infinities, Base64, Base.Checked, Test
         @test !(ℵ₀ < ℵ₀) && !(ℵ₀ > ℵ₀)
         @test ℵ₀ ≤ ℵ₀ && ℵ₀ ≥ ℵ₀
         @test ℵ₀ < ℵ₁ && ℵ₀ ≤ ℵ₁
-        @test Inf < ℵ₁ && !(ℵ₁ < Inf)
-        @test !(Inf < ℵ₀) && !(ℵ₀ < Inf)
-        @test (5 < ℵ₀) && !(ℵ₀ < 5)
-
-        @test 5 < ℵ₀ && 5 ≤ ℵ₀
-        @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
-        @test ℵ₀ > 5 && ℵ₀ ≥ 5
-        @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
+        @test !(ℵ₀ > ℵ₁) && !(ℵ₀ ≥ ℵ₁)
 
         @test !(∞ < ℵ₀) && ∞ ≤ ℵ₀
         @test !(∞ > ℵ₀) && ∞ ≥ ℵ₀
         @test ∞ < ℵ₁ && ∞ ≤ ℵ₁
         @test !(∞ > ℵ₁) && !(∞ ≥ ℵ₁)
+        @test ℵ₀ ≤ ∞
+        @test !(ℵ₁ < ∞) && !(ℵ₁ ≤ ∞)
+        @test !(ℵ₀ > ∞)
+        @test ℵ₁ > ∞ && ℵ₁ ≥ ∞
 
         @test -∞ < ℵ₀ && -∞ ≤ ℵ₀
+        @test -∞ < ℵ₁ && -∞ ≤ ℵ₁
+        @test !(-∞ > ℵ₀) && RealInfinity() ≥ ℵ₀
+        @test !(-∞ > ℵ₁) && !(RealInfinity() ≥ ℵ₁)
         @test !(-∞ > ℵ₀) && !(-∞ ≥ ℵ₀)
+
+        @test Inf < ℵ₁ && !(ℵ₁ < Inf)
+        @test !(Inf < ℵ₀) && !(ℵ₀ < Inf)
+        @test (5 < ℵ₀) && !(ℵ₀ < 5)
+        @test 5 ≤ ℵ₁ && !(5 ≥ ℵ₁)
+        @test 5 < ℵ₀ && 5 ≤ ℵ₀
+        @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
+        @test ℵ₀ > 5 && ℵ₀ ≥ 5
+        @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
     end
 
     @testset "min/max" begin
