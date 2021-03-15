@@ -12,6 +12,8 @@ using Infinities, Base64, Base.Checked, Test
         @test one(ℵ₀) ≡ 1
         @test isinf(ℵ₀) && !isfinite(ℵ₀)
         @test Integer(RealInfinity()) ≡ Integer(ComplexInfinity()) ≡ ℵ₀
+        @test_throws InexactError Integer(-∞)
+        @test_throws InexactError Integer(exp(0.1im)*∞)
     end
 
     @testset "equality" begin

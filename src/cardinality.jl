@@ -39,7 +39,7 @@ function Integer(x::RealInfinity)
     ℵ₀
 end
 function Integer(x::ComplexInfinity)
-    iszero(angle(x)) && throw(InexactError(:Integer, Integer, x))
+    iszero(angle(x)) || throw(InexactError(:Integer, Integer, x))
     ℵ₀
 end
 
