@@ -128,4 +128,10 @@ using Infinities, Base64, Base.Checked, Test
         @test checked_sub(5, ℵ₀) ≡ -∞
         @test checked_mul(-5, ℵ₀) ≡ checked_mul(ℵ₀, -5) ≡ -∞
     end
+
+    @testset "indexing" begin
+        @test_throws BoundsError randn(3)[ℵ₀]
+        @test_throws ErrorException Base._unsafe_getindex(IndexCartesian(),permutedims(1:3)',ℵ₀)
+        @test_throws BoundsError view(randn(3),1:2)[ℵ₀]
+    end
 end
