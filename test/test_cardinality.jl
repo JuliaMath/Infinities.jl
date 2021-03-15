@@ -11,6 +11,7 @@ using Infinities, Base64, Base.Checked, Test
         @test zero(ℵ₀) ≡ 0
         @test one(ℵ₀) ≡ 1
         @test isinf(ℵ₀) && !isfinite(ℵ₀)
+        @test Integer(RealInfinity()) ≡ Integer(ComplexInfinity()) ≡ ℵ₀
     end
 
     @testset "equality" begin

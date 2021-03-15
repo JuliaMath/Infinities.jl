@@ -34,6 +34,14 @@ isinf(::InfiniteCardinal) = true
 isfinite(::InfiniteCardinal) = false
 
 Integer(::Infinity) = InfiniteCardinal{0}()
+function Integer(x::RealInfinity)
+    signbit(x) && throw(InexactError(:Integer, Integer, x))
+    ℵ₀
+end
+function Integer(x::ComplexInfinity)
+    iszero(angle(x)) && throw(InexactError(:Integer, Integer, x))
+    ℵ₀
+end
 
 ==(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = true
 ==(::InfiniteCardinal, ::InfiniteCardinal)= false
