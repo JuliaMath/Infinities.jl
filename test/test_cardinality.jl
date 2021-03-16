@@ -11,6 +11,9 @@ using Infinities, Base64, Base.Checked, Test
         @test zero(ℵ₀) ≡ 0
         @test one(ℵ₀) ≡ 1
         @test isinf(ℵ₀) && !isfinite(ℵ₀)
+        @test Integer(RealInfinity()) ≡ Integer(ComplexInfinity()) ≡ ℵ₀
+        @test_throws InexactError Integer(-∞)
+        @test_throws InexactError Integer(exp(0.1im)*∞)
     end
 
     @testset "equality" begin
@@ -124,5 +127,11 @@ using Infinities, Base64, Base.Checked, Test
         @test checked_sub(ℵ₀, 5) ≡ ℵ₀
         @test checked_sub(5, ℵ₀) ≡ -∞
         @test checked_mul(-5, ℵ₀) ≡ checked_mul(ℵ₀, -5) ≡ -∞
+    end
+
+    @testset "indexing" begin
+        @test_throws BoundsError randn(3)[ℵ₀]
+        @test_throws ErrorException Base._unsafe_getindex(IndexCartesian(),permutedims(1:3)',ℵ₀)
+        @test_throws BoundsError view(randn(3),1:2)[ℵ₀]
     end
 end

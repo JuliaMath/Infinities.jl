@@ -34,6 +34,14 @@ isinf(::InfiniteCardinal) = true
 isfinite(::InfiniteCardinal) = false
 
 Integer(::Infinity) = InfiniteCardinal{0}()
+function Integer(x::RealInfinity)
+    signbit(x) && throw(InexactError(:Integer, Integer, x))
+    ℵ₀
+end
+function Integer(x::ComplexInfinity)
+    iszero(angle(x)) || throw(InexactError(:Integer, Integer, x))
+    ℵ₀
+end
 
 ==(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = true
 ==(::InfiniteCardinal, ::InfiniteCardinal)= false
@@ -188,3 +196,16 @@ Base.Checked.checked_mul(::InfiniteCardinal{0}, x::Integer) = sign(x)*∞
 
 Base.hash(::InfiniteCardinal{0}) = 0x775431eef01bca90 # made up
 Base.hash(::InfiniteCardinal{1}) = 0x55437c69b794f8ce # made up
+
+
+# avoid stack overflow
+getindex(A::Array, i1::InfiniteCardinal{0}, I::Integer...) = throw(BoundsError(A, i1, I...))
+
+Base._unsafe_getindex(::IndexStyle, A::AbstractArray, I::InfiniteCardinal{0}) = error("Overload getindex(::$(typeof(A)), ::InfiniteCardinal{0})")
+
+# Avoid too-strict restrictions in SubArray
+function getindex(V::SubArray{T,N}, I::Vararg{InfiniteCardinal{0},N}) where {T,N}
+  @boundscheck checkbounds(V, I...)
+  @inbounds r = V.parent[Base.reindex(V.indices, I)...]
+  r
+end
