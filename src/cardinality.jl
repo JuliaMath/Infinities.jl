@@ -132,7 +132,7 @@ max(ℵ::InfiniteCardinal, ::Infinity) = ℵ
 *(::InfiniteCardinal{N}, ::Infinity) where N = InfiniteCardinal{N}()
 *(::Infinity, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
 function *(a::Integer, b::InfiniteCardinal)
-    a > 0 || throw(ArgumentError("$a is negative"))
+    a > 0 || throw(ArgumentError("$a is non-positive"))
     b
 end
 
