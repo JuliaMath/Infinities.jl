@@ -28,7 +28,7 @@ sign(::InfiniteCardinal) = 1
 angle(::InfiniteCardinal) = 0
 abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
-one(::InfiniteCardinal) = 1
+one(::Type{<:InfiniteCardinal}) = 1
 
 isinf(::InfiniteCardinal) = true
 isfinite(::InfiniteCardinal) = false
