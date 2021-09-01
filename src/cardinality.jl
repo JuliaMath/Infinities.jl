@@ -29,6 +29,7 @@ angle(::InfiniteCardinal) = 0
 abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
 one(::Type{<:InfiniteCardinal}) = 1
+oneunit(::Type{<:InfiniteCardinal}) = 1
 
 isinf(::InfiniteCardinal) = true
 isfinite(::InfiniteCardinal) = false

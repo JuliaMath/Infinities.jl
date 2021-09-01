@@ -1,6 +1,6 @@
 module Infinities
 
-import Base: angle, isone, iszero, isinf, isfinite, abs, one, zero, isless, 
+import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, 
                 +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit, 
                 string, show, promote_rule, convert, getindex
 
@@ -42,6 +42,7 @@ sign(y::Infinity) = 1
 angle(x::Infinity) = 0
 
 one(::Type{Infinity}) = 1
+oneunit(::Type{Infinity}) = 1
 zero(::Infinity) = 0
 
 isinf(::Infinity) = true
@@ -138,6 +139,16 @@ isfinite(::RealInfinity) = false
 
 promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity
 convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
+
+convert(::Type{Float64}, x::RealInfinity) = sign(x)*Inf64
+convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
+convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
+Base.Float64(x::RealInfinity) = convert(Float64, x)
+Base.Float32(x::RealInfinity) = convert(Float32, x)
+Base.Float16(x::RealInfinity) = convert(Float16, x)
+Base.BigFloat(x::RealInfinity) = sign(x)*BigFloat(Inf)
+convert(::Type{AF}, x::RealInfinity) where AF<:AbstractFloat = sign(x)*convert(AF, Inf)
+
 
 signbit(y::RealInfinity) = y.signbit
 sign(y::RealInfinity) = 1-2signbit(y)
