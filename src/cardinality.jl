@@ -153,11 +153,18 @@ end
 -(::InfiniteCardinal) = -∞
 -(x::Integer, ::InfiniteCardinal) = x - ∞
 
+for op in (:+, :-)
+    @eval begin
+        $op(x::Number, ::InfiniteCardinal) = $op(x, ∞)
+        $op(::InfiniteCardinal, x::Number) = $op(∞, x)
+    end
+end
+
 for OP in (:fld,:cld,:div)
-  @eval begin
-    $OP(x::InfiniteCardinal, ::Real) = x
-    $OP(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
-  end
+    @eval begin
+        $OP(x::InfiniteCardinal, ::Real) = x
+        $OP(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
+    end
 end
 
 div(::T, ::InfiniteCardinal) where T<:Real = zero(T)
@@ -205,7 +212,7 @@ Base._unsafe_getindex(::IndexStyle, A::AbstractArray, I::InfiniteCardinal{0}) = 
 
 # Avoid too-strict restrictions in SubArray
 function getindex(V::SubArray{T,N}, I::Vararg{InfiniteCardinal{0},N}) where {T,N}
-  @boundscheck checkbounds(V, I...)
-  @inbounds r = V.parent[Base.reindex(V.indices, I)...]
-  r
+    @boundscheck checkbounds(V, I...)
+    @inbounds r = V.parent[Base.reindex(V.indices, I)...]
+    r
 end
