@@ -133,5 +133,7 @@ using Infinities, Base64, Base.Checked, Test
         @test_throws BoundsError randn(3)[ℵ₀]
         @test_throws ErrorException Base._unsafe_getindex(IndexCartesian(),permutedims(1:3)',ℵ₀)
         @test_throws BoundsError view(randn(3),1:2)[ℵ₀]
+        # check ambiguity is not introduced
+        @test view(collect(1:5),2)[] == 2
     end
 end
