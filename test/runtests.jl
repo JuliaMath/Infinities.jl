@@ -35,7 +35,7 @@ import Infinities: Infinity
         @test ∞*∞ ≡ ∞
         @test ∞ - ∞ isa NotANumber
 
-        @test one(∞) ≡ 1
+        @test one(∞) ≡ one(Infinity) ≡ oneunit(∞) ≡ oneunit(Infinity) ≡ 1
         @test zero(∞) ≡ 0
 
         @test !isone(∞)
@@ -190,6 +190,13 @@ import Infinities: Infinity
             @test min(5, -∞) ≡ min(-∞, 5) ≡ -∞
             @test max(5, RealInfinity()) ≡ max(RealInfinity(), 5) ≡ RealInfinity()
             @test max(5, -∞) ≡ max(-∞, 5) ≡ 5
+        end
+
+        @testset "convert" begin
+            @test convert(Float64, -∞) ≡ Float64(-∞) ≡ -Inf
+            @test convert(Float32, -∞) ≡ Float32(-∞) ≡ -Inf32
+            @test convert(Float16, -∞) ≡ Float16(-∞) ≡ -Inf16
+            @test convert(BigFloat, -∞)::BigFloat == BigFloat(-∞)::BigFloat == -BigFloat(Inf)
         end
     end
 

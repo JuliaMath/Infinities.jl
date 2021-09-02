@@ -43,6 +43,7 @@ angle(x::Infinity) = 0
 
 one(::Type{Infinity}) = 1
 oneunit(::Type{Infinity}) = 1
+oneunit(::Infinity) = 1
 zero(::Infinity) = 0
 
 isinf(::Infinity) = true

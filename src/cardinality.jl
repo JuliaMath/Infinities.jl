@@ -30,6 +30,7 @@ abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
 one(::Type{<:InfiniteCardinal}) = 1
 oneunit(::Type{<:InfiniteCardinal}) = 1
+oneunit(::InfiniteCardinal) = 1
 
 isinf(::InfiniteCardinal) = true
 isfinite(::InfiniteCardinal) = false
@@ -213,7 +214,7 @@ Base._unsafe_getindex(::IndexStyle, A::AbstractArray, I::InfiniteCardinal{0}) = 
 
 # Avoid too-strict restrictions in SubArray
 function getindex(V::SubArray{T,N}, i1::InfiniteCardinal{0}, I::Integer...) where {T,N}
-  @boundscheck checkbounds(V, i1, I...)
-  @inbounds r = V.parent[Base.reindex(V.indices, tuple(i1, I...))...]
-  r
+    @boundscheck checkbounds(V, i1, I...)
+    @inbounds r = V.parent[Base.reindex(V.indices, tuple(i1, I...))...]
+    r
 end
