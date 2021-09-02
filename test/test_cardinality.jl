@@ -9,7 +9,7 @@ using Infinities, Base64, Base.Checked, Test
         @test Integer(∞) ≡ convert(Integer,∞) ≡ Integer(ℵ₀) ≡ convert(Integer, ℵ₀) ≡ ℵ₀
         @test abs(ℵ₀) ≡ ℵ₀
         @test zero(ℵ₀) ≡ 0
-        @test one(ℵ₀) ≡ 1
+        @test one(ℵ₀) ≡ one(InfiniteCardinal{0}) ≡ oneunit(ℵ₀) ≡ oneunit(InfiniteCardinal{0}) ≡ 1
         @test isinf(ℵ₀) && !isfinite(ℵ₀)
         @test Integer(RealInfinity()) ≡ Integer(ComplexInfinity()) ≡ ℵ₀
         @test_throws InexactError Integer(-∞)
@@ -94,6 +94,11 @@ using Infinities, Base64, Base.Checked, Test
         @test 5 * ℵ₀ ≡ ℵ₀ * 5 ≡ ℵ₀
         @test 5.0ℵ₀ ≡ ℵ₀*5.0 ≡ RealInfinity()
         @test_throws ArgumentError (-5) * ℵ₀
+
+        @test ℵ₀ - 5.1 ≡ ∞
+        @test ℵ₀ + 5.1 ≡ ∞
+        @test 5.1 + ℵ₀ ≡ ∞
+        @test 5.1 - ℵ₀ ≡ -∞
     end
 
     @testset "fld/cld/div/mod" begin
