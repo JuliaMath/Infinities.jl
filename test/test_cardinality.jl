@@ -56,6 +56,9 @@ using Infinities, Base64, Base.Checked, Test
         @test !(-∞ > ℵ₀) && !(-∞ ≥ ℵ₀)
         @test ℵ₀ > -∞
         @test ℵ₁ > -∞ && ℵ₁ ≥ -∞
+        @test ℵ₀ ≤ RealInfinity()
+        @test !(ℵ₀ ≤ -∞)
+        @test !(ℵ₁ ≤ RealInfinity())
 
         @test Inf < ℵ₁ && !(ℵ₁ < Inf)
         @test !(Inf < ℵ₀) && !(ℵ₀ < Inf)
