@@ -102,7 +102,9 @@ using Infinities, Base64, Base.Checked, Test
         @test ℵ₀ + 5.1 ≡ ∞
         @test 5.1 + ℵ₀ ≡ ∞
         @test 5.1 - ℵ₀ ≡ -∞
-
+        
+        @test ℵ₀ + ∞ == ∞
+        @test ∞ + ℵ₀ == ∞
         @test ℵ₀ + RealInfinity() == ∞
         @test ℵ₀ - (-∞) == ∞
         @test  RealInfinity() + ℵ₀ == ∞
