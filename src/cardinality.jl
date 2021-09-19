@@ -163,6 +163,8 @@ for op in (:+, :-)
         $op(::InfiniteCardinal, x::Number) = $op(∞, x)
         $op(x::RealInfinity, ::InfiniteCardinal) = $op(x, ∞)
         $op(::InfiniteCardinal, x::RealInfinity) = $op(∞, x)
+        $op(::Infinity, ::InfiniteCardinal) = $op(∞, ∞)
+        $op(::InfiniteCardinal, ::Infinity) = $op(∞, ∞)
     end
 end
 
