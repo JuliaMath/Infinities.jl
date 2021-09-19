@@ -161,6 +161,8 @@ for op in (:+, :-)
     @eval begin
         $op(x::Number, ::InfiniteCardinal) = $op(x, ∞)
         $op(::InfiniteCardinal, x::Number) = $op(∞, x)
+        $op(x::RealInfinity, ::InfiniteCardinal) = $op(x, ∞)
+        $op(::InfiniteCardinal, x::RealInfinity) = $op(∞, x)
     end
 end
 
