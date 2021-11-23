@@ -400,4 +400,5 @@ Base.hash(::Infinity) = 0x020113134b21797f # made up
 
 
 include("cardinality.jl")
+include("static.jl")
 end # module
