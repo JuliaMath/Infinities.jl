@@ -174,8 +174,8 @@ show(io::IO, y::RealInfinity) = print(io, string(y))
 isless(x::RealInfinity, y::RealInfinity) = signbit(x) && !signbit(y)
 for Typ in (:Number, :Real, :Integer, :AbstractFloat)
     @eval begin
-        isless(x::RealInfinity, y::$Typ) = signbit(x) && y ≠ -∞
-        isless(x::$Typ, y::RealInfinity) = !signbit(y) && x ≠ ∞
+        isless(x::RealInfinity, y::$Typ) = signbit(x) && y ≠ -∞
+        isless(x::$Typ, y::RealInfinity) = !signbit(y) && x ≠ ∞
         +(::$Typ, y::RealInfinity) = y
         +(y::RealInfinity, ::$Typ) = y
         -(y::RealInfinity, ::$Typ) = y
@@ -217,7 +217,7 @@ end
 -(y::RealInfinity) = RealInfinity(!y.signbit)
 
 function +(x::RealInfinity, y::RealInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
+    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
     x
 end
 
@@ -317,13 +317,13 @@ show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 ==(y::Number, x::ComplexInfinity) = x == y
 
 isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.signbit && !y.signbit
-isless(x::Number, y::ComplexInfinity{Bool}) = !y.signbit && x ≠ ∞
-isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
+isless(x::Number, y::ComplexInfinity{Bool}) = !y.signbit && x ≠ ∞
+isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 
 function +(x::ComplexInfinity, y::ComplexInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
+    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
     promote_type(typeof(x),typeof(y))(x.signbit)
 end
 
