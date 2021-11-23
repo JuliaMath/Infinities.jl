@@ -376,7 +376,7 @@ for OP in (:fld,:cld,:div)
 end
 
 min(x::ComplexInfinity{B}, y::ComplexInfinity{B}) where B<:Integer = sign(x) == -1 ? x : y
-max(x::ComplexInfinity{B}, ::ComplexInfinity{B}) where B<:Integer = sign(x) == 1 ? x : y
+max(x::ComplexInfinity{B}, y::ComplexInfinity{B}) where B<:Integer = sign(x) == 1 ? x : y
 min(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? x : y
 min(x::ComplexInfinity{B}, y::Real) where B<:Integer = min(y,x)
 max(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? y : x
