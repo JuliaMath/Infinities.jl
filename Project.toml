@@ -3,7 +3,11 @@ uuid = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
 authors = ["Sheehan Olver <solver@mac.com>"]
 version = "0.1.4"
 
+[deps]
+Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+
 [compat]
+Static = "0.4"
 julia = "1"
 
 [extras]
