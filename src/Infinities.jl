@@ -61,19 +61,11 @@ isless(x::Infinity, y::Real) = false
 
 ≤(::Infinity, ::Infinity) = true
 <(::Infinity, ::Infinity) = false
-≥(::Infinity, ::Infinity) = true
->(::Infinity, ::Infinity) = false
 
 <(x::Real, ::Infinity) = isfinite(x) || signbit(x)
 ≤(::Real, ::Infinity) = true
 <(::Infinity, ::Real) = false
 ≤(::Infinity, y::Real) = isinf(y) && !signbit(y)
-
->(::Real, ::Infinity) = false
-≥(x::Real, ::Infinity) = isinf(x) && !signbit(x)
->(::Infinity, y::Real) = isfinite(y) || signbit(y)
-≥(::Infinity, y::Real) = true
-
 
 min(::Infinity, ::Infinity) = ∞
 max(::Infinity, ::Infinity) = ∞
@@ -191,10 +183,6 @@ end
 ≤(::Infinity, s::RealInfinity) = !signbit(s)
 <(s::RealInfinity, ::Infinity) = signbit(s)
 <(::Infinity, ::RealInfinity) = false
-≥(s::RealInfinity, ::Infinity) = !signbit(s)
-≥(::Infinity, ::RealInfinity) = true
->(::RealInfinity, ::Infinity) = false
->(::Infinity, s::RealInfinity) = signbit(s)
 
 
 
@@ -323,7 +311,7 @@ isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 
 function +(x::ComplexInfinity, y::ComplexInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
+    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
     promote_type(typeof(x),typeof(y))(x.signbit)
 end
 
@@ -386,13 +374,6 @@ for OP in (:<,:≤)
     @eval begin
         $OP(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) ==  1
         $OP(y::ComplexInfinity{B}, x::Real) where B<:Integer = sign(y) == -1
-    end
-end
-
-for OP in (:>, :≥)
-    @eval begin
-        $OP(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) == -1
-        $OP(y::ComplexInfinity{B}, x::Real) where B<:Integer = sign(y) == 1
     end
 end
 
