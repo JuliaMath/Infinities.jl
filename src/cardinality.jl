@@ -67,12 +67,8 @@ isless(x::InfiniteCardinal, y::AbstractFloat) = false
 
 @generated <(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N < M))
 @generated ≤(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≤ M))
-@generated >(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N > M))
-@generated ≥(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≥ M))
 
 ≤(::InfiniteCardinal{0}, ::InfiniteCardinal) = true
->(::InfiniteCardinal{0}, ::InfiniteCardinal) = false
-≥(::InfiniteCardinal, ::InfiniteCardinal{0}) = true
 <(::InfiniteCardinal, ::InfiniteCardinal{0}) = false
 
 
@@ -82,14 +78,9 @@ isless(x::InfiniteCardinal, y::AbstractFloat) = false
 <(::InfiniteCardinal, x::Real) = false
 ≤(::InfiniteCardinal{0}, x::Real) = ∞ ≤ x
 ≤(::InfiniteCardinal, x::Real) = false
-≤(::InfiniteCardinal{0}, x::RealInfinity) = ∞ ≤ x
+≤(::InfiniteCardinal{0}, x::RealInfinity) = ∞ ≤ x
 ≤(::InfiniteCardinal, x::RealInfinity) = false
->(::InfiniteCardinal{0}, y::Real) = ∞ > y
->(::InfiniteCardinal, ::Real) = true
-≥(::InfiniteCardinal, ::Real) = true
->(::Real, ::InfiniteCardinal) = false
-≥(x::Real, ::InfiniteCardinal{0}) = x ≥ ∞
-≥(x::Real, ::InfiniteCardinal) = false
+<(::InfiniteCardinal, x::RealInfinity) = false
 
 
 <(::Infinity, ::InfiniteCardinal{0}) = false
@@ -98,20 +89,11 @@ isless(x::InfiniteCardinal, y::AbstractFloat) = false
 <(::InfiniteCardinal, ::Infinity) = false
 ≤(::InfiniteCardinal{0}, ::Infinity) = true
 ≤(::InfiniteCardinal, ::Infinity) = false
->(::InfiniteCardinal{0}, ::Infinity) = false
->(::InfiniteCardinal, ::Infinity) = true
-≥(::InfiniteCardinal, ::Infinity) = true
->(::Infinity, ::InfiniteCardinal) = false
-≥(::Infinity, ::InfiniteCardinal{0}) = true
-≥(::Infinity, ::InfiniteCardinal) = false
 
 
 <(x::RealInfinity, ::InfiniteCardinal{0}) = x < ∞
 <(x::RealInfinity, ::InfiniteCardinal) = true
 ≤(x::RealInfinity, ::InfiniteCardinal) = true
->(::InfiniteCardinal{0}, y::RealInfinity) = ∞ > y
->(::InfiniteCardinal, ::RealInfinity) = true
-≥(::InfiniteCardinal, ::RealInfinity) = true
 
 
 @generated min(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(min(N,M))}())
