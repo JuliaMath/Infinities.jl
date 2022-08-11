@@ -311,7 +311,7 @@ isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 
 function +(x::ComplexInfinity, y::ComplexInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
+    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
     promote_type(typeof(x),typeof(y))(x.signbit)
 end
 
@@ -374,13 +374,6 @@ for OP in (:<,:≤)
     @eval begin
         $OP(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) ==  1
         $OP(y::ComplexInfinity{B}, x::Real) where B<:Integer = sign(y) == -1
-    end
-end
-
-for OP in (:≥,)
-    @eval begin
-        $OP(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) == -1
-        $OP(y::ComplexInfinity{B}, x::Real) where B<:Integer = sign(y) == 1
     end
 end
 
