@@ -28,14 +28,11 @@ const ∞ = Infinity()
 show(io::IO, ::Infinity) = print(io, "∞")
 string(::Infinity) = "∞"
 
-convert(::Type{Float64}, ::Infinity) = Inf64
-convert(::Type{Float32}, ::Infinity) = Inf32
-convert(::Type{Float16}, ::Infinity) = Inf16
-Base.Float64(::Infinity) = convert(Float64, ∞)
-Base.Float32(::Infinity) = convert(Float32, ∞)
-Base.Float16(::Infinity) = convert(Float16, ∞)
-Base.BigFloat(::Infinity) = BigFloat(Inf)
-convert(::Type{AF}, ::Infinity) where AF<:AbstractFloat = convert(AF, Inf)
+_convert(::Type{Float64}, ::Infinity) = Inf64
+_convert(::Type{Float32}, ::Infinity) = Inf32
+_convert(::Type{Float16}, ::Infinity) = Inf16
+_convert(::Type{T}, ::Infinity) where {T<:Real} = convert(T, Inf)::T
+(::Type{T})(x::Infinity) where {T<:Real} = _convert(T, x)
 
 
 sign(y::Infinity) = 1
@@ -131,16 +128,13 @@ isinf(::RealInfinity) = true
 isfinite(::RealInfinity) = false
 
 promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity
-convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
+_convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
 
-convert(::Type{Float64}, x::RealInfinity) = sign(x)*Inf64
-convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
-convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
-Base.Float64(x::RealInfinity) = convert(Float64, x)
-Base.Float32(x::RealInfinity) = convert(Float32, x)
-Base.Float16(x::RealInfinity) = convert(Float16, x)
-Base.BigFloat(x::RealInfinity) = sign(x)*BigFloat(Inf)
-convert(::Type{AF}, x::RealInfinity) where AF<:AbstractFloat = sign(x)*convert(AF, Inf)
+_convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
+_convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
+_convert(::Type{Float64}, x::RealInfinity) = sign(x)*Inf64
+_convert(::Type{T}, x::RealInfinity) where {T<:Real} = sign(x)*convert(T, Inf)
+(::Type{T})(x::RealInfinity) where {T<:Real} = _convert(T, x)
 
 
 signbit(y::RealInfinity) = y.signbit
