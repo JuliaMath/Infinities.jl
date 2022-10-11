@@ -87,6 +87,8 @@ import Infinities: Infinity
             @test convert(Float32, ∞) ≡ Float32(∞) ≡ Inf32
             @test convert(Float16, ∞) ≡ Float16(∞) ≡ Inf16
             @test convert(BigFloat, ∞)::BigFloat == BigFloat(∞)::BigFloat == BigFloat(Inf)
+            @test convert(RealInfinity, ∞) isa RealInfinity
+            @test convert(RealInfinity, ∞) == Inf
         end
     end
 
