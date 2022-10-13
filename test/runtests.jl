@@ -1,6 +1,11 @@
 using Infinities, Base64, Test
 import Infinities: Infinity
 
+using Aqua
+@testset "Project quality" begin
+    Aqua.test_all(Infinities, ambiguities=false)
+end
+
 @testset "∞" begin
     @testset "∞" begin
         @test ∞ ≠ 1
