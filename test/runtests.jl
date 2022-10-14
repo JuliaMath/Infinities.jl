@@ -8,8 +8,8 @@ end
 
 @testset "∞" begin
     @testset "∞" begin
-        @test ∞ ≠ 1
-        @test 1 ≠ ∞
+        @test ∞ ≠ 1
+        @test 1 ≠ ∞
         @test ∞ == ∞
         @test ∞ == Inf
         @test Inf == ∞
@@ -27,10 +27,10 @@ end
             @test !(∞ > ∞)
             @test ∞ ≥ ∞
 
-            @test 5 < ∞ && 5 ≤ ∞
-            @test !(∞ < 5) && !(∞ ≤ 5)
-            @test ∞ > 5 && ∞ ≥ 5
-            @test !(5 > ∞) && !(5 ≥ ∞)
+            @test 5 < ∞ && 5 ≤ ∞
+            @test !(∞ < 5) && !(∞ ≤ 5)
+            @test ∞ > 5 && ∞ ≥ 5
+            @test !(5 > ∞) && !(5 ≥ ∞)
         end
 
         @test ∞ + ∞ ≡ ∞
@@ -126,15 +126,15 @@ end
         @test !isless(-Inf, -∞)
         @test !isless(1, -∞)
 
-        @test -∞ ≤ ∞
-        @test RealInfinity() ≤ ∞
-        @test ∞ ≤ RealInfinity()
-        @test -∞ ≤ -∞
+        @test -∞ ≤ ∞
+        @test RealInfinity() ≤ ∞
+        @test ∞ ≤ RealInfinity()
+        @test -∞ ≤ -∞
         @test !(∞ ≤ -∞)
-        @test -∞ < ∞
+        @test -∞ < ∞
         @test !(-∞ < -∞)
-        @test !(RealInfinity() < ∞) && !(∞ < RealInfinity())
-        @test RealInfinity() ≥ ∞ && ∞ ≥ RealInfinity()
+        @test !(RealInfinity() < ∞) && !(∞ < RealInfinity())
+        @test RealInfinity() ≥ ∞ && ∞ ≥ RealInfinity()
         @test !(-∞ > ∞)
         @test ∞ > -∞
         @test !(5 < -∞)
@@ -260,7 +260,7 @@ end
         @test 5 < ComplexInfinity() && 5 ≤ ComplexInfinity()
         @test !(ComplexInfinity() < 5) && !(ComplexInfinity() ≤ 5)
         @test 5 > -ComplexInfinity() && 5 ≥ -ComplexInfinity()
-        @test ComplexInfinity() > 5 && ComplexInfinity() ≥  5
+        @test ComplexInfinity() > 5 && ComplexInfinity() ≥  5
 
         @test 1 + ComplexInfinity() ≡ 1.0 + ComplexInfinity() ≡ ComplexInfinity() + 1 ≡ ComplexInfinity() + 1.0 ≡ ComplexInfinity()
         @test 5 * ComplexInfinity() ≡ ComplexInfinity()
