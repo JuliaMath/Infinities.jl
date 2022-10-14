@@ -4,7 +4,7 @@
 """
 InfiniteCardinal{K}()
 
-represents the k-th cardinal number. 
+represents the k-th cardinal number.
 Note that `InfiniteCardinal <: Integer` to support
 being treated as a length in array machinier.
 """
@@ -163,7 +163,7 @@ cld(x::T, ::InfiniteCardinal) where T<:Real = signbit(x) ? zero(T) : one(T)
 
 mod(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
 mod(::InfiniteCardinal, ::Real) = NotANumber()
-function mod(x::Real, ::InfiniteCardinal) 
+function mod(x::Real, ::InfiniteCardinal)
     x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
     x
 end

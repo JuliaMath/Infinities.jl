@@ -1,12 +1,12 @@
 module Infinities
 
-import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, 
-                +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit, 
+import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless,
+                +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
                 string, show, promote_rule, convert, getindex
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber
 # The following is commented out for now to avoid conflicts with Infinity.jl
-# export Infinity 
+# export Infinity
 
 """
 NotANumber()
@@ -19,7 +19,7 @@ struct NotANumber <: Number end
 """
    Infinity()
 
-represents the positive real infinite. 
+represents the positive real infinite.
 """
 struct Infinity <: Real end
 
@@ -102,7 +102,7 @@ cld(x::T, ::Infinity) where T<:Real = signbit(x) ? zero(T) : one(T)
 
 mod(::Infinity, ::Infinity) = NotANumber()
 mod(::Infinity, ::Real) = NotANumber()
-function mod(x::Real, ::Infinity) 
+function mod(x::Real, ::Infinity)
     x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
     x
 end
@@ -142,7 +142,7 @@ sign(y::RealInfinity) = 1-2signbit(y)
 angle(x::RealInfinity) = π*signbit(x)
 mod(::RealInfinity, ::RealInfinity) = NotANumber()
 mod(::RealInfinity, ::Real) = NotANumber()
-function mod(x::Real, y::RealInfinity) 
+function mod(x::Real, y::RealInfinity)
     signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
     x
 end
@@ -160,13 +160,13 @@ show(io::IO, y::RealInfinity) = print(io, string(y))
 isless(x::RealInfinity, y::RealInfinity) = signbit(x) && !signbit(y)
 for Typ in (:Number, :Real, :Integer, :AbstractFloat)
     @eval begin
-        isless(x::RealInfinity, y::$Typ) = signbit(x) && y ≠ -∞
-        isless(x::$Typ, y::RealInfinity) = !signbit(y) && x ≠ ∞
+        isless(x::RealInfinity, y::$Typ) = signbit(x) && y ≠ -∞
+        isless(x::$Typ, y::RealInfinity) = !signbit(y) && x ≠ ∞
         +(::$Typ, y::RealInfinity) = y
         +(y::RealInfinity, ::$Typ) = y
         -(y::RealInfinity, ::$Typ) = y
         -(::$Typ, y::RealInfinity) = -y
-        function *(a::$Typ, y::RealInfinity) 
+        function *(a::$Typ, y::RealInfinity)
             iszero(a) && throw(ArgumentError("Cannot multiply $a * $y"))
             a > 0 ? y : (-y)
         end
@@ -181,17 +181,17 @@ end
 
 
 
-function -(::Infinity, y::RealInfinity) 
+function -(::Infinity, y::RealInfinity)
     signbit(y) || throw(ArgumentError("Cannot subtract ∞ from ∞"))
     ∞
 end
 
-function -(x::RealInfinity, ::Infinity) 
+function -(x::RealInfinity, ::Infinity)
     signbit(x) || throw(ArgumentError("Cannot subtract ∞ from ∞"))
     x
 end
 
-function -(x::RealInfinity, y::RealInfinity) 
+function -(x::RealInfinity, y::RealInfinity)
     signbit(x) == !signbit(y) || throw(ArgumentError("Cannot subtract ∞ from ∞"))
     x
 end
@@ -199,7 +199,7 @@ end
 -(y::RealInfinity) = RealInfinity(!y.signbit)
 
 function +(x::RealInfinity, y::RealInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
+    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
     x
 end
 
@@ -299,8 +299,8 @@ show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 ==(y::Number, x::ComplexInfinity) = x == y
 
 isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.signbit && !y.signbit
-isless(x::Number, y::ComplexInfinity{Bool}) = !y.signbit && x ≠ ∞
-isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
+isless(x::Number, y::ComplexInfinity{Bool}) = !y.signbit && x ≠ ∞
+isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 

@@ -18,12 +18,12 @@ using Infinities, Base64, Base.Checked, Test
 
     @testset "equality" begin
         @test ℵ₀ == ℵ₀
-        @test ℵ₀ ≠ ℵ₁
+        @test ℵ₀ ≠ ℵ₁
         @test ℵ₀ == ∞ && ∞ == ℵ₀
-        @test ℵ₁ ≠ ∞ && ∞ ≠ ℵ₁
-        @test ℵ₀ ≠ -∞ && -∞ ≠ ℵ₀
+        @test ℵ₁ ≠ ∞ && ∞ ≠ ℵ₁
+        @test ℵ₀ ≠ -∞ && -∞ ≠ ℵ₀
         @test ℵ₀ == Inf && Inf == ℵ₀
-        @test ℵ₀ ≠ 5 && 5 ≠ ℵ₀
+        @test ℵ₀ ≠ 5 && 5 ≠ ℵ₀
     end
 
     @testset "inequalities" begin
@@ -38,16 +38,16 @@ using Infinities, Base64, Base.Checked, Test
         @test ℵ₀ ≤ ℵ₀ && ℵ₀ ≥ ℵ₀
         @test ℵ₀ < ℵ₁ && ℵ₀ ≤ ℵ₁
         @test !(ℵ₀ > ℵ₁) && !(ℵ₀ ≥ ℵ₁)
-        @test ℵ₁ ≤ ℵ₁ && ℵ₁ ≥ ℵ₁ && !(ℵ₁ > ℵ₁) && !(ℵ₁ < ℵ₁)
+        @test ℵ₁ ≤ ℵ₁ && ℵ₁ ≥ ℵ₁ && !(ℵ₁ > ℵ₁) && !(ℵ₁ < ℵ₁)
 
         @test !(∞ < ℵ₀) && ∞ ≤ ℵ₀
         @test !(∞ > ℵ₀) && ∞ ≥ ℵ₀
         @test ∞ < ℵ₁ && ∞ ≤ ℵ₁
         @test !(∞ > ℵ₁) && !(∞ ≥ ℵ₁)
-        @test ℵ₀ ≤ ∞
+        @test ℵ₀ ≤ ∞
         @test !(ℵ₁ < ∞) && !(ℵ₁ ≤ ∞)
         @test !(ℵ₀ > ∞)
-        @test ℵ₁ > ∞ && ℵ₁ ≥ ∞
+        @test ℵ₁ > ∞ && ℵ₁ ≥ ∞
 
         @test -∞ < ℵ₀ && -∞ ≤ ℵ₀
         @test -∞ < ℵ₁ && -∞ ≤ ℵ₁
@@ -56,18 +56,18 @@ using Infinities, Base64, Base.Checked, Test
         @test !(-∞ > ℵ₀) && !(-∞ ≥ ℵ₀)
         @test ℵ₀ > -∞
         @test ℵ₁ > -∞ && ℵ₁ ≥ -∞
-        @test ℵ₀ ≤ RealInfinity()
-        @test !(ℵ₀ ≤ -∞)
-        @test !(ℵ₁ ≤ RealInfinity())
+        @test ℵ₀ ≤ RealInfinity()
+        @test !(ℵ₀ ≤ -∞)
+        @test !(ℵ₁ ≤ RealInfinity())
 
         @test Inf < ℵ₁ && !(ℵ₁ < Inf)
         @test !(Inf < ℵ₀) && !(ℵ₀ < Inf)
         @test (5 < ℵ₀) && !(ℵ₀ < 5)
-        @test 5 ≤ ℵ₁ && !(5 ≥ ℵ₁) && !(ℵ₁ ≤ 5) && ℵ₁ > 5
-        @test 5 < ℵ₀ && 5 ≤ ℵ₀
-        @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
+        @test 5 ≤ ℵ₁ && !(5 ≥ ℵ₁) && !(ℵ₁ ≤ 5) && ℵ₁ > 5
+        @test 5 < ℵ₀ && 5 ≤ ℵ₀
+        @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
         @test ℵ₀ > 5 && ℵ₀ ≥ 5
-        @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
+        @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
     end
 
     @testset "min/max" begin
@@ -102,7 +102,7 @@ using Infinities, Base64, Base.Checked, Test
         @test ℵ₀ + 5.1 ≡ ∞
         @test 5.1 + ℵ₀ ≡ ∞
         @test 5.1 - ℵ₀ ≡ -∞
-        
+
         @test ℵ₀ + ∞ == ∞
         @test ∞ + ℵ₀ == ∞
         @test ℵ₀ + RealInfinity() == ∞
