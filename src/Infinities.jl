@@ -138,8 +138,6 @@ _convert(::Type{Float64}, x::RealInfinity) = sign(x)*Inf64
 _convert(::Type{T}, x::RealInfinity) where {T<:Real} = sign(x)*convert(T, Inf)
 (::Type{T})(x::RealInfinity) where {T<:Real} = _convert(T, x)
 
-
-signbit(y::RealInfinity) = y.signbit
 sign(y::RealInfinity) = 1-2signbit(y)
 angle(x::RealInfinity) = π*signbit(x)
 mod(::RealInfinity, ::RealInfinity) = NotANumber()
