@@ -107,15 +107,17 @@ function mod(x::Real, ::Infinity)
     x
 end
 
+abstract type RealInfinity <: Real end
+struct PositiveInfinity <: RealInfinity end
+struct NegativeInfinity <: RealInfinity end
 
+signbit(::PositiveInfinity) = false
+signbit(::NegativeInfinity) = true
 
-struct RealInfinity <: Real
-    signbit::Bool
-end
-
-RealInfinity() = RealInfinity(false)
-RealInfinity(::Infinity) = RealInfinity()
+RealInfinity() = PositiveInfinity()
+RealInfinity(::Infinity) = PositiveInfinity()
 RealInfinity(x::RealInfinity) = x
+RealInfinity(x::Bool) = ifelse(x, NegativeInfinity(), PositiveInfinity())
 
 -(::Infinity) = RealInfinity(true)
 -(x::Number, ::Infinity) = x + (-∞)
@@ -127,7 +129,7 @@ RealInfinity(x::RealInfinity) = x
 isinf(::RealInfinity) = true
 isfinite(::RealInfinity) = false
 
-promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity
+promote_rule(::Type{Infinity}, ::Type{<:RealInfinity}) = RealInfinity
 _convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
@@ -150,9 +152,9 @@ end
 string(y::RealInfinity) = signbit(y) ? "-∞" : "+∞"
 show(io::IO, y::RealInfinity) = print(io, string(y))
 
-==(x::RealInfinity, y::Infinity) = !x.signbit
-==(y::Infinity, x::RealInfinity) = !x.signbit
-==(x::RealInfinity, y::RealInfinity) = x.signbit == y.signbit
+==(x::RealInfinity, y::Infinity) = !signbit(x)
+==(y::Infinity, x::RealInfinity) = !signbit(x)
+==(x::RealInfinity, y::RealInfinity) = signbit(x) == signbit(y)
 
 ==(x::RealInfinity, y::Number) = isinf(y) && signbit(y) == signbit(x)
 ==(y::Number, x::RealInfinity) = x == y
@@ -196,7 +198,7 @@ function -(x::RealInfinity, y::RealInfinity)
     x
 end
 
--(y::RealInfinity) = RealInfinity(!y.signbit)
+-(y::RealInfinity) = RealInfinity(!signbit(y))
 
 function +(x::RealInfinity, y::RealInfinity)
     x == y || throw(ArgumentError("Angles must be the same to add ∞"))
@@ -231,12 +233,12 @@ for OP in (:<,:≤)
 end
 
 
-min(x::RealInfinity, y::RealInfinity) = RealInfinity(x.signbit | y.signbit)
-max(x::RealInfinity, y::RealInfinity) = RealInfinity(x.signbit & y.signbit)
-min(x::Real, y::RealInfinity) = y.signbit ? y : x
-max(x::Real, y::RealInfinity) = y.signbit ? x : y
-min(x::RealInfinity, y::Real) = x.signbit ? x : y
-max(x::RealInfinity, y::Real) = x.signbit ? y : x
+min(x::RealInfinity, y::RealInfinity) = RealInfinity(signbit(x) | signbit(y))
+max(x::RealInfinity, y::RealInfinity) = RealInfinity(signbit(x) & signbit(y))
+min(x::Real, y::RealInfinity) = signbit(y) ? y : x
+max(x::Real, y::RealInfinity) = signbit(y) ? x : y
+min(x::RealInfinity, y::Real) = signbit(x) ? x : y
+max(x::RealInfinity, y::Real) = signbit(x) ? y : x
 min(x::RealInfinity, ::Infinity) = x
 max(::RealInfinity, ::Infinity) = ∞
 min(::Infinity, x::RealInfinity) = x
@@ -275,7 +277,7 @@ isfinite(::ComplexInfinity) = false
 
 
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
+promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
 convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T}(x)
