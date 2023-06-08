@@ -2,9 +2,6 @@ using Infinities, Base64, Test
 import Infinities: Infinity
 
 using Aqua
-@testset "Project quality" begin
-    Aqua.test_all(Infinities, ambiguities=false)
-end
 
 @testset "∞" begin
     @testset "∞" begin
@@ -13,8 +10,6 @@ end
         @test ∞ == ∞
         @test ∞ == Inf
         @test Inf == ∞
-
-        @test +∞ ≡ ∞
 
         @testset "inequalities" begin
             @test isless(1, ∞)
@@ -38,7 +33,7 @@ end
         @test ∞ - 1 ≡ ∞ - 1.0 ≡ ∞
         @test *(∞) ≡ ∞
         @test ∞*∞ ≡ ∞
-        @test ∞ - ∞ isa NotANumber
+        @test_throws ArgumentError ∞ - ∞
 
         @test one(∞) ≡ one(Infinity) ≡ oneunit(∞) ≡ oneunit(Infinity) ≡ 1
         @test zero(∞) ≡ 0
@@ -105,7 +100,7 @@ end
         @test promote(∞, RealInfinity()) ≡ (RealInfinity(),RealInfinity())
 
         @test -∞ ≡ RealInfinity(true)
-        @test +∞ ≡ ∞
+        @test +∞ ≡ RealInfinity()
 
         @test sign(-∞) == -1
         @test angle(-∞) ≈ π
@@ -164,7 +159,7 @@ end
         @test_throws ArgumentError (1∞) + (-∞)
         @test_throws ArgumentError (-∞) + ∞
 
-        @test ∞ - (-∞) ≡ ∞
+        @test ∞ - (-∞) ≡ +∞
         @test (-∞) - ∞ ≡ -∞
         @test (1∞) - (-∞) ≡ 1∞
         @test (-∞) - (1∞) ≡ -∞
@@ -295,3 +290,7 @@ end
 
 
 include("test_cardinality.jl")
+
+@testset "Project quality" begin
+    Aqua.test_all(Infinities)
+end

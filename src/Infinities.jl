@@ -47,8 +47,6 @@ isinf(::Infinity) = true
 isfinite(::Infinity) = false
 
 ==(x::Infinity, y::Infinity) = true
-==(x::Infinity, y::Number) = isinf(y) && angle(y) == angle(x)
-==(y::Number, x::Infinity) = x == y
 
 isless(x::Infinity, y::Infinity) = false
 isless(x::Real, y::Infinity) = isfinite(x) || signbit(x)
@@ -71,17 +69,12 @@ max(::Real, ::Infinity) = ∞
 min(::Infinity, x::Real) = x
 max(::Infinity, ::Real) = ∞
 
-+(::Infinity) = ∞
 +(::Infinity, ::Infinity) = ∞
 +(::Number, y::Infinity) = ∞
 +(::Infinity, ::Number) = ∞
--(::Infinity, ::Number) = ∞
 
 +(::Integer, y::Infinity) = ∞
 +(::Infinity, ::Integer) = ∞
--(::Infinity, ::Integer) = ∞
-
--(::Infinity, ::Infinity) = NotANumber()
 
 # ⊻ is xor
 *(::Infinity) = ∞
@@ -100,7 +93,6 @@ div(::T, ::Infinity) where T<:Real = zero(T)
 fld(x::T, ::Infinity) where T<:Real = signbit(x) ? -one(T) : zero(T)
 cld(x::T, ::Infinity) where T<:Real = signbit(x) ? zero(T) : one(T)
 
-mod(::Infinity, ::Infinity) = NotANumber()
 mod(::Infinity, ::Real) = NotANumber()
 function mod(x::Real, ::Infinity)
     x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
@@ -118,11 +110,7 @@ RealInfinity(::Infinity) = RealInfinity()
 RealInfinity(x::RealInfinity) = x
 
 -(::Infinity) = RealInfinity(true)
--(x::Number, ::Infinity) = x + (-∞)
--(x::Integer, ::Infinity) = x + (-∞)
--(x::Complex, ::Infinity) = x + (-∞)
--(x::Complex{Bool}, ::Infinity) = x + (-∞)
-
++(::Infinity) = RealInfinity()
 
 isinf(::RealInfinity) = true
 isfinite(::RealInfinity) = false
@@ -136,11 +124,14 @@ _convert(::Type{Float64}, x::RealInfinity) = sign(x)*Inf64
 _convert(::Type{T}, x::RealInfinity) where {T<:Real} = sign(x)*convert(T, Inf)
 (::Type{T})(x::RealInfinity) where {T<:Real} = _convert(T, x)
 
+for Typ in (RealInfinity, Infinity)
+    @eval Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x))
+end
 
 signbit(y::RealInfinity) = y.signbit
 sign(y::RealInfinity) = 1-2signbit(y)
 angle(x::RealInfinity) = π*signbit(x)
-mod(::RealInfinity, ::RealInfinity) = NotANumber()
+
 mod(::RealInfinity, ::Real) = NotANumber()
 function mod(x::Real, y::RealInfinity)
     signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
@@ -154,9 +145,6 @@ show(io::IO, y::RealInfinity) = print(io, string(y))
 ==(y::Infinity, x::RealInfinity) = !x.signbit
 ==(x::RealInfinity, y::RealInfinity) = x.signbit == y.signbit
 
-==(x::RealInfinity, y::Number) = isinf(y) && signbit(y) == signbit(x)
-==(y::Number, x::RealInfinity) = x == y
-
 isless(x::RealInfinity, y::RealInfinity) = signbit(x) && !signbit(y)
 for Typ in (:Number, :Real, :Integer, :AbstractFloat)
     @eval begin
@@ -164,8 +152,6 @@ for Typ in (:Number, :Real, :Integer, :AbstractFloat)
         isless(x::$Typ, y::RealInfinity) = !signbit(y) && x ≠ ∞
         +(::$Typ, y::RealInfinity) = y
         +(y::RealInfinity, ::$Typ) = y
-        -(y::RealInfinity, ::$Typ) = y
-        -(::$Typ, y::RealInfinity) = -y
         function *(a::$Typ, y::RealInfinity)
             iszero(a) && throw(ArgumentError("Cannot multiply $a * $y"))
             a > 0 ? y : (-y)
@@ -175,26 +161,6 @@ end
 
 ≤(::RealInfinity, ::Infinity) = true
 ≤(::Infinity, s::RealInfinity) = !signbit(s)
-<(s::RealInfinity, ::Infinity) = signbit(s)
-<(::Infinity, ::RealInfinity) = false
-
-
-
-
-function -(::Infinity, y::RealInfinity)
-    signbit(y) || throw(ArgumentError("Cannot subtract ∞ from ∞"))
-    ∞
-end
-
-function -(x::RealInfinity, ::Infinity)
-    signbit(x) || throw(ArgumentError("Cannot subtract ∞ from ∞"))
-    x
-end
-
-function -(x::RealInfinity, y::RealInfinity)
-    signbit(x) == !signbit(y) || throw(ArgumentError("Cannot subtract ∞ from ∞"))
-    x
-end
 
 -(y::RealInfinity) = RealInfinity(!y.signbit)
 
@@ -268,8 +234,6 @@ ComplexInfinity(::Infinity) = ComplexInfinity()
 ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x))
 ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
 
-
-
 isinf(::ComplexInfinity) = true
 isfinite(::ComplexInfinity) = false
 
@@ -289,10 +253,6 @@ mod(::ComplexInfinity{<:Integer}, ::Integer) = NotANumber()
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
-==(x::ComplexInfinity, y::Infinity) = x.signbit == 0
-==(y::Infinity, x::ComplexInfinity) = x.signbit == 0
-==(x::ComplexInfinity, y::RealInfinity) = x.signbit == signbit(y)
-==(y::RealInfinity, x::ComplexInfinity) = x.signbit == signbit(y)
 ==(x::ComplexInfinity, y::ComplexInfinity) = x.signbit == y.signbit
 
 ==(x::ComplexInfinity, y::Number) = isinf(y) && angle(y) == angle(x)
@@ -315,22 +275,16 @@ end
 +(x::RealInfinity, y::ComplexInfinity) = ComplexInfinity(x)+y
 +(::Number, y::ComplexInfinity) = y
 +(y::ComplexInfinity, ::Number) = y
--(y::ComplexInfinity, ::Number) = y
--(::Number, y::ComplexInfinity) = -y
 
 +(::Complex, ::Infinity) = ComplexInfinity()
 +(::Infinity, ::Complex) = ComplexInfinity()
--(::Infinity, ::Complex) = ComplexInfinity()
 +(::Complex{Bool}, ::Infinity) = ComplexInfinity()
 +(::Infinity, ::Complex{Bool}) = ComplexInfinity()
--(::Infinity, ::Complex{Bool}) = ComplexInfinity()
 
 +(::Complex, y::RealInfinity) = ComplexInfinity(y)
 +(y::RealInfinity, ::Complex) = ComplexInfinity(y)
--(y::RealInfinity, ::Complex) = ComplexInfinity(y)
 +(::Complex{Bool}, y::RealInfinity) = ComplexInfinity(y)
 +(y::RealInfinity, ::Complex{Bool}) = ComplexInfinity(y)
--(y::RealInfinity, ::Complex{Bool}) = ComplexInfinity(y)
 
 
 # ⊻ is xor
@@ -347,11 +301,14 @@ end
 *(a::Number, y::ComplexInfinity) = ComplexInfinity(y.signbit+angle(a)/π)
 *(y::ComplexInfinity, a::Number) = a*y
 
-*(a::Complex, y::Infinity) = a*ComplexInfinity(y)
-*(y::Infinity, a::Complex) = ComplexInfinity(y)*a
-
-*(a::Complex,y::RealInfinity) = a*ComplexInfinity(y)
-*(y::RealInfinity, a::Complex) = ComplexInfinity(y)*a
+for Typ in (Complex, Complex{Bool})
+    @eval begin
+        *(a::$Typ, y::Infinity) = a*ComplexInfinity(y)
+        *(y::Infinity, a::$Typ) = ComplexInfinity(y)*a
+        *(a::$Typ,y::RealInfinity) = a*ComplexInfinity(y)
+        *(y::RealInfinity, a::$Typ) = ComplexInfinity(y)*a
+    end
+end
 
 for OP in (:fld,:cld,:div)
   @eval $OP(y::ComplexInfinity, a::Number) = y*(1/sign(a))
@@ -375,4 +332,5 @@ Base.hash(::Infinity) = 0x020113134b21797f # made up
 
 
 include("cardinality.jl")
+include("algebra.jl")
 end # module

@@ -53,11 +53,9 @@ end
 ==(::Infinity, y::InfiniteCardinal) = ℵ₀ == y
 ==(::InfiniteCardinal{0}, y::RealInfinity) = ∞ == y
 ==(x::RealInfinity, ::InfiniteCardinal{0}) = x == ∞
-==(::InfiniteCardinal, y::Real) = ∞ == y
-==(x::Real, ::InfiniteCardinal) = x == ∞
+
 
 @generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
-isless(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 isless(x::Real, ::InfiniteCardinal{0}) = isfinite(x)
 isless(x::Real, ::InfiniteCardinal) = true
 isless(x::AbstractFloat, ::InfiniteCardinal{0}) = isfinite(x)
@@ -69,32 +67,26 @@ isless(x::InfiniteCardinal, y::AbstractFloat) = false
 @generated ≤(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≤ M))
 
 ≤(::InfiniteCardinal{0}, ::InfiniteCardinal) = true
-<(::InfiniteCardinal, ::InfiniteCardinal{0}) = false
 
-
-<(x::Real, ::InfiniteCardinal{0}) = x < ∞
-<(x::Real, ::InfiniteCardinal) = true
-≤(x::Real, ::InfiniteCardinal) = true
-<(::InfiniteCardinal, x::Real) = false
-≤(::InfiniteCardinal{0}, x::Real) = ∞ ≤ x
-≤(::InfiniteCardinal, x::Real) = false
 ≤(::InfiniteCardinal{0}, x::RealInfinity) = ∞ ≤ x
 ≤(::InfiniteCardinal, x::RealInfinity) = false
-<(::InfiniteCardinal, x::RealInfinity) = false
 
+for Typ in (Real, BigInt, Rational, BigFloat)
+    @eval begin
+        ≤(x::$Typ, ::InfiniteCardinal) = true
+        ≤(::InfiniteCardinal{0}, x::$Typ) = ∞ ≤ x
+        ≤(::InfiniteCardinal, x::$Typ) = false
+        <(::InfiniteCardinal, x::$Typ) = false
+        <(x::$Typ, ::InfiniteCardinal{0}) = x < ∞
+        <(x::$Typ, ::InfiniteCardinal) = true
+    end
+end
 
-<(::Infinity, ::InfiniteCardinal{0}) = false
-<(::Infinity, ::InfiniteCardinal) = true
 ≤(::Infinity, ::InfiniteCardinal) = true
-<(::InfiniteCardinal, ::Infinity) = false
 ≤(::InfiniteCardinal{0}, ::Infinity) = true
 ≤(::InfiniteCardinal, ::Infinity) = false
 
-
-<(x::RealInfinity, ::InfiniteCardinal{0}) = x < ∞
-<(x::RealInfinity, ::InfiniteCardinal) = true
 ≤(x::RealInfinity, ::InfiniteCardinal) = true
-
 
 @generated min(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(min(N,M))}())
 @generated max(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(max(N,M))}())
@@ -115,6 +107,7 @@ max(ℵ::InfiniteCardinal, ::Infinity) = ℵ
 
 *(x::InfiniteCardinal) = x
 *(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
+*(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
 *(::InfiniteCardinal{N}, ::Infinity) where N = InfiniteCardinal{N}()
 *(::Infinity, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
 function *(a::Integer, b::InfiniteCardinal)
@@ -122,10 +115,14 @@ function *(a::Integer, b::InfiniteCardinal)
     b
 end
 
-*(a::Number, b::InfiniteCardinal) = a * ∞
+for Typ in (Number, Complex, ComplexInfinity, Complex{Bool}, RealInfinity, Rational)
+    @eval begin
+        *(a::$Typ, b::InfiniteCardinal) = a * ∞
+        *(a::InfiniteCardinal, b::$Typ) = b*a
+    end
+end
 
 *(a::InfiniteCardinal, b::Integer) = b*a
-*(a::InfiniteCardinal, b::Number) = b*a
 
 +(x::InfiniteCardinal) = x
 +(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
@@ -139,35 +136,47 @@ end
 -(::InfiniteCardinal) = -∞
 -(x::Integer, ::InfiniteCardinal) = x - ∞
 
-for op in (:+, :-)
+for op in (:+,)
+    for Typ in (Number, Complex{Bool}, Rational, Complex)
+        @eval begin
+            $op(x::$Typ, ::InfiniteCardinal) = $op(x, ∞)
+            $op(::InfiniteCardinal, x::$Typ) = $op(∞, x)
+        end
+    end
     @eval begin
-        $op(x::Number, ::InfiniteCardinal) = $op(x, ∞)
-        $op(::InfiniteCardinal, x::Number) = $op(∞, x)
         $op(x::RealInfinity, ::InfiniteCardinal) = $op(x, ∞)
         $op(::InfiniteCardinal, x::RealInfinity) = $op(∞, x)
         $op(::Infinity, ::InfiniteCardinal) = $op(∞, ∞)
         $op(::InfiniteCardinal, ::Infinity) = $op(∞, ∞)
+        $op(x::ComplexInfinity, ::InfiniteCardinal) = $op(x, ∞)
+        $op(::InfiniteCardinal, x::ComplexInfinity) = $op(∞, x)
     end
 end
 
 for OP in (:fld,:cld,:div)
+    for Typ in (Real, Rational)
+        @eval begin
+            $OP(x::InfiniteCardinal, ::$Typ) = x
+        end
+    end
     @eval begin
-        $OP(x::InfiniteCardinal, ::Real) = x
         $OP(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
+        $OP(::Infinity, ::InfiniteCardinal) = NotANumber()
+        $OP(::InfiniteCardinal, ::Infinity) = NotANumber()
     end
 end
-
-div(::T, ::InfiniteCardinal) where T<:Real = zero(T)
-fld(x::T, ::InfiniteCardinal) where T<:Real = signbit(x) ? -one(T) : zero(T)
-cld(x::T, ::InfiniteCardinal) where T<:Real = signbit(x) ? zero(T) : one(T)
-
-mod(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
-mod(::InfiniteCardinal, ::Real) = NotANumber()
-function mod(x::Real, ::InfiniteCardinal)
-    x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
-    x
+for Typ in (Real, Rational)
+    @eval begin
+        div(::T, ::InfiniteCardinal) where T <: $Typ = zero(T)
+        fld(x::T, ::InfiniteCardinal) where T <: $Typ = signbit(x) ? -one(T) : zero(T)
+        cld(x::T, ::InfiniteCardinal) where T <: $Typ = signbit(x) ? zero(T) : one(T)
+        function mod(x::$Typ, ::InfiniteCardinal)
+            x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
+            x
+        end
+        mod(::InfiniteCardinal, ::$Typ) = NotANumber()
+    end
 end
-
 
 Base.to_index(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
 Base.to_shape(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
@@ -180,11 +189,14 @@ Base.to_shape(dims::Tuple{Vararg{Union{Infinity, Integer, AbstractUnitRange}}}) 
 
 Base.Checked.checked_sub(::Integer, ::InfiniteCardinal{0}) = -∞
 Base.Checked.checked_sub(::InfiniteCardinal{0}, ::Integer) = ℵ₀
+Base.Checked.checked_sub(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = NotANumber()
 Base.Checked.checked_add(::Integer, ::InfiniteCardinal{0}) = ℵ₀
 Base.Checked.checked_add(::InfiniteCardinal{0}, ::Integer) = ℵ₀
+Base.Checked.checked_add(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀
 
 Base.Checked.checked_mul(x::Integer, ::InfiniteCardinal{0}) = sign(x)*∞
 Base.Checked.checked_mul(::InfiniteCardinal{0}, x::Integer) = sign(x)*∞
+Base.Checked.checked_mul(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ∞*∞
 
 
 ##
