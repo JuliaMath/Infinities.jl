@@ -196,7 +196,7 @@ Base.Checked.checked_add(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀
 
 Base.Checked.checked_mul(x::Integer, ::InfiniteCardinal{0}) = sign(x)*∞
 Base.Checked.checked_mul(::InfiniteCardinal{0}, x::Integer) = sign(x)*∞
-Base.Checked.checked_mul(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ∞*∞
+Base.Checked.checked_mul(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀
 
 
 ##
