@@ -37,6 +37,7 @@ _convert(::Type{T}, ::Infinity) where {T<:Real} = convert(T, Inf)::T
 
 sign(y::Infinity) = 1
 angle(x::Infinity) = 0
+signbit(::Infinity) = false
 
 one(::Type{Infinity}) = 1
 oneunit(::Type{Infinity}) = 1
@@ -45,29 +46,6 @@ zero(::Infinity) = 0
 
 isinf(::Infinity) = true
 isfinite(::Infinity) = false
-
-==(x::Infinity, y::Infinity) = true
-
-isless(x::Infinity, y::Infinity) = false
-isless(x::Real, y::Infinity) = isfinite(x) || signbit(x)
-isless(x::AbstractFloat, y::Infinity) = isless(x, convert(typeof(x), y))
-isless(x::Infinity, y::AbstractFloat) = false
-isless(x::Infinity, y::Real) = false
-
-≤(::Infinity, ::Infinity) = true
-<(::Infinity, ::Infinity) = false
-
-<(x::Real, ::Infinity) = isfinite(x) || signbit(x)
-≤(::Real, ::Infinity) = true
-<(::Infinity, ::Real) = false
-≤(::Infinity, y::Real) = isinf(y) && !signbit(y)
-
-min(::Infinity, ::Infinity) = ∞
-max(::Infinity, ::Infinity) = ∞
-min(x::Real, ::Infinity) = x
-max(::Real, ::Infinity) = ∞
-min(::Infinity, x::Real) = x
-max(::Infinity, ::Real) = ∞
 
 +(::Infinity, ::Infinity) = ∞
 +(::Number, y::Infinity) = ∞
@@ -145,11 +123,9 @@ show(io::IO, y::RealInfinity) = print(io, string(y))
 ==(y::Infinity, x::RealInfinity) = !x.signbit
 ==(x::RealInfinity, y::RealInfinity) = x.signbit == y.signbit
 
-isless(x::RealInfinity, y::RealInfinity) = signbit(x) && !signbit(y)
+
 for Typ in (:Number, :Real, :Integer, :AbstractFloat)
     @eval begin
-        isless(x::RealInfinity, y::$Typ) = signbit(x) && y ≠ -∞
-        isless(x::$Typ, y::RealInfinity) = !signbit(y) && x ≠ ∞
         +(::$Typ, y::RealInfinity) = y
         +(y::RealInfinity, ::$Typ) = y
         function *(a::$Typ, y::RealInfinity)
@@ -186,30 +162,6 @@ end
 *(y::RealInfinity, a::Real) = a*y
 *(y::RealInfinity, a::Integer) = a*y
 
-<(x::RealInfinity, y::RealInfinity) = signbit(x) & !signbit(y)
-≤(x::RealInfinity, y::RealInfinity) = signbit(x) | !signbit(y)
-
-for OP in (:<,:≤)
-    @eval begin
-        $OP(x::Real, y::RealInfinity) = !signbit(y)
-        $OP(y::RealInfinity, x::Real) = signbit(y)
-    end
-end
-
-
-min(x::RealInfinity, y::RealInfinity) = RealInfinity(x.signbit | y.signbit)
-max(x::RealInfinity, y::RealInfinity) = RealInfinity(x.signbit & y.signbit)
-min(x::Real, y::RealInfinity) = y.signbit ? y : x
-max(x::Real, y::RealInfinity) = y.signbit ? x : y
-min(x::RealInfinity, y::Real) = x.signbit ? x : y
-max(x::RealInfinity, y::Real) = x.signbit ? y : x
-min(x::RealInfinity, ::Infinity) = x
-max(::RealInfinity, ::Infinity) = ∞
-min(::Infinity, x::RealInfinity) = x
-max(::Infinity, x::RealInfinity) = ∞
-
-
-
 ######
 # ComplexInfinity
 #######
@@ -236,7 +188,8 @@ ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
 
 isinf(::ComplexInfinity) = true
 isfinite(::ComplexInfinity) = false
-
+signbit(y::ComplexInfinity{Bool}) = y.signbit
+signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
 
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
@@ -252,15 +205,6 @@ mod(::ComplexInfinity{<:Integer}, ::Integer) = NotANumber()
 
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
-
-==(x::ComplexInfinity, y::ComplexInfinity) = x.signbit == y.signbit
-
-==(x::ComplexInfinity, y::Number) = isinf(y) && angle(y) == angle(x)
-==(y::Number, x::ComplexInfinity) = x == y
-
-isless(x::ComplexInfinity{Bool}, y::ComplexInfinity{Bool}) = x.signbit && !y.signbit
-isless(x::Number, y::ComplexInfinity{Bool}) = !y.signbit && x ≠ ∞
-isless(x::ComplexInfinity{Bool}, y::Number) = x.signbit && y ≠ -∞
 
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 
@@ -314,23 +258,11 @@ for OP in (:fld,:cld,:div)
   @eval $OP(y::ComplexInfinity, a::Number) = y*(1/sign(a))
 end
 
-min(x::ComplexInfinity{B}, y::ComplexInfinity{B}) where B<:Integer = sign(x) == -1 ? x : y
-max(x::ComplexInfinity{B}, ::ComplexInfinity{B}) where B<:Integer = sign(x) == 1 ? x : y
-min(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? x : y
-min(x::ComplexInfinity{B}, y::Real) where B<:Integer = min(y,x)
-max(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? y : x
-max(x::ComplexInfinity{B}, y::Real) where B<:Integer = max(y,x)
-
-for OP in (:<,:≤)
-    @eval begin
-        $OP(x::Real, y::ComplexInfinity{B}) where B<:Integer = sign(y) ==  1
-        $OP(y::ComplexInfinity{B}, x::Real) where B<:Integer = sign(y) == -1
-    end
-end
-
 Base.hash(::Infinity) = 0x020113134b21797f # made up
 
 
 include("cardinality.jl")
+include("compare.jl")
 include("algebra.jl")
+include("ambiguities.jl")
 end # module

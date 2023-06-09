@@ -47,63 +47,10 @@ end
 
 ==(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = true
 ==(::InfiniteCardinal, ::InfiniteCardinal)= false
-==(::InfiniteCardinal, ::Int) = false
-==(::Int, ::InfiniteCardinal) = false
-==(x::InfiniteCardinal, ::Infinity) = x == ℵ₀
-==(::Infinity, y::InfiniteCardinal) = ℵ₀ == y
 ==(::InfiniteCardinal{0}, y::RealInfinity) = ∞ == y
 ==(x::RealInfinity, ::InfiniteCardinal{0}) = x == ∞
 
-
-@generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
-isless(x::Real, ::InfiniteCardinal{0}) = isfinite(x)
-isless(x::Real, ::InfiniteCardinal) = true
-isless(x::AbstractFloat, ::InfiniteCardinal{0}) = isfinite(x)
-isless(x::AbstractFloat, ::InfiniteCardinal) = true
-isless(::InfiniteCardinal, y::Real) = false
-isless(x::InfiniteCardinal, y::AbstractFloat) = false
-
-@generated <(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N < M))
 @generated ≤(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≤ M))
-
-≤(::InfiniteCardinal{0}, ::InfiniteCardinal) = true
-
-≤(::InfiniteCardinal{0}, x::RealInfinity) = ∞ ≤ x
-≤(::InfiniteCardinal, x::RealInfinity) = false
-
-for Typ in (Real, BigInt, Rational, BigFloat)
-    @eval begin
-        ≤(x::$Typ, ::InfiniteCardinal) = true
-        ≤(::InfiniteCardinal{0}, x::$Typ) = ∞ ≤ x
-        ≤(::InfiniteCardinal, x::$Typ) = false
-        <(::InfiniteCardinal, x::$Typ) = false
-        <(x::$Typ, ::InfiniteCardinal{0}) = x < ∞
-        <(x::$Typ, ::InfiniteCardinal) = true
-    end
-end
-
-≤(::Infinity, ::InfiniteCardinal) = true
-≤(::InfiniteCardinal{0}, ::Infinity) = true
-≤(::InfiniteCardinal, ::Infinity) = false
-
-≤(x::RealInfinity, ::InfiniteCardinal) = true
-
-@generated min(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(min(N,M))}())
-@generated max(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :(InfiniteCardinal{$(max(N,M))}())
-min(x::Real, ::InfiniteCardinal) = x
-max(::Real, ℵ::InfiniteCardinal) = ℵ
-min(::InfiniteCardinal, x::Real) = x
-max(ℵ::InfiniteCardinal, ::Real) = ℵ
-
-min(x::RealInfinity, ::InfiniteCardinal) = min(x, ∞)
-max(::RealInfinity, ℵ::InfiniteCardinal) = ℵ
-min(::InfiniteCardinal, y::RealInfinity) = min(∞, y)
-max(ℵ::InfiniteCardinal, ::RealInfinity) = ℵ
-
-min(::Infinity, ::InfiniteCardinal) = ∞
-min(::InfiniteCardinal, ::Infinity) = ∞
-max(::Infinity, ℵ::InfiniteCardinal) = ℵ
-max(ℵ::InfiniteCardinal, ::Infinity) = ℵ
 
 *(x::InfiniteCardinal) = x
 *(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
