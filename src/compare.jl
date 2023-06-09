@@ -11,12 +11,8 @@ promote_rule(::Type{ComplexInfinity{T}}, ::Type{RealInfinity}) where T<:Integer 
 @inline _infeq(x, y) = _eq(x, y)
 @inline _infeq(x::InfiniteCardinal, y) = _eq(y, x)
 @inline _infeq(x::InfiniteCardinal, y::InfiniteCardinal) = !(x<y) & !(y<x)
-for Typ in (Number, Complex, AbstractIrrational, BigFloat, BigInt, Rational)
-    @eval begin
-        ==(x::AllInfinities, y::$Typ) = _eq(y, x)
-        ==(y::$Typ, x::AllInfinities) = _eq(y, x)
-    end
-end
+==(x::AllInfinities, y::Number) = _eq(y, x)
+==(y::Number, x::AllInfinities) = _eq(y, x)
 ==(x::AllInfinities, y::AllInfinities) = _infeq(x, y)
 
 # isless

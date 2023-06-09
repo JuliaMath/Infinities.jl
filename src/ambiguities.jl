@@ -4,7 +4,7 @@ for Typ in (Rational, BigInt, BigFloat)
         @eval $op(x::$Typ, y::InfiniteCardinal) = $fop(x, y)
     end
 end
-for Typ in (Rational, BigInt, BigFloat, Complex)
-    @eval ==(x::InfiniteCardinal, y::$Typ) = _eq(y, x)
-    @eval ==(x::$Typ, y::InfiniteCardinal) = _eq(x, y)
+for Typ in (Rational, BigInt, BigFloat, Complex, AbstractIrrational)
+    @eval ==(x::AllInfinities, y::$Typ) = _eq(y, x)
+    @eval ==(x::$Typ, y::AllInfinities) = _eq(x, y)
 end
