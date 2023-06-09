@@ -45,7 +45,7 @@ function Integer(x::ComplexInfinity)
     ℵ₀
 end
 
-*(x::InfiniteCardinal) = x
+
 *(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
 *(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
 *(::InfiniteCardinal{N}, ::Infinity) where N = InfiniteCardinal{N}()

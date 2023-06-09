@@ -48,7 +48,6 @@ isinf(::Infinity) = true
 isfinite(::Infinity) = false
 
 # ⊻ is xor
-*(::Infinity) = ∞
 *(::Infinity, ::Infinity) = ∞
 
 
