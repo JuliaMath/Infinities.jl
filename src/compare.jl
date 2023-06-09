@@ -1,9 +1,16 @@
 const AllInfinities = Union{Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal}
 const AllRealInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}}
-const allinfinitylist = (Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal) # useless
-const allrealinfinitylist = (Infinity, RealInfinity, ComplexInfinity{<:Integer})
+const allinfinitylist = (Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal)
+const allrealinfinitylist = (Infinity, RealInfinity, ComplexInfinity{<:Integer}) # useless
+const ExtendedComplex{T} = Union{Complex{T}, ComplexInfinity{T}}
 
 promote_rule(::Type{ComplexInfinity{T}}, ::Type{RealInfinity}) where T<:Integer = ComplexInfinity{T}
+
+@inline infpromote(x, y) = (x, y)
+@inline infpromote(x::ExtendedComplex, y::AllInfinities) = (x, ComplexInfinity(y))
+@inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = (x, y)
+@inline infpromote(x::Real, y::InfiniteCardinal) = (x, ∞)
+@inline infpromote(x::Integer, y::InfiniteCardinal) = (x, y)
 
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀

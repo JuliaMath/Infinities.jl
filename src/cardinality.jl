@@ -45,13 +45,6 @@ function Integer(x::ComplexInfinity)
     ℵ₀
 end
 
-==(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = true
-==(::InfiniteCardinal, ::InfiniteCardinal)= false
-==(::InfiniteCardinal{0}, y::RealInfinity) = ∞ == y
-==(x::RealInfinity, ::InfiniteCardinal{0}) = x == ∞
-
-@generated ≤(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≤ M))
-
 *(x::InfiniteCardinal) = x
 *(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
 *(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
@@ -72,33 +65,13 @@ end
 *(a::InfiniteCardinal, b::Integer) = b*a
 
 +(x::InfiniteCardinal) = x
-+(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
 
-+(::Integer, y::InfiniteCardinal) = y
-+(x::InfiniteCardinal, ::Integer) = x
 -(x::InfiniteCardinal, ::Integer) = x
 
 -(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = NotANumber()
 
 -(::InfiniteCardinal) = -∞
 -(x::Integer, ::InfiniteCardinal) = x - ∞
-
-for op in (:+,)
-    for Typ in (Number, Complex{Bool}, Rational, Complex)
-        @eval begin
-            $op(x::$Typ, ::InfiniteCardinal) = $op(x, ∞)
-            $op(::InfiniteCardinal, x::$Typ) = $op(∞, x)
-        end
-    end
-    @eval begin
-        $op(x::RealInfinity, ::InfiniteCardinal) = $op(x, ∞)
-        $op(::InfiniteCardinal, x::RealInfinity) = $op(∞, x)
-        $op(::Infinity, ::InfiniteCardinal) = $op(∞, ∞)
-        $op(::InfiniteCardinal, ::Infinity) = $op(∞, ∞)
-        $op(x::ComplexInfinity, ::InfiniteCardinal) = $op(x, ∞)
-        $op(::InfiniteCardinal, x::ComplexInfinity) = $op(∞, x)
-    end
-end
 
 for OP in (:fld,:cld,:div)
     for Typ in (Real, Rational)
@@ -117,11 +90,6 @@ for Typ in (Real, Rational)
         div(::T, ::InfiniteCardinal) where T <: $Typ = zero(T)
         fld(x::T, ::InfiniteCardinal) where T <: $Typ = signbit(x) ? -one(T) : zero(T)
         cld(x::T, ::InfiniteCardinal) where T <: $Typ = signbit(x) ? zero(T) : one(T)
-        function mod(x::$Typ, ::InfiniteCardinal)
-            x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
-            x
-        end
-        mod(::InfiniteCardinal, ::$Typ) = NotANumber()
     end
 end
 

@@ -47,13 +47,6 @@ zero(::Infinity) = 0
 isinf(::Infinity) = true
 isfinite(::Infinity) = false
 
-+(::Infinity, ::Infinity) = ∞
-+(::Number, y::Infinity) = ∞
-+(::Infinity, ::Number) = ∞
-
-+(::Integer, y::Infinity) = ∞
-+(::Infinity, ::Integer) = ∞
-
 # ⊻ is xor
 *(::Infinity) = ∞
 *(::Infinity, ::Infinity) = ∞
@@ -70,14 +63,6 @@ end
 div(::T, ::Infinity) where T<:Real = zero(T)
 fld(x::T, ::Infinity) where T<:Real = signbit(x) ? -one(T) : zero(T)
 cld(x::T, ::Infinity) where T<:Real = signbit(x) ? zero(T) : one(T)
-
-mod(::Infinity, ::Real) = NotANumber()
-function mod(x::Real, ::Infinity)
-    x ≥ 0 || throw(ArgumentError("mod(x,∞) is unbounded for x < 0"))
-    x
-end
-
-
 
 struct RealInfinity <: Real
     signbit::Bool
@@ -110,33 +95,17 @@ signbit(y::RealInfinity) = y.signbit
 sign(y::RealInfinity) = 1-2signbit(y)
 angle(x::RealInfinity) = π*signbit(x)
 
-mod(::RealInfinity, ::Real) = NotANumber()
-function mod(x::Real, y::RealInfinity)
-    signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
-    x
-end
-
 string(y::RealInfinity) = signbit(y) ? "-∞" : "+∞"
 show(io::IO, y::RealInfinity) = print(io, string(y))
 
-==(x::RealInfinity, y::Infinity) = !x.signbit
-==(y::Infinity, x::RealInfinity) = !x.signbit
-==(x::RealInfinity, y::RealInfinity) = x.signbit == y.signbit
-
-
 for Typ in (:Number, :Real, :Integer, :AbstractFloat)
     @eval begin
-        +(::$Typ, y::RealInfinity) = y
-        +(y::RealInfinity, ::$Typ) = y
         function *(a::$Typ, y::RealInfinity)
             iszero(a) && throw(ArgumentError("Cannot multiply $a * $y"))
             a > 0 ? y : (-y)
         end
     end
 end
-
-≤(::RealInfinity, ::Infinity) = true
-≤(::Infinity, s::RealInfinity) = !signbit(s)
 
 -(y::RealInfinity) = RealInfinity(!y.signbit)
 
@@ -185,6 +154,7 @@ ComplexInfinity{T}(::Infinity) where T<:Real = ComplexInfinity{T}()
 ComplexInfinity(::Infinity) = ComplexInfinity()
 ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x))
 ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
+ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(signbit(x)))
 
 isinf(::ComplexInfinity) = true
 isfinite(::ComplexInfinity) = false
@@ -201,7 +171,6 @@ convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
 
 sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
 angle(x::ComplexInfinity) = π*x.signbit
-mod(::ComplexInfinity{<:Integer}, ::Integer) = NotANumber()
 
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
@@ -212,24 +181,6 @@ function +(x::ComplexInfinity, y::ComplexInfinity)
     x == y || throw(ArgumentError("Angles must be the same to add ∞"))
     promote_type(typeof(x),typeof(y))(x.signbit)
 end
-
-+(x::ComplexInfinity, y::Infinity) = x+ComplexInfinity(y)
-+(x::Infinity, y::ComplexInfinity) = ComplexInfinity(x)+y
-+(x::ComplexInfinity, y::RealInfinity) = x+ComplexInfinity(y)
-+(x::RealInfinity, y::ComplexInfinity) = ComplexInfinity(x)+y
-+(::Number, y::ComplexInfinity) = y
-+(y::ComplexInfinity, ::Number) = y
-
-+(::Complex, ::Infinity) = ComplexInfinity()
-+(::Infinity, ::Complex) = ComplexInfinity()
-+(::Complex{Bool}, ::Infinity) = ComplexInfinity()
-+(::Infinity, ::Complex{Bool}) = ComplexInfinity()
-
-+(::Complex, y::RealInfinity) = ComplexInfinity(y)
-+(y::RealInfinity, ::Complex) = ComplexInfinity(y)
-+(::Complex{Bool}, y::RealInfinity) = ComplexInfinity(y)
-+(y::RealInfinity, ::Complex{Bool}) = ComplexInfinity(y)
-
 
 # ⊻ is xor
 *(a::ComplexInfinity{Bool}, b::ComplexInfinity{Bool}) = ComplexInfinity(a.signbit ⊻ b.signbit)
