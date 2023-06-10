@@ -1,5 +1,3 @@
-const AllInfinities = Union{Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal}
-const AllRealInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}}
 const allinfinitylist = (Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal)
 const allrealinfinitylist = (Infinity, RealInfinity, ComplexInfinity{<:Integer}) # useless
 const ExtendedComplex{T} = Union{Complex{T}, ComplexInfinity{T}}

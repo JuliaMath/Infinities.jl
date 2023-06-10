@@ -47,11 +47,6 @@ zero(::Infinity) = 0
 isinf(::Infinity) = true
 isfinite(::Infinity) = false
 
-# ⊻ is xor
-*(::Infinity, ::Infinity) = ∞
-
-
-
 for OP in (:fld,:cld,:div)
   @eval begin
     $OP(::Infinity, ::Real) = ∞
@@ -94,29 +89,6 @@ angle(x::RealInfinity) = π*signbit(x)
 string(y::RealInfinity) = signbit(y) ? "-∞" : "+∞"
 show(io::IO, y::RealInfinity) = print(io, string(y))
 
-for Typ in (:Number, :Real, :Integer, :AbstractFloat)
-    @eval begin
-        function *(a::$Typ, y::RealInfinity)
-            iszero(a) && throw(ArgumentError("Cannot multiply $a * $y"))
-            a > 0 ? y : (-y)
-        end
-    end
-end
-
-# ⊻ is xor
-*(a::RealInfinity, b::RealInfinity) = RealInfinity(signbit(a) ⊻ signbit(b))
-*(a::Infinity, b::RealInfinity) = RealInfinity(a)*b
-*(a::RealInfinity, b::Infinity) = a*RealInfinity(b)
-
-*(a::Integer, y::Infinity) = a*RealInfinity(y)
-*(y::Infinity, a::Integer) = RealInfinity(y)*a
-
-*(a::Real, y::Infinity) = a*RealInfinity(y)
-*(y::Infinity, a::Real) = RealInfinity(y)*a
-
-*(y::RealInfinity, a::Real) = a*y
-*(y::RealInfinity, a::Integer) = a*y
-
 ######
 # ComplexInfinity
 #######
@@ -146,6 +118,7 @@ isinf(::ComplexInfinity) = true
 isfinite(::ComplexInfinity) = false
 signbit(y::ComplexInfinity{Bool}) = y.signbit
 signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
+signbit(y::ComplexInfinity) = y.signbit
 
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
@@ -159,22 +132,7 @@ convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
 sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
 angle(x::ComplexInfinity) = π*x.signbit
 
-
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
-
-# ⊻ is xor
-*(a::ComplexInfinity{Bool}, b::ComplexInfinity{Bool}) = ComplexInfinity(a.signbit ⊻ b.signbit)
-*(a::ComplexInfinity, b::ComplexInfinity) = ComplexInfinity(a.signbit + b.signbit)
-*(a::Infinity, b::ComplexInfinity) = ComplexInfinity(a)*b
-*(a::ComplexInfinity, b::Infinity) = a*ComplexInfinity(b)
-*(a::RealInfinity, b::ComplexInfinity) = ComplexInfinity(a)*b
-*(a::ComplexInfinity, b::RealInfinity) = a*ComplexInfinity(b)
-
-*(a::Real, y::ComplexInfinity) = a > 0 ? y : (-y)
-*(y::ComplexInfinity, a::Real) = a*y
-
-*(a::Number, y::ComplexInfinity) = ComplexInfinity(y.signbit+angle(a)/π)
-*(y::ComplexInfinity, a::Number) = a*y
 
 for Typ in (Complex, Complex{Bool})
     @eval begin
@@ -193,6 +151,7 @@ Base.hash(::Infinity) = 0x020113134b21797f # made up
 
 
 include("cardinality.jl")
+include("interface.jl")
 include("compare.jl")
 include("algebra.jl")
 include("ambiguities.jl")

@@ -16,3 +16,11 @@ for Typ in (Complex, Complex{Bool}, Integer, Rational)
     @eval -(x::$Typ, y::AllInfinities) = _sub(x, y)
     @eval -(x::AllInfinities, y::$Typ) = _sub(x, y)
 end
+for Typ in (Integer,)
+    @eval *(x::InfiniteCardinal, y::$Typ) = _mul(y, x)
+    @eval *(x::$Typ, y::InfiniteCardinal) = _mul(x, y)
+end
+for Typ in (Complex, Rational, Complex{Bool})
+    @eval *(x::AllInfinities, y::$Typ) = _mul(y, x)
+    @eval *(x::$Typ, y::AllInfinities) = _mul(x, y)
+end

@@ -45,25 +45,6 @@ function Integer(x::ComplexInfinity)
     ℵ₀
 end
 
-
-*(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
-*(x::InfiniteCardinal, y::InfiniteCardinal) = max(x,y)
-*(::InfiniteCardinal{N}, ::Infinity) where N = InfiniteCardinal{N}()
-*(::Infinity, ::InfiniteCardinal{N}) where N = InfiniteCardinal{N}()
-function *(a::Integer, b::InfiniteCardinal)
-    a > 0 || throw(ArgumentError("$a is non-positive"))
-    b
-end
-
-for Typ in (Number, Complex, ComplexInfinity, Complex{Bool}, RealInfinity, Rational)
-    @eval begin
-        *(a::$Typ, b::InfiniteCardinal) = a * ∞
-        *(a::InfiniteCardinal, b::$Typ) = b*a
-    end
-end
-
-*(a::InfiniteCardinal, b::Integer) = b*a
-
 for OP in (:fld,:cld,:div)
     for Typ in (Real, Rational)
         @eval begin
