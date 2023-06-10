@@ -58,10 +58,26 @@
 
 
 # mod
-function _mod(x::Real, y::IntegerInfinities)
+@inline function _mod(x::Real, y::IntegerInfinities)
     signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
     x
 end
 mod(x::Real, y::IntegerInfinities) = _mod(x, y)
 mod(::IntegerInfinities, ::Real) = NotANumber()
 mod(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
+
+# fld, cld, div
+_divinf(T) = zero(T)
+_fldinf(x) = signbit(x) ? -one(x) : zero(x)
+_cldinf(x) = signbit(x) ? zero(x) : one(x)
+div(::T, ::IntegerInfinities) where T <: Real = _divinf(T)
+fld(x::Real, ::IntegerInfinities) = _fldinf(x)
+cld(x::Real, ::IntegerInfinities) = _cldinf(x)
+
+_inffcd(x, y) = signbit(y) ? -x : x
+for OP in (:fld,:cld,:div)
+    @eval begin
+        $OP(x::IntegerInfinities, y::Real) = _inffcd(x, y)
+        $OP(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
+    end
+end

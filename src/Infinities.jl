@@ -43,17 +43,6 @@ oneunit(::Type{Infinity}) = 1
 oneunit(::Infinity) = 1
 zero(::Infinity) = 0
 
-for OP in (:fld,:cld,:div)
-  @eval begin
-    $OP(::Infinity, ::Real) = ∞
-    $OP(::Infinity, ::Infinity) = NotANumber()
-  end
-end
-
-div(::T, ::Infinity) where T<:Real = zero(T)
-fld(x::T, ::Infinity) where T<:Real = signbit(x) ? -one(T) : zero(T)
-cld(x::T, ::Infinity) where T<:Real = signbit(x) ? zero(T) : one(T)
-
 struct RealInfinity <: Real
     signbit::Bool
 end
@@ -124,10 +113,6 @@ sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
 angle(x::ComplexInfinity) = π*x.signbit
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
-
-for OP in (:fld,:cld,:div)
-  @eval $OP(y::ComplexInfinity, a::Number) = y*(1/sign(a))
-end
 
 Base.hash(::Infinity) = 0x020113134b21797f # made up
 

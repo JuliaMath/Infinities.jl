@@ -40,26 +40,6 @@ function Integer(x::ComplexInfinity)
     ℵ₀
 end
 
-for OP in (:fld,:cld,:div)
-    for Typ in (Real, Rational)
-        @eval begin
-            $OP(x::InfiniteCardinal, ::$Typ) = x
-        end
-    end
-    @eval begin
-        $OP(::InfiniteCardinal, ::InfiniteCardinal) = NotANumber()
-        $OP(::Infinity, ::InfiniteCardinal) = NotANumber()
-        $OP(::InfiniteCardinal, ::Infinity) = NotANumber()
-    end
-end
-for Typ in (Real, Rational)
-    @eval begin
-        div(::T, ::InfiniteCardinal) where T <: $Typ = zero(T)
-        fld(x::T, ::InfiniteCardinal) where T <: $Typ = signbit(x) ? -one(T) : zero(T)
-        cld(x::T, ::InfiniteCardinal) where T <: $Typ = signbit(x) ? zero(T) : one(T)
-    end
-end
-
 Base.to_index(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
 Base.to_shape(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
 Base.to_shape(dims::Tuple{Vararg{Union{Infinity, Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
