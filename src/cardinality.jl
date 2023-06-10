@@ -19,9 +19,7 @@ string(::InfiniteCardinal{1}) = "ℵ₁"
 show(io::IO, F::InfiniteCardinal{0}) = print(io, "ℵ₀")
 show(io::IO, F::InfiniteCardinal{1}) = print(io, "ℵ₁")
 
-
 isone(::InfiniteCardinal) = false
-iszero(::InfiniteCardinal) = false
 
 signbit(::InfiniteCardinal) = false
 sign(::InfiniteCardinal) = 1
@@ -31,9 +29,6 @@ zero(::InfiniteCardinal) = 0
 one(::Type{<:InfiniteCardinal}) = 1
 oneunit(::Type{<:InfiniteCardinal}) = 1
 oneunit(::InfiniteCardinal) = 1
-
-isinf(::InfiniteCardinal) = true
-isfinite(::InfiniteCardinal) = false
 
 Integer(::Infinity) = InfiniteCardinal{0}()
 function Integer(x::RealInfinity)

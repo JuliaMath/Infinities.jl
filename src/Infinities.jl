@@ -34,7 +34,6 @@ _convert(::Type{Float16}, ::Infinity) = Inf16
 _convert(::Type{T}, ::Infinity) where {T<:Real} = convert(T, Inf)::T
 (::Type{T})(x::Infinity) where {T<:Real} = _convert(T, x)
 
-
 sign(y::Infinity) = 1
 angle(x::Infinity) = 0
 signbit(::Infinity) = false
@@ -43,9 +42,6 @@ one(::Type{Infinity}) = 1
 oneunit(::Type{Infinity}) = 1
 oneunit(::Infinity) = 1
 zero(::Infinity) = 0
-
-isinf(::Infinity) = true
-isfinite(::Infinity) = false
 
 for OP in (:fld,:cld,:div)
   @eval begin
@@ -65,9 +61,6 @@ end
 RealInfinity() = RealInfinity(false)
 RealInfinity(::Infinity) = RealInfinity()
 RealInfinity(x::RealInfinity) = x
-
-isinf(::RealInfinity) = true
-isfinite(::RealInfinity) = false
 
 promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity
 _convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
@@ -114,8 +107,6 @@ ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x
 ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
 ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(signbit(x)))
 
-isinf(::ComplexInfinity) = true
-isfinite(::ComplexInfinity) = false
 signbit(y::ComplexInfinity{Bool}) = y.signbit
 signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
 signbit(y::ComplexInfinity) = y.signbit

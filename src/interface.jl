@@ -2,3 +2,5 @@ const AllInfinities = Union{Infinity, RealInfinity, ComplexInfinity, InfiniteCar
 const AllRealInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}}
 
 iszero(::AllInfinities) = false
+isinf(::AllInfinities) = true
+isfinite(::AllInfinities) = false
