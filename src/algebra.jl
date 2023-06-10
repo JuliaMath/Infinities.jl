@@ -57,18 +57,11 @@
 *(::Infinity, ::Infinity) = ∞
 
 
-for T1 in allinfinitylist
-    for T2 in allinfinitylist
-        @eval mod(::$T1, ::$T2) = NotANumber()
-    end
-    for T2 in (Complex, Real, Rational, Complex{Bool}, Number)
-        @eval begin
-            mod(::$T1, ::$T2) = NotANumber()
-            function mod(x::$T2, y::$T1)
-                signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
-                x
-            end
-        end
-    end
+# mod
+function _mod(x::Real, y::IntegerInfinities)
+    signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
+    x
 end
-mod(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = NotANumber()
+mod(x::Real, y::IntegerInfinities) = _mod(x, y)
+mod(::IntegerInfinities, ::Real) = NotANumber()
+mod(::IntegerInfinities, ::IntegerInfinities) = NotANumber()

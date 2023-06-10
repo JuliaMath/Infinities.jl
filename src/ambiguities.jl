@@ -26,3 +26,8 @@ for Typ in (Complex, Rational, Complex{Bool}, Integer)
     @eval *(x::AllInfinities, y::$Typ) = _mul(y, x)
     @eval *(x::$Typ, y::AllInfinities) = _mul(x, y)
 end
+
+for Typ in (Rational, )
+    @eval mod(::IntegerInfinities, ::$Typ) = NotANumber()
+    @eval mod(x::$Typ, y::IntegerInfinities) = _mod(x, y)
+end
