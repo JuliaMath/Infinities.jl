@@ -134,15 +134,6 @@ angle(x::ComplexInfinity) = π*x.signbit
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
-for Typ in (Complex, Complex{Bool})
-    @eval begin
-        *(a::$Typ, y::Infinity) = a*ComplexInfinity(y)
-        *(y::Infinity, a::$Typ) = ComplexInfinity(y)*a
-        *(a::$Typ,y::RealInfinity) = a*ComplexInfinity(y)
-        *(y::RealInfinity, a::$Typ) = ComplexInfinity(y)*a
-    end
-end
-
 for OP in (:fld,:cld,:div)
   @eval $OP(y::ComplexInfinity, a::Number) = y*(1/sign(a))
 end

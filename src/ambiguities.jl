@@ -1,13 +1,23 @@
+for Typ in (Base.TwicePrecision, AbstractChar, Complex)
+    @eval begin
+        RealInfinity(x::$Typ) = throw(MethodError(RealInfinity, x))
+        ComplexInfinity{T}(x::$Typ) where T<:Real = throw(MethodError(ComplexInfinity{T}, x))
+    end
+end
+ComplexInfinity{T}(x::ComplexInfinity{T}) where T<:Real = x
+
 for Typ in (Rational, BigInt, BigFloat)
     for (op, fop) in ((:<, :isless), (:≤, :_le))
         @eval $op(x::InfiniteCardinal, y::$Typ) = $fop(x, y)
         @eval $op(x::$Typ, y::InfiniteCardinal) = $fop(x, y)
     end
 end
+
 for Typ in (Rational, BigInt, BigFloat, Complex, AbstractIrrational)
     @eval ==(x::AllInfinities, y::$Typ) = _eq(y, x)
     @eval ==(x::$Typ, y::AllInfinities) = _eq(x, y)
 end
+
 for Typ in (Complex, Rational, Complex{Bool}, Integer)
     @eval +(x::AllInfinities, y::$Typ) = _add(y, x)
     @eval +(x::$Typ, y::AllInfinities) = _add(x, y)
