@@ -263,6 +263,7 @@ using Aqua
         @test (-5) * ComplexInfinity() ≡ -ComplexInfinity()
 
         @test ComplexInfinity(0.25) * ComplexInfinity(0.5) ≡ ComplexInfinity(0.75)
+        @test ComplexInfinity(0.0) + ComplexInfinity() ≡ ComplexInfinity() + ComplexInfinity(0.0) ≡ ComplexInfinity(0.0)
 
         @test mod(ComplexInfinity(), 5) ≡ NotANumber()
 
