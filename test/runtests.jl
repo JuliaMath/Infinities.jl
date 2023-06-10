@@ -244,6 +244,7 @@ using Aqua
 
         @test exp(im*π/4)*∞ == Inf+im*Inf
         @test exp(im*π/4)+∞ == ∞
+        @test Inf + im + ∞ ≡ ComplexInfinity()
 
         @test Inf == ComplexInfinity()
         @test ComplexInfinity() == Inf

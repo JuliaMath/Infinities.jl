@@ -1,3 +1,10 @@
+@inline infpromote(x, y) = Base._promote(x, y)
+@inline infpromote(x::ExtendedComplex, y::AllInfinities) = (x, ComplexInfinity(y))
+@inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = Base._promote(x, y)
+@inline infpromote(x::Real, y::InfiniteCardinal) = (x, ∞)
+@inline infpromote(x::Integer, y::InfiniteCardinal) = (x, y)
+
+
 # sign
 +(::Infinity) = RealInfinity()
 -(::Infinity) = RealInfinity(true)
@@ -15,7 +22,6 @@
 @inline _infadd(x, y) = angle(x) == angle(y) ? y : throw(ArgumentError("Angles must be the same to add ∞"))
 
 @inline __add(x, y::AllInfinities) = isinf(x) ? _infadd(toinf(x), y) : y
-@inline __add(x, ::InfiniteCardinal) = x + ∞
 @inline __add(x::Integer, y::InfiniteCardinal) = max(x, y)
 
 @inline _add(x, y) = __add(infpromote(x, y)...)

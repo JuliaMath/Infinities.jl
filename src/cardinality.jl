@@ -51,14 +51,14 @@ Base.to_shape(dims::Tuple{Vararg{Union{Infinity, Integer, AbstractUnitRange}}}) 
 
 Base.Checked.checked_sub(::Integer, ::InfiniteCardinal{0}) = -∞
 Base.Checked.checked_sub(::InfiniteCardinal{0}, ::Integer) = ℵ₀
-Base.Checked.checked_sub(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = NotANumber()
+Base.Checked.checked_sub(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = NotANumber() # ambiguity fix
 Base.Checked.checked_add(::Integer, ::InfiniteCardinal{0}) = ℵ₀
 Base.Checked.checked_add(::InfiniteCardinal{0}, ::Integer) = ℵ₀
-Base.Checked.checked_add(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀
+Base.Checked.checked_add(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀ # ambiguity fix
 
 Base.Checked.checked_mul(x::Integer, ::InfiniteCardinal{0}) = sign(x)*∞
 Base.Checked.checked_mul(::InfiniteCardinal{0}, x::Integer) = sign(x)*∞
-Base.Checked.checked_mul(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀
+Base.Checked.checked_mul(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀ # ambiguity fix
 
 
 ##

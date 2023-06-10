@@ -60,7 +60,7 @@ _convert(::Type{T}, x::RealInfinity) where {T<:Real} = sign(x)*convert(T, Inf)
 (::Type{T})(x::RealInfinity) where {T<:Real} = _convert(T, x)
 
 for Typ in (RealInfinity, Infinity)
-    @eval Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x))
+    @eval Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x)) # ambiguity fix
 end
 
 signbit(y::RealInfinity) = y.signbit
@@ -93,7 +93,7 @@ ComplexInfinity{T}(::Infinity) where T<:Real = ComplexInfinity{T}()
 ComplexInfinity(::Infinity) = ComplexInfinity()
 ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x))
 ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
-ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(signbit(x)))
+ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(signbit(x))) # ambiguity fix
 
 signbit(y::ComplexInfinity{Bool}) = y.signbit
 signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
