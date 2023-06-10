@@ -8,19 +8,11 @@ for Typ in (Rational, BigInt, BigFloat, Complex, AbstractIrrational)
     @eval ==(x::AllInfinities, y::$Typ) = _eq(y, x)
     @eval ==(x::$Typ, y::AllInfinities) = _eq(x, y)
 end
-for Typ in (Complex, Complex{Bool}, Integer, Rational)
+for Typ in (Complex, Rational, Complex{Bool}, Integer)
     @eval +(x::AllInfinities, y::$Typ) = _add(y, x)
     @eval +(x::$Typ, y::AllInfinities) = _add(x, y)
-end
-for Typ in (Complex, Complex{Bool}, Integer, Rational)
-    @eval -(x::$Typ, y::AllInfinities) = _sub(x, y)
     @eval -(x::AllInfinities, y::$Typ) = _sub(x, y)
-end
-for Typ in (Integer,)
-    @eval *(x::InfiniteCardinal, y::$Typ) = _mul(y, x)
-    @eval *(x::$Typ, y::InfiniteCardinal) = _mul(x, y)
-end
-for Typ in (Complex, Rational, Complex{Bool})
+    @eval -(x::$Typ, y::AllInfinities) = _sub(x, y)
     @eval *(x::AllInfinities, y::$Typ) = _mul(y, x)
     @eval *(x::$Typ, y::AllInfinities) = _mul(x, y)
 end
