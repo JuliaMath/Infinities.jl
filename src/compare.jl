@@ -1,9 +1,3 @@
-const allinfinitylist = (Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal)
-const allrealinfinitylist = (Infinity, RealInfinity, ComplexInfinity{<:Integer}) # useless
-const ExtendedComplex{T} = Union{Complex{T}, ComplexInfinity{T}}
-
-promote_rule(::Type{ComplexInfinity{T}}, ::Type{RealInfinity}) where T<:Integer = ComplexInfinity{T}
-
 @inline infpromote(x, y) = Base._promote(x, y)
 @inline infpromote(x::ExtendedComplex, y::AllInfinities) = (x, ComplexInfinity(y))
 @inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = Base._promote(x, y)

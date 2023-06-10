@@ -51,7 +51,6 @@ RealInfinity() = RealInfinity(false)
 RealInfinity(::Infinity) = RealInfinity()
 RealInfinity(x::RealInfinity) = x
 
-promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity
 _convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
@@ -100,9 +99,6 @@ signbit(y::ComplexInfinity{Bool}) = y.signbit
 signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
 signbit(y::ComplexInfinity) = y.signbit
 
-promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{ComplexInfinity{T}}, ::Type{ComplexInfinity{S}}) where {T, S} = ComplexInfinity{promote_type(T, S)}
 convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
 convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T}(x)
