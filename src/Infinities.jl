@@ -51,8 +51,6 @@ RealInfinity() = RealInfinity(false)
 RealInfinity(::Infinity) = RealInfinity()
 RealInfinity(x::RealInfinity) = x
 
-_convert(::Type{RealInfinity}, ::Infinity) = RealInfinity(false)
-
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
 _convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
 _convert(::Type{Float64}, x::RealInfinity) = sign(x)*Inf64
