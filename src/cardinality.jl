@@ -64,15 +64,6 @@ end
 
 *(a::InfiniteCardinal, b::Integer) = b*a
 
-+(x::InfiniteCardinal) = x
-
--(x::InfiniteCardinal, ::Integer) = x
-
--(::InfiniteCardinal{N}, ::InfiniteCardinal{N}) where N = NotANumber()
-
--(::InfiniteCardinal) = -∞
--(x::Integer, ::InfiniteCardinal) = x - ∞
-
 for OP in (:fld,:cld,:div)
     for Typ in (Real, Rational)
         @eval begin

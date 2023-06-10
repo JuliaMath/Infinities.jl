@@ -6,9 +6,9 @@ const ExtendedComplex{T} = Union{Complex{T}, ComplexInfinity{T}}
 
 promote_rule(::Type{ComplexInfinity{T}}, ::Type{RealInfinity}) where T<:Integer = ComplexInfinity{T}
 
-@inline infpromote(x, y) = (x, y)
+@inline infpromote(x, y) = Base._promote(x, y)
 @inline infpromote(x::ExtendedComplex, y::AllInfinities) = (x, ComplexInfinity(y))
-@inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = (x, y)
+@inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = Base._promote(x, y)
 @inline infpromote(x::Real, y::InfiniteCardinal) = (x, ∞)
 @inline infpromote(x::Integer, y::InfiniteCardinal) = (x, y)
 
@@ -27,8 +27,8 @@ isless(x::AllRealInfinities, y::AllRealInfinities) = signbit(x) && !signbit(y)
 @generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
 for Typ in (Number, Real, AbstractFloat)
     @eval begin
-        isless(x::AllRealInfinities, y::$Typ) = signbit(x) && y ≠ -∞
-        isless(x::$Typ, y::AllRealInfinities) = !signbit(y) && x ≠ ∞
+        isless(x::AllRealInfinities, y::$Typ) = (signbit(y); signbit(x) && y ≠ -∞)
+        isless(x::$Typ, y::AllRealInfinities) = (signbit(x); !signbit(y) && x ≠ ∞)
     end
 end
 for Typ in (Number, Real, AbstractFloat, AllRealInfinities)

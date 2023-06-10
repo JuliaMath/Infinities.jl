@@ -71,9 +71,6 @@ RealInfinity() = RealInfinity(false)
 RealInfinity(::Infinity) = RealInfinity()
 RealInfinity(x::RealInfinity) = x
 
--(::Infinity) = RealInfinity(true)
-+(::Infinity) = RealInfinity()
-
 isinf(::RealInfinity) = true
 isfinite(::RealInfinity) = false
 
@@ -105,16 +102,6 @@ for Typ in (:Number, :Real, :Integer, :AbstractFloat)
         end
     end
 end
-
--(y::RealInfinity) = RealInfinity(!y.signbit)
-
-function +(x::RealInfinity, y::RealInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
-    x
-end
-
-+(x::RealInfinity, y::Infinity) = x+RealInfinity(y)
-+(x::Infinity, y::RealInfinity) = RealInfinity(x)+y
 
 # ⊻ is xor
 *(a::RealInfinity, b::RealInfinity) = RealInfinity(signbit(a) ⊻ signbit(b))
@@ -162,6 +149,7 @@ signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
 
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
+promote_rule(::Type{ComplexInfinity{T}}, ::Type{ComplexInfinity{S}}) where {T, S} = ComplexInfinity{promote_type(T, S)}
 convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
 convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T}(x)
@@ -173,13 +161,6 @@ angle(x::ComplexInfinity) = π*x.signbit
 
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
-
--(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
-
-function +(x::ComplexInfinity, y::ComplexInfinity)
-    x == y || throw(ArgumentError("Angles must be the same to add ∞"))
-    promote_type(typeof(x),typeof(y))(x.signbit)
-end
 
 # ⊻ is xor
 *(a::ComplexInfinity{Bool}, b::ComplexInfinity{Bool}) = ComplexInfinity(a.signbit ⊻ b.signbit)

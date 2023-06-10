@@ -88,7 +88,7 @@ using Infinities, Base64, Base.Checked, Test
         @test 5 + ℵ₀ ≡ ℵ₀ + 5 ≡ ℵ₀
         @test ℵ₀ - 5 ≡ ℵ₀
         @test 5 - ℵ₀ ≡ -∞
-        @test ℵ₀ - ℵ₀ ≡ NotANumber()
+        @test_throws ArgumentError ℵ₀ - ℵ₀
         @test -ℵ₀ ≡ -∞
 
         @test *(ℵ₀) ≡ ℵ₀
