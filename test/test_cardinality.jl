@@ -8,7 +8,7 @@ using Infinities, Base64, Base.Checked, Test
         @test angle(ℵ₀) ≡ 0
         @test Integer(∞) ≡ convert(Integer,∞) ≡ Integer(ℵ₀) ≡ convert(Integer, ℵ₀) ≡ ℵ₀
         @test abs(ℵ₀) ≡ ℵ₀
-        @test zero(ℵ₀) ≡ 0
+        @test zero(ℵ₀) ≡ zero(InfiniteCardinal{0}) ≡ 0
         @test one(ℵ₀) ≡ one(InfiniteCardinal{0}) ≡ oneunit(ℵ₀) ≡ oneunit(InfiniteCardinal{0}) ≡ 1
         @test isinf(ℵ₀) && !isfinite(ℵ₀)
         @test Integer(RealInfinity()) ≡ Integer(ComplexInfinity()) ≡ ℵ₀
