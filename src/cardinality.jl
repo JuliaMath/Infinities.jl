@@ -57,6 +57,11 @@ end
 ==(::InfiniteCardinal, y::Real) = ∞ == y
 ==(x::Real, ::InfiniteCardinal) = x == ∞
 
+==(::BigInt, ::InfiniteCardinal) = false
+==(::InfiniteCardinal, ::BigInt) = false
+==(x::BigFloat, ::InfiniteCardinal) = x == ∞
+==(::InfiniteCardinal, x::BigFloat) = x == ∞
+
 @generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
 isless(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 isless(x::Real, ::InfiniteCardinal{0}) = isfinite(x)
@@ -83,6 +88,18 @@ isless(x::InfiniteCardinal, y::AbstractFloat) = false
 ≤(::InfiniteCardinal, x::RealInfinity) = false
 <(::InfiniteCardinal, x::RealInfinity) = false
 
+for T in (:InfiniteCardinal, :(InfiniteCardinal{0}))
+    @eval begin
+        ≤(::BigInt, ::$T) = true
+        <(::BigInt, ::$T) = true
+        ≤(::$T, ::BigInt) = false
+        <(::$T, ::BigInt) = false
+        ≤(x::BigFloat, ::$T) = true
+        <(x::BigFloat, ::$T) = x < ∞
+        ≤(::$T, x::BigFloat) = ∞ ≤ x
+        <(::$T, x::BigFloat) = false
+    end
+end
 
 <(::Infinity, ::InfiniteCardinal{0}) = false
 <(::Infinity, ::InfiniteCardinal) = true
