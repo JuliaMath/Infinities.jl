@@ -82,7 +82,14 @@ using Infinities, Base64, Base.Checked, Test
                 @test x <= InfiniteCardinal{1}()
                 @test !(InfiniteCardinal{1}() <= x)
             end
+            @test (ℵ₀ == big(Inf)) == (ℵ₀ == Inf)
+            @test (big(Inf) == ℵ₀) == (Inf == ℵ₀)
+            @test (ℵ₀ < big(Inf)) == (ℵ₀ < Inf)
+            @test (big(Inf) < ℵ₀) == (Inf < ℵ₀)
+            @test (ℵ₀ <= big(Inf)) == (ℵ₀ <= Inf)
+            @test (big(Inf) <= ℵ₀) == (Inf <= ℵ₀)
         end
+
     end
 
     @testset "min/max" begin
