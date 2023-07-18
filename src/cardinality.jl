@@ -26,6 +26,7 @@ sign(::InfiniteCardinal) = 1
 angle(::InfiniteCardinal) = 0
 abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
+zero(::Type{<:InfiniteCardinal}) = 0
 one(::Type{<:InfiniteCardinal}) = 1
 oneunit(::Type{<:InfiniteCardinal}) = 1
 oneunit(::InfiniteCardinal) = 1

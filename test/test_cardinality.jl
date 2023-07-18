@@ -8,7 +8,7 @@ using Infinities, Base64, Base.Checked, Test
         @test angle(ℵ₀) ≡ 0
         @test Integer(∞) ≡ convert(Integer,∞) ≡ Integer(ℵ₀) ≡ convert(Integer, ℵ₀) ≡ ℵ₀
         @test abs(ℵ₀) ≡ ℵ₀
-        @test zero(ℵ₀) ≡ 0
+        @test zero(ℵ₀) ≡ zero(InfiniteCardinal{0}) ≡ 0
         @test one(ℵ₀) ≡ one(InfiniteCardinal{0}) ≡ oneunit(ℵ₀) ≡ oneunit(InfiniteCardinal{0}) ≡ 1
         @test isinf(ℵ₀) && !isfinite(ℵ₀)
         @test Integer(RealInfinity()) ≡ Integer(ComplexInfinity()) ≡ ℵ₀
@@ -68,6 +68,28 @@ using Infinities, Base64, Base.Checked, Test
         @test !(ℵ₀ < 5) && !(ℵ₀ ≤ 5)
         @test ℵ₀ > 5 && ℵ₀ ≥ 5
         @test !(5 > ℵ₀) && !(5 ≥ ℵ₀)
+
+        @testset "BigInt/BigFloat" begin
+            for x in (big(2), big(2.0))
+                @test !(x == ℵ₀)
+                @test !(ℵ₀ == x)
+                @test x < ℵ₀
+                @test !(ℵ₀ < x)
+                @test x <= ℵ₀
+                @test !(ℵ₀ <= x)
+                @test x < InfiniteCardinal{1}()
+                @test !(InfiniteCardinal{1}() < x)
+                @test x <= InfiniteCardinal{1}()
+                @test !(InfiniteCardinal{1}() <= x)
+            end
+            @test (ℵ₀ == big(Inf)) == (ℵ₀ == Inf)
+            @test (big(Inf) == ℵ₀) == (Inf == ℵ₀)
+            @test (ℵ₀ < big(Inf)) == (ℵ₀ < Inf)
+            @test (big(Inf) < ℵ₀) == (Inf < ℵ₀)
+            @test (ℵ₀ <= big(Inf)) == (ℵ₀ <= Inf)
+            @test (big(Inf) <= ℵ₀) == (Inf <= ℵ₀)
+        end
+
     end
 
     @testset "min/max" begin
