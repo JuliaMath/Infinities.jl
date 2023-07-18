@@ -96,8 +96,8 @@ using Infinities, Base64, Base.Checked, Test
         @test @inferred(min(ℵ₀,ℵ₁)) ≡ ℵ₀
         @test @inferred(min(ℵ₀,ℵ₁)) ≡ min(ℵ₁,ℵ₀) ≡ ℵ₀
         @test @inferred(max(ℵ₀,ℵ₁)) ≡ max(ℵ₁,ℵ₀) ≡ ℵ₁
-        @test min(∞,ℵ₀) ≡ min(ℵ₀,∞) ≡ ∞
-        @test max(∞,ℵ₀) ≡ max(ℵ₀,∞) ≡ ℵ₀
+        @test min(∞,ℵ₀) ≡ max(ℵ₀,∞) ≡ ∞
+        @test max(∞,ℵ₀) ≡ min(ℵ₀,∞) ≡ ℵ₀
         @test min(-∞,ℵ₀) ≡ min(ℵ₀,-∞) ≡ -∞
         @test max(-∞,ℵ₀) ≡ max(ℵ₀,-∞) ≡ ℵ₀
         @test min(5,ℵ₀) ≡ min(ℵ₀,5) ≡ 5
@@ -110,7 +110,7 @@ using Infinities, Base64, Base.Checked, Test
         @test 5 + ℵ₀ ≡ ℵ₀ + 5 ≡ ℵ₀
         @test ℵ₀ - 5 ≡ ℵ₀
         @test 5 - ℵ₀ ≡ -∞
-        @test ℵ₀ - ℵ₀ ≡ NotANumber()
+        @test_throws ArgumentError ℵ₀ - ℵ₀
         @test -ℵ₀ ≡ -∞
 
         @test *(ℵ₀) ≡ ℵ₀
