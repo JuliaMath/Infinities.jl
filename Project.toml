@@ -4,7 +4,7 @@ authors = ["Sheehan Olver <solver@mac.com>"]
 version = "0.1.7"
 
 [compat]
-Aqua = "0.6"
+Aqua = "0.7"
 julia = "1"
 
 [extras]
