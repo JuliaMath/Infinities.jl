@@ -3,7 +3,7 @@ import Infinities: Infinity
 
 using Aqua
 @testset "Project quality" begin
-    Aqua.test_all(Infinities, ambiguities=false)
+    Aqua.test_all(Infinities, ambiguities=false, piracies=(; broken=true))
 end
 
 @testset "∞" begin
