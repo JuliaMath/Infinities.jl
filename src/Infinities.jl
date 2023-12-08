@@ -178,7 +178,8 @@ end
 <(s::RealInfinity, ::Infinity) = signbit(s)
 <(::Infinity, ::RealInfinity) = false
 
-
+isless(x::RealInfinity, ::Infinity) = isless(x, RealInfinity())
+isless(::Infinity, x::RealInfinity) = isless(RealInfinity(), x)
 
 
 function -(::Infinity, y::RealInfinity)
