@@ -70,6 +70,14 @@ isless(x::AbstractFloat, ::InfiniteCardinal{0}) = isfinite(x)
 isless(x::AbstractFloat, ::InfiniteCardinal) = true
 isless(::InfiniteCardinal, y::Real) = false
 isless(x::InfiniteCardinal, y::AbstractFloat) = false
+isless(x::RealInfinity, ::InfiniteCardinal{0}) = isless(x, ∞)
+isless(::InfiniteCardinal{0}, x::RealInfinity) = isless(∞, x)
+isless(x::RealInfinity, ::InfiniteCardinal) = true
+isless(::InfiniteCardinal, x::RealInfinity) = false
+isless(x::Infinity, ::InfiniteCardinal{0}) = isless(x, ∞)
+isless(::InfiniteCardinal{0}, x::Infinity) = isless(∞, x)
+isless(x::Infinity, ::InfiniteCardinal) = true
+isless(::InfiniteCardinal, x::Infinity) = false
 
 @generated <(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N < M))
 @generated ≤(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(N ≤ M))
