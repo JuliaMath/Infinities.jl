@@ -243,7 +243,7 @@ max(::RealInfinity, ::Infinity) = ∞
 min(::Infinity, x::RealInfinity) = x
 max(::Infinity, x::RealInfinity) = ∞
 
-
+Base.to_index(i::RealInfinity) = convert(Integer, i)
 
 ######
 # ComplexInfinity

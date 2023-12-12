@@ -205,6 +205,8 @@ end
             @test convert(Float16, -∞) ≡ Float16(-∞) ≡ -Inf16
             @test convert(BigFloat, -∞)::BigFloat == BigFloat(-∞)::BigFloat == -BigFloat(Inf)
         end
+
+        @test Base.to_index(RealInfinity()) ≡ ℵ₀
     end
 
     @testset "ComplexInfinity" begin
