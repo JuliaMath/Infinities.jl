@@ -33,6 +33,19 @@ using Infinities, Base64, Base.Checked, Test
         @test !isless(Inf, ℵ₀) && !isless(ℵ₀, Inf)
         @test isless(5, ℵ₀) && !isless(ℵ₀, 5)
         @test isless(5, ℵ₁) && !isless(ℵ₁, 5)
+        @test !isless(RealInfinity(), ℵ₀)
+        @test isless(-RealInfinity(), ℵ₀)
+        @test !isless(ℵ₀, RealInfinity())
+        @test !isless(ℵ₀, -RealInfinity())
+        @test isless(RealInfinity(), ℵ₁)
+        @test isless(-RealInfinity(), ℵ₁)
+        @test !isless(ℵ₁, RealInfinity())
+        @test !isless(ℵ₁, -RealInfinity())
+        @test !isless(∞, ℵ₀)
+        @test !isless(ℵ₀, ∞)
+        @test isless(∞, ℵ₁)
+        @test !isless(ℵ₁, ∞)
+
 
         @test !(ℵ₀ < ℵ₀) && !(ℵ₀ > ℵ₀)
         @test ℵ₀ ≤ ℵ₀ && ℵ₀ ≥ ℵ₀
