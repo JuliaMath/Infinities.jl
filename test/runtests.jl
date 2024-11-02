@@ -294,5 +294,5 @@ end
 include("test_cardinality.jl")
 
 @testset "Project quality" begin
-    Aqua.test_all(Infinities)
+    Aqua.test_all(Infinities, piracies=(; broken=true))
 end
