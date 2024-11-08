@@ -176,6 +176,9 @@ using Infinities, Base64, Base.Checked, Test
         @test checked_sub(ℵ₀, 5) ≡ ℵ₀
         @test checked_sub(5, ℵ₀) ≡ -∞
         @test checked_mul(-5, ℵ₀) ≡ checked_mul(ℵ₀, -5) ≡ -∞
+        @test checked_sub(ℵ₀, ℵ₀) ≡ NotANumber()
+        @test checked_add(ℵ₀, ℵ₀) ≡ ℵ₀
+        @test checked_mul(ℵ₀, ℵ₀) ≡ ℵ₀
     end
 
     @testset "indexing" begin

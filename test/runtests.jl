@@ -40,6 +40,7 @@ using Aqua
 
         @test !isone(∞)
         @test !iszero(∞)
+        @test !signbit(∞)
 
         @test sign(∞) ≡ 1
         @test angle(∞) ≡ 0
@@ -204,7 +205,7 @@ using Aqua
 
     @testset "ComplexInfinity" begin
         @test ComplexInfinity(∞) ≡ convert(ComplexInfinity, ∞) ≡ ComplexInfinity() ≡
-            ComplexInfinity(false) ≡ ComplexInfinity{Bool}(∞) ≡ ComplexInfinity{Bool}(RealInfinity())
+            ComplexInfinity(false) ≡ ComplexInfinity{Bool}(∞) ≡ ComplexInfinity{Bool}(RealInfinity()) ≡ ComplexInfinity(ComplexInfinity())
 
         @test convert(ComplexInfinity{Bool}, ∞) ≡ convert(ComplexInfinity, ∞) ≡ ComplexInfinity()
         @test convert(ComplexInfinity{Bool}, -∞) ≡ convert(ComplexInfinity, -∞) ≡ -ComplexInfinity()
@@ -280,6 +281,9 @@ using Aqua
             @test div(ComplexInfinity(), 5) ≡ fld(ComplexInfinity(), 5) ≡ ComplexInfinity()
             @test div(-ComplexInfinity(),2) ≡ -ComplexInfinity()
         end
+
+        @test signbit(ComplexInfinity(3))
+        @test !signbit(ComplexInfinity(100))
     end
 
     @testset "Set" begin
@@ -292,6 +296,7 @@ end
 
 
 include("test_cardinality.jl")
+include("test_ambiguity.jl")
 
 @testset "Project quality" begin
     Aqua.test_all(Infinities, piracies=(; broken=true))

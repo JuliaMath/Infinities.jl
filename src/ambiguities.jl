@@ -1,7 +1,7 @@
 for Typ in (Base.TwicePrecision, AbstractChar, Complex)
     @eval begin
         RealInfinity(x::$Typ) = throw(MethodError(RealInfinity, x))
-        ComplexInfinity{T}(x::$Typ) where T<:Real = throw(MethodError(ComplexInfinity{T}, x))
+        ComplexInfinity{T}(x::$Typ) where T<:Real = ComplexInfinity(T(x))
     end
 end
 ComplexInfinity{T}(x::ComplexInfinity{T}) where T<:Real = x
