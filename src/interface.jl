@@ -7,7 +7,7 @@ iszero(::AllInfinities) = false
 isinf(::AllInfinities) = true
 isfinite(::AllInfinities) = false
 
-promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity
+promote_rule(::Type{Infinity}, ::Type{RealInfinity}) = RealInfinity # not detected by CodeCov. Removing this results in failed tests.
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 promote_rule(::Type{RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 promote_rule(::Type{ComplexInfinity{T}}, ::Type{RealInfinity}) where T<:Integer = ComplexInfinity{T}
