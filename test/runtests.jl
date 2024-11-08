@@ -2,9 +2,6 @@ using Infinities, Base64, Test
 import Infinities: Infinity
 
 using Aqua
-@testset "Project quality" begin
-    Aqua.test_all(Infinities, ambiguities=false, piracies=(; broken=true))
-end
 
 @testset "∞" begin
     @testset "∞" begin
@@ -13,8 +10,6 @@ end
         @test ∞ == ∞
         @test ∞ == Inf
         @test Inf == ∞
-
-        @test +∞ ≡ ∞
 
         @testset "inequalities" begin
             @test isless(1, ∞)
@@ -38,13 +33,14 @@ end
         @test ∞ - 1 ≡ ∞ - 1.0 ≡ ∞
         @test *(∞) ≡ ∞
         @test ∞*∞ ≡ ∞
-        @test ∞ - ∞ isa NotANumber
+        @test_throws ArgumentError ∞ - ∞
 
         @test one(∞) ≡ one(Infinity) ≡ oneunit(∞) ≡ oneunit(Infinity) ≡ 1
         @test zero(∞) ≡ 0
 
         @test !isone(∞)
         @test !iszero(∞)
+        @test !signbit(∞)
 
         @test sign(∞) ≡ 1
         @test angle(∞) ≡ 0
@@ -105,7 +101,7 @@ end
         @test promote(∞, RealInfinity()) ≡ (RealInfinity(),RealInfinity())
 
         @test -∞ ≡ RealInfinity(true)
-        @test +∞ ≡ ∞
+        @test +∞ ≡ RealInfinity()
 
         @test sign(-∞) == -1
         @test angle(-∞) ≈ π
@@ -164,7 +160,7 @@ end
         @test_throws ArgumentError (1∞) + (-∞)
         @test_throws ArgumentError (-∞) + ∞
 
-        @test ∞ - (-∞) ≡ ∞
+        @test ∞ - (-∞) ≡ +∞
         @test (-∞) - ∞ ≡ -∞
         @test (1∞) - (-∞) ≡ 1∞
         @test (-∞) - (1∞) ≡ -∞
@@ -209,7 +205,7 @@ end
 
     @testset "ComplexInfinity" begin
         @test ComplexInfinity(∞) ≡ convert(ComplexInfinity, ∞) ≡ ComplexInfinity() ≡
-            ComplexInfinity(false) ≡ ComplexInfinity{Bool}(∞) ≡ ComplexInfinity{Bool}(RealInfinity())
+            ComplexInfinity(false) ≡ ComplexInfinity{Bool}(∞) ≡ ComplexInfinity{Bool}(RealInfinity()) ≡ ComplexInfinity{Bool}(ComplexInfinity())
 
         @test convert(ComplexInfinity{Bool}, ∞) ≡ convert(ComplexInfinity, ∞) ≡ ComplexInfinity()
         @test convert(ComplexInfinity{Bool}, -∞) ≡ convert(ComplexInfinity, -∞) ≡ -ComplexInfinity()
@@ -249,6 +245,7 @@ end
 
         @test exp(im*π/4)*∞ == Inf+im*Inf
         @test exp(im*π/4)+∞ == ∞
+        @test Inf + im + ∞ ≡ ComplexInfinity()
 
         @test Inf == ComplexInfinity()
         @test ComplexInfinity() == Inf
@@ -267,6 +264,7 @@ end
         @test (-5) * ComplexInfinity() ≡ -ComplexInfinity()
 
         @test ComplexInfinity(0.25) * ComplexInfinity(0.5) ≡ ComplexInfinity(0.75)
+        @test ComplexInfinity(0.0) + ComplexInfinity() ≡ ComplexInfinity() + ComplexInfinity(0.0) ≡ ComplexInfinity(0.0)
 
         @test mod(ComplexInfinity(), 5) ≡ NotANumber()
 
@@ -283,6 +281,9 @@ end
             @test div(ComplexInfinity(), 5) ≡ fld(ComplexInfinity(), 5) ≡ ComplexInfinity()
             @test div(-ComplexInfinity(),2) ≡ -ComplexInfinity()
         end
+
+        @test signbit(ComplexInfinity(3))
+        @test !signbit(ComplexInfinity(100))
     end
 
     @testset "Set" begin
@@ -295,3 +296,8 @@ end
 
 
 include("test_cardinality.jl")
+include("test_ambiguity.jl")
+
+@testset "Project quality" begin
+    Aqua.test_all(Infinities, piracies=(; broken=true))
+end
