@@ -171,6 +171,8 @@ using Aqua
         @test_throws ArgumentError (-∞) - (-∞)
         @test_throws ArgumentError 0*∞
         @test_throws ArgumentError 0*(-∞)
+        @test_throws ArgumentError Inf - RealInfinity()
+        @test_throws ArgumentError RealInfinity() - Inf
 
         @test (-∞)*2 ≡ 2*(-∞) ≡ -2 * ∞ ≡ ∞ * (-2) ≡ (-2) * RealInfinity() ≡ -∞
         @test (-∞)*2.3 ≡ 2.3*(-∞) ≡ -2.3 * ∞ ≡ ∞ * (-2.3) ≡ (-2.3) * RealInfinity() ≡ -∞
