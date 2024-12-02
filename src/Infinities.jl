@@ -68,6 +68,8 @@ angle(x::RealInfinity) = π*signbit(x)
 string(y::RealInfinity) = signbit(y) ? "-∞" : "+∞"
 show(io::IO, y::RealInfinity) = print(io, string(y))
 
+Base.to_index(i::RealInfinity) = convert(Integer, i)
+
 #######
 # ComplexInfinity
 #######
