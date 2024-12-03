@@ -3,7 +3,7 @@ A Julia package for representing infinity in all its forms
 
 [![Build Status](https://github.com/JuliaMath/Infinities.jl/workflows/CI/badge.svg)](https://github.com/JuliaMath/Infinities.jl/actions)
 [![codecov](https://codecov.io/gh/JuliaMath/Infinities.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaMath/Infinities.jl)
-
+[![version](https://juliahub.com/docs/General/Infinities/stable/version.svg)](https://juliahub.com/ui/Packages/General/Infinities)
 
 
 This Julia package is used to represent infinities, including:
