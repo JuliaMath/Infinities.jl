@@ -87,3 +87,8 @@ for OP in (:fld,:cld,:div)
         $OP(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
     end
 end
+
+# literal power
+
+Base.literal_pow(::typeof(^), x::InfiniteCardinal, ::Val{0}) = 1
+Base.literal_pow(::typeof(^), x::InfiniteCardinal, ::Val{p}) where p = p > 0 ? x : 0
