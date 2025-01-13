@@ -88,6 +88,8 @@ for OP in (:fld,:cld,:div)
     end
 end
 
+# Base.literal_pow
+
 # inv
 inv(::Union{Infinity,InfiniteCardinal}) = 0
 inv(x::RealInfinity) = inv(float(x))
