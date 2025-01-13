@@ -296,7 +296,26 @@ using Aqua
         @test ∞ in s
         @test 2 ∉ s
     end
+
+    @testset "Base.literal_pow" begin
+        @test @inferred(Base.literal_pow(^, ℵ₀, Val(0))) ≡ ℵ₀^0 ≡ 1
+        @test @inferred(Base.literal_pow(^, ℵ₀, Val(1))) ≡ ℵ₀^1 ≡ ℵ₀
+        @test @inferred(Base.literal_pow(^, ℵ₀, Val(-1))) ≡ ℵ₀^(-1) ≡ 0
+
+        @test @inferred(Base.literal_pow(^, ∞, Val(0))) ≡ ∞^0 ≡ 1
+        @test @inferred(Base.literal_pow(^, ∞, Val(1))) ≡ ∞^1 ≡ ∞
+        @test @inferred(Base.literal_pow(^, ∞, Val(-1))) ≡ ∞^(-1) ≡ 0
+
+        @test @inferred(Base.literal_pow(^, -∞, Val(0))) ≡ (-∞)^0 ≡ 1.0
+        @test @inferred(Base.literal_pow(^, -∞, Val(1))) ≡ (-∞)^1 ≡ -∞
+        @test @inferred(Base.literal_pow(^, -∞, Val(-1))) ≡ (-∞)^(-1) ≡ 0.0
+
+        @test @inferred(Base.literal_pow(^, ComplexInfinity(0.1), Val(0))) ≡ ComplexInfinity(0.1)^0 ≡ 1.0+0.0im
+        @test @inferred(Base.literal_pow(^, ComplexInfinity(0.1), Val(1))) ≡ (ComplexInfinity(0.1))^1 ≡ ComplexInfinity(0.1)
+        @test @inferred(Base.literal_pow(^, ComplexInfinity(0.1), Val(-1))) ≡ (ComplexInfinity(0.1))^(-1) ≡ 0.0+0.0im
+    end
 end
+
 
 
 include("test_cardinality.jl")

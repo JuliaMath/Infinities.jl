@@ -88,7 +88,7 @@ for OP in (:fld,:cld,:div)
     end
 end
 
-# literal power
-
-Base.literal_pow(::typeof(^), x::InfiniteCardinal, ::Val{0}) = 1
-Base.literal_pow(::typeof(^), x::InfiniteCardinal, ::Val{p}) where p = p > 0 ? x : 0
+# inv
+inv(::Union{Infinity,InfiniteCardinal}) = 0
+inv(x::RealInfinity) = inv(float(x))
+inv(x::ComplexInfinity) = zero(ComplexF64)
