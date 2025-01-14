@@ -1,6 +1,6 @@
 module Infinities
 
-import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless,
+import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
                 +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
                 string, show, promote_rule, convert, getindex
 
@@ -42,6 +42,7 @@ one(::Type{Infinity}) = 1
 oneunit(::Type{Infinity}) = 1
 oneunit(::Infinity) = 1
 zero(::Infinity) = 0
+zero(::Type{Infinity}) = 0
 
 struct RealInfinity <: Real
     signbit::Bool
@@ -69,6 +70,13 @@ string(y::RealInfinity) = signbit(y) ? "-∞" : "+∞"
 show(io::IO, y::RealInfinity) = print(io, string(y))
 
 Base.to_index(i::RealInfinity) = convert(Integer, i)
+
+one(::Type{RealInfinity}) = 1.0
+oneunit(::Type{RealInfinity}) = 1.0
+oneunit(::RealInfinity) = 1.0
+zero(::RealInfinity) = 0.0
+zero(::Type{RealInfinity}) = 0.0
+
 
 #######
 # ComplexInfinity
@@ -109,6 +117,12 @@ sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
 angle(x::ComplexInfinity) = π*x.signbit
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
+
+one(::Type{<:ComplexInfinity}) = one(ComplexF64)
+oneunit(::Type{<:ComplexInfinity}) = oneunit(ComplexF64)
+oneunit(::ComplexInfinity) = oneunit(ComplexF64)
+zero(::ComplexInfinity) = zero(ComplexF64)
+zero(::Type{<:ComplexInfinity}) = zero(ComplexF64)
 
 Base.hash(::Infinity) = 0x020113134b21797f # made up
 

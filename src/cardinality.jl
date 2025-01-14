@@ -43,7 +43,15 @@ end
 
 Base.to_index(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
 Base.to_shape(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
-Base.to_shape(dims::Tuple{Vararg{Union{Infinity, Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+
+# only vectors, matrices, 3-tensors are supported
+Base.to_shape(dims::Tuple{Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+Base.to_shape(dims::Tuple{Infinity, Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+Base.to_shape(dims::Tuple{Union{Integer, AbstractUnitRange}, Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+Base.to_shape(dims::Tuple{Infinity, Infinity, Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+Base.to_shape(dims::Tuple{Infinity, Union{Integer, AbstractUnitRange}, Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+Base.to_shape(dims::Tuple{Union{Integer, AbstractUnitRange}, Infinity, Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
+Base.to_shape(dims::Tuple{Union{Integer, AbstractUnitRange}, Union{Integer, AbstractUnitRange}, Infinity, Vararg{Union{Integer, AbstractUnitRange}}}) = map(Base.to_shape, dims)
 
 
 ##
