@@ -161,6 +161,15 @@ using Infinities, Base64, Base.Checked, Test
     @test string(ℵ₁) == stringmime("text/plain", ℵ₁) == "ℵ₁"
     @test Base.to_index(ℵ₀) ≡ Base.to_shape(ℵ₀) ≡ ℵ₀
     @test Base.to_shape((∞,)) ≡ (ℵ₀,)
+    @test Base.to_shape((∞,∞)) ≡ (ℵ₀,ℵ₀)
+    @test Base.to_shape((∞,1)) ≡ (ℵ₀,1)
+    @test Base.to_shape((1,∞)) ≡ (1,ℵ₀)
+    @test Base.to_shape((∞,∞,∞)) ≡ (ℵ₀,ℵ₀,ℵ₀)
+    @test Base.to_shape((∞,1,∞)) ≡ (ℵ₀,1,ℵ₀)
+    @test Base.to_shape((∞,∞,1)) ≡ (ℵ₀,ℵ₀,1)
+    @test Base.to_shape((1,∞,∞)) ≡ (1,ℵ₀,ℵ₀)
+    @test Base.to_shape((1,1,∞)) ≡ (1,1,ℵ₀)
+
 
     @testset "Set" begin
         s = Set([ℵ₀,ℵ₁,∞,1])
