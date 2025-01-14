@@ -87,3 +87,10 @@ for OP in (:fld,:cld,:div)
         $OP(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
     end
 end
+
+# Base.literal_pow
+
+# inv
+inv(::Union{Infinity,InfiniteCardinal}) = 0
+inv(x::RealInfinity) = inv(float(x))
+inv(x::ComplexInfinity) = zero(ComplexF64)
