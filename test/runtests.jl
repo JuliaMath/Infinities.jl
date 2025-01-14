@@ -314,6 +314,16 @@ using Aqua
         @test Base.literal_pow(^, ComplexInfinity(0.1), Val(1)) ≡ (ComplexInfinity(0.1))^1 ≡ ComplexInfinity(0.1)
         @test Base.literal_pow(^, ComplexInfinity(0.1), Val(-1)) ≡ (ComplexInfinity(0.1))^(-1) ≡ 0.0+0.0im
     end
+
+    @testset "one/zero/oneunit" begin
+        @test one(ℵ₀) ≡ one(∞)≡ one(ℵ₀) ≡ oneunit(∞) ≡ one(Infinity) ≡ one(InfiniteCardinal{0}) ≡ oneunit(Infinity) ≡ oneunit(InfiniteCardinal{0})  ≡ 1
+        @test one(-∞) ≡ oneunit(-∞) ≡ one(RealInfinity) ≡ oneunit(RealInfinity) ≡ 1.0
+        @test one(exp(0.1im)∞) ≡ oneunit(exp(0.1im)∞) ≡ one(ComplexInfinity) ≡ oneunit(ComplexInfinity) ≡ 1.0+0.0im
+
+        @test zero(ℵ₀) ≡ zero(∞) ≡ zero(Infinity) ≡ zero(InfiniteCardinal{0}) ≡ 0
+        @test zero(-∞) ≡ zero(RealInfinity) ≡ 0.0
+        @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
+    end
 end
 
 
@@ -322,5 +332,5 @@ include("test_cardinality.jl")
 include("test_ambiguity.jl")
 
 @testset "Project quality" begin
-    Aqua.test_all(Infinities, piracies=(; broken=true))
+    Aqua.test_all(Infinities)
 end
