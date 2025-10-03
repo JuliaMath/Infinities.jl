@@ -308,7 +308,7 @@ using Aqua
 
         @test Base.literal_pow(^, -∞, Val(0)) ≡ (-∞)^0 ≡ 1.0
         @test Base.literal_pow(^, -∞, Val(1)) ≡ (-∞)^1 ≡ -∞
-        @test Base.literal_pow(^, -∞, Val(-1)) ≡ (-∞)^(-1) ≡ 0.0
+        @test Base.literal_pow(^, -∞, Val(-1)) ≡ (-∞)^(-1) ≡ (VERSION < v"1.12-" ?  0.0 : -0.0)
 
         @test Base.literal_pow(^, ComplexInfinity(0.1), Val(0)) ≡ ComplexInfinity(0.1)^0 ≡ 1.0+0.0im
         @test Base.literal_pow(^, ComplexInfinity(0.1), Val(1)) ≡ (ComplexInfinity(0.1))^1 ≡ ComplexInfinity(0.1)
