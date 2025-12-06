@@ -8,7 +8,7 @@
 # sign
 +(::Infinity) = RealInfinity()
 -(::Infinity) = RealInfinity(true)
--(y::RealInfinity) = RealInfinity(!y.signbit)
+-(y::RealInfinity) = RealInfinity(!signbit(y))
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
 +(x::InfiniteCardinal) = x
 -(::InfiniteCardinal) = -∞

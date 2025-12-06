@@ -45,13 +45,18 @@ oneunit(::Infinity) = 1
 zero(::Infinity) = 0
 zero(::Type{Infinity}) = 0
 
-struct RealInfinity <: Real
-    signbit::Bool
-end
+abstract type RealInfinity <: Real end
+struct PositiveInfinity <: RealInfinity end
+struct NegativeInfinity <: RealInfinity end
 
-RealInfinity() = RealInfinity(false)
-RealInfinity(::Infinity) = RealInfinity()
+signbit(::PositiveInfinity) = false
+signbit(::NegativeInfinity) = true
+one(::RealInfinity) = 1.0
+
+RealInfinity() = PositiveInfinity()
+RealInfinity(::Infinity) = PositiveInfinity()
 RealInfinity(x::RealInfinity) = x
+RealInfinity(x::Bool) = ifelse(x, NegativeInfinity(), PositiveInfinity())
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
 _convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
