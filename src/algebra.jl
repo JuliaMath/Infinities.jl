@@ -1,8 +1,11 @@
 @inline infpromote(x, y) = Base._promote(x, y)
 @inline infpromote(x::ExtendedComplex, y::AllInfinities) = (x, ComplexInfinity(y))
 @inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = Base._promote(x, y)
-@inline infpromote(x::Real, y::InfiniteCardinal) = (x, ∞)
+@inline infpromote(x::Real, ::InfiniteCardinal) = (x, ∞)
 @inline infpromote(x::Integer, y::InfiniteCardinal) = (x, y)
+@inline infpromote(x::RealInfinity, y::Union{Integer, Rational}) = (x, float(y))
+@inline infpromote(x::Union{Integer, Rational}, y::RealInfinity) = (float(x), y)
+@inline infpromote(x::RealInfinity, ::InfiniteCardinal) = (x, ∞)
 
 
 # sign
@@ -91,16 +94,15 @@ end
 # power
 # Although the base implementation can cover these cases, it can change overtime and yield inconsistent results.
 # ref: https://github.com/JuliaMath/Infinities.jl/actions/runs/19993302836/
-@inline function ^(::PositiveInfinity, p::Integer)
+_infpow(::PositiveInfinity, p) = ifelse(iszero(p), one(p), ifelse(p > 0, +∞, +zero(p)))
+function _infpow(x::NegativeInfinity, p)
+    !isinteger(p) && throw(Base.Math.throw_exp_domainerror(x))
     iszero(p) && return one(p)
-    return ifelse(p > 0, +∞, +float(zero(p)))
+    isodd(p) && return ifelse(p > 0, -∞, -zero(p))
+    return ifelse(p > 0, +∞, +zero(p))
 end
-@inline function ^(x::NegativeInfinity, p::Integer)
-    !isinteger(p) && Base.Math.throw_exp_domainerror(x)
-    iszero(p) && return float(one(p))
-    isodd(p) && return ifelse(p > 0, -∞, -float(zero(p)))
-    return ifelse(p > 0, +∞, +float(zero(p)))
-end
+^(x::RealInfinity, p::Real) = _infpow(infpromote(x, p)...)
+^(x::RealInfinity, p::Integer) = _infpow(infpromote(x, p)...)
 
 # inv
 inv(::Union{Infinity,InfiniteCardinal}) = 0
