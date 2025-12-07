@@ -68,7 +68,6 @@ for Typ in (RealInfinity, Infinity)
     @eval Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x)) # ambiguity fix
 end
 
-signbit(y::RealInfinity) = y.signbit
 sign(y::RealInfinity) = 1-2signbit(y)
 angle(x::RealInfinity) = π*signbit(x)
 
