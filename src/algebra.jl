@@ -88,7 +88,19 @@ for OP in (:fld,:cld,:div)
     end
 end
 
-# Base.literal_pow
+# power
+# Although the base implementation can cover these cases, it can change overtime and yield inconsistent results.
+# ref: https://github.com/JuliaMath/Infinities.jl/actions/runs/19993302836/
+@inline function ^(::PositiveInfinity, p::Integer)
+    iszero(p) && return one(p)
+    return ifelse(p > 0, +∞, +float(zero(p)))
+end
+@inline function ^(x::NegativeInfinity, p::Integer)
+    !isinteger(p) && Base.Math.throw_exp_domainerror(x)
+    iszero(p) && return float(one(p))
+    isodd(p) && return ifelse(p > 0, -∞, -float(zero(p)))
+    return ifelse(p > 0, +∞, +float(zero(p)))
+end
 
 # inv
 inv(::Union{Infinity,InfiniteCardinal}) = 0

@@ -1,11 +1,11 @@
 module Infinities
 
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
-                +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
+                +, -, *, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
                 string, show, promote_rule, convert, getindex,
                 Bool, Integer
 
-export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber
+export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
 # The following is commented out for now to avoid conflicts with Infinity.jl
 # export Infinity
 
