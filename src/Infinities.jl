@@ -3,7 +3,7 @@ module Infinities
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
                 +, -, *, /, \, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
                 string, show, promote_rule, convert, getindex,
-                Bool, Integer
+                Bool, Integer, round
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber
 # The following is commented out for now to avoid conflicts with Infinity.jl

@@ -97,3 +97,6 @@ end
 inv(::Union{Infinity,InfiniteCardinal}) = 0
 inv(x::RealInfinity) = inv(float(x))
 inv(x::ComplexInfinity) = zero(ComplexF64)
+
+# round
+round(x::AllInfinities, mode::RoundingMode; kwds...) = round(float(x), mode; kwds...)
