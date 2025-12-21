@@ -57,6 +57,9 @@
 *(x::AllInfinities, y::AllInfinities) = _mul(x, y)
 *(x::InfiniteCardinal, y::InfiniteCardinal) = max(x, y)
 
+/(x::AllInfinities, y::Number) = x * inv(y)
+/(x::Number, y::AllInfinities) = x / float(y)
+
 # just conventions somehow
 *(::Infinity, y::InfiniteCardinal) = y
 *(x::InfiniteCardinal, ::Infinity) = x
