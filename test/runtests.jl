@@ -222,6 +222,11 @@ using Aqua
             @test (2//3) / (+∞) ≡ 0.0
             @test (2//3) / (exp(im*π/4)∞) ≡ 0.0 - 0.0im
         end
+
+        @testset "round" begin
+            @test round(+∞, RoundNearest) ≡ Inf
+            @test round(-∞, RoundNearest) ≡ -Inf
+        end
     end
 
     @testset "ComplexInfinity" begin
