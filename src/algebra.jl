@@ -62,7 +62,8 @@
 /(x::AllInfinities, y::Complex) = x * inv(y)
 /(x::Number, y::AllInfinities) = x / float(y)
 /(x::Complex, y::AllInfinities) = x / float(y)
-/(x::Rational, y::AllInfinities) = x / float(y)
+/(x::Rational, y::Union{Infinity,InfiniteCardinal}) = zero(x)
+/(x::Rational, y::Union{RealInfinity,ComplexInfinity}) = x/ float(y)
 /(x::AllInfinities, y::AllInfinities) = x * inv(y)
 
 # just conventions somehow
