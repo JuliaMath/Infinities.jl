@@ -58,7 +58,12 @@
 *(x::InfiniteCardinal, y::InfiniteCardinal) = max(x, y)
 
 /(x::AllInfinities, y::Number) = x * inv(y)
+/(x::AllInfinities, y::Rational) = x * inv(y)
+/(x::AllInfinities, y::Complex) = x * inv(y)
 /(x::Number, y::AllInfinities) = x / float(y)
+/(x::Complex, y::AllInfinities) = x / float(y)
+/(x::Rational, y::AllInfinities) = x / float(y)
+/(x::AllInfinities, y::AllInfinities) = x * inv(y)
 
 # just conventions somehow
 *(::Infinity, y::InfiniteCardinal) = y
