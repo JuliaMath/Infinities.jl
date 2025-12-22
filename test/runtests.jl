@@ -206,22 +206,6 @@ using Aqua
 
         @test Base.to_index(RealInfinity()) ≡ ℵ₀
 
-        @testset "division" begin
-            @test (+∞) / 2.0 ≡ 2.0 \ (+∞) ≡ (+∞) / (2 //3) ≡ +∞
-            @test +∞ / (1+im) ≡ exp(-im*π/4)*∞
-            @test (+∞) / (-2.0) ≡ (-2.0) \ (+∞) ≡ -∞
-            @test (-∞) / 2.0 ≡ (2.0) \ (-∞) ≡ -∞
-            @test (-∞) / (-2.0) ≡ (-2.0) \ (-∞) ≡ +∞
-
-            @test +∞ / 0 ≡ +∞ / 0.0 ≡ -∞ / (-0.0) ≡ +∞
-            @test -∞ / 0 ≡ -∞ / 0.0  ≡ +∞ / (-0.0) ≡ -∞ 
-
-            @test 2 / (+∞) ≡ 2.0 / (+∞) ≡ -2.0 / (-∞) ≡ 0.0
-            @test 2 / (-∞) ≡ 2.0 / (-∞) ≡ -2.0 / (+∞) ≡ -0.0
-            @test (2//3) / ∞ ≡ 0 // 1
-            @test (2//3) / (+∞) ≡ 0.0
-            @test (2//3) / (exp(im*π/4)∞) ≡ 0.0 - 0.0im
-        end
 
         @testset "round" begin
             @test round(+∞, RoundNearest) ≡ Inf
@@ -310,6 +294,11 @@ using Aqua
 
         @test signbit(ComplexInfinity(3))
         @test !signbit(ComplexInfinity(100))
+
+        @test conj(exp(im)∞) ≡ exp(-im)∞
+        @test conj(ComplexInfinity(1)) == ComplexInfinity(1)
+        @test ComplexInfinity(1) == -∞
+        @test ComplexInfinity(-1) == -∞
     end
 
     @testset "Set" begin
@@ -345,6 +334,28 @@ using Aqua
         @test zero(ℵ₀) ≡ zero(∞) ≡ zero(Infinity) ≡ zero(InfiniteCardinal{0}) ≡ 0
         @test zero(-∞) ≡ zero(RealInfinity) ≡ 0.0
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
+    end
+
+    @testset "division" begin
+        @test (+∞) / 2.0 ≡ 2.0 \ (+∞) ≡ (+∞) / (2 //3) ≡ +∞
+        @test (+∞) / (1+im) ≡ (1+im) \ (+∞) ≡ exp(-im*π/4)*∞
+        @test (+∞) / (-2.0) ≡ (-2.0) \ (+∞) ≡ -∞
+        @test (-∞) / 2.0 ≡ (2.0) \ (-∞) ≡ -∞
+        @test (-∞) / (-2.0) ≡ (-2.0) \ (-∞) ≡ +∞
+
+        @test +∞ / 0 ≡ +∞ / 0.0 ≡ -∞ / (-0.0) ≡ +∞
+        @test -∞ / 0 ≡ -∞ / 0.0  ≡ +∞ / (-0.0) ≡ -∞ 
+
+        @test 2 / (+∞) ≡ 2.0 / (+∞) ≡ -2.0 / (-∞) ≡ 0.0
+        @test 2 / (-∞) ≡ 2.0 / (-∞) ≡ -2.0 / (+∞) ≡ -0.0
+        @test (1+im) / (+∞) ≡ (+∞) \ (1+im) ≡ 0.0+0.0im
+        @test (1+im) / (exp(im)∞) ≡ (1+im) / (exp(im)Inf) ≡ 0.0-0.0im
+        @test (exp(im)∞) \ (1+im) ≡ (exp(im)Inf) \ (1+im) ≡ 0.0+0.0im
+        @test (2//3) / ∞ ≡ 0 // 1
+        @test (2//3) / (+∞) ≡ 0.0
+        @test (2//3) / (exp(im*π/4)∞) ≡ 0.0 - 0.0im
+
+        @test_throws ArgumentError +∞ / +∞
     end
 end
 

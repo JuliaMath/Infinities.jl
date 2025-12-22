@@ -3,7 +3,7 @@ module Infinities
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
                 +, -, *, /, \, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
                 string, show, promote_rule, convert, getindex,
-                Bool, Integer, round, float
+                Bool, Integer, round, float, conj
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber
 # The following is commented out for now to avoid conflicts with Infinity.jl
@@ -116,7 +116,9 @@ float(x::ComplexInfinity) = exp(im*angle(x)) * Inf
 
 
 sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
-angle(x::ComplexInfinity) = π*x.signbit
+angle(x::ComplexInfinity) = π*mod(x.signbit, 2)
+conj(x::ComplexInfinity{Bool}) = x
+conj(x::ComplexInfinity) = ComplexInfinity(-x.signbit)
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
