@@ -57,6 +57,15 @@
 *(x::AllInfinities, y::AllInfinities) = _mul(x, y)
 *(x::InfiniteCardinal, y::InfiniteCardinal) = max(x, y)
 
+/(x::AllInfinities, y::Number) = x * inv(y)
+/(x::AllInfinities, y::Rational) = x * inv(y)
+/(x::AllInfinities, y::Complex) = x * inv(y)
+/(x::Number, y::AllInfinities) = x / float(y)
+/(x::Complex, y::AllInfinities) = x / float(y)
+/(x::Rational, y::Union{Infinity,InfiniteCardinal}) = zero(x)
+/(x::Rational, y::Union{RealInfinity,ComplexInfinity}) = x/ float(y)
+/(x::AllInfinities, y::AllInfinities) = x * inv(y)
+
 # just conventions somehow
 *(::Infinity, y::InfiniteCardinal) = y
 *(x::InfiniteCardinal, ::Infinity) = x
@@ -94,3 +103,6 @@ end
 inv(::Union{Infinity,InfiniteCardinal}) = 0
 inv(x::RealInfinity) = inv(float(x))
 inv(x::ComplexInfinity) = zero(ComplexF64)
+
+# round
+round(x::AllInfinities, mode::RoundingMode; kwds...) = round(float(x), mode; kwds...)
