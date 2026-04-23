@@ -17,4 +17,27 @@
         @test fld(inf, 1//2) ≡ cld(inf, 1//2) ≡ div(inf, 1//2) ≡ inf
         @test fld(inf, ∞) ≡ fld(inf, +∞) ≡ fld(inf, ℵ₀) ≡ fld(inf, ComplexInfinity()) ≡ NotANumber()
     end
+
+    @testset "rational power" begin
+        # zero
+        @test (+∞)^(0//1) ≡ (-∞)^(0//1) ≡ 1.0
+
+        # positive even/odd/fraction
+        @test (+∞)^(2//1) ≡ (-∞)^(2//1) ≡ +∞
+        @test (+∞)^(1//1) ≡ +∞
+        @test (-∞)^(1//1) ≡ -∞
+        @test (+∞)^(1//2) ≡ +∞
+        @test_throws DomainError (-∞)^(1//2)
+
+        # negative even/odd/fraction
+        @test (+∞)^(-2.0) ≡ (-∞)^(-2.0) ≡ 0.0
+        @test (+∞)^(-1//1) ≡ 0.0
+        @test (-∞)^(-1//1) ≡ -0.0
+        @test (+∞)^(-1//2) ≡ 0.0
+        @test_throws DomainError (-∞)^(-1//2)
+
+        # irrational
+        @test (+∞)^π ≡ +∞
+        @test_throws DomainError (-∞)^π
+    end
 end
