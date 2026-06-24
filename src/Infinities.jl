@@ -1,11 +1,11 @@
 module Infinities
 
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
-                +, -, *, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
+                +, -, *, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
                 string, show, promote_rule, convert, getindex,
                 Bool, Integer
 
-export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber
+export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
 # The following is commented out for now to avoid conflicts with Infinity.jl
 # export Infinity
 
@@ -45,13 +45,18 @@ oneunit(::Infinity) = 1
 zero(::Infinity) = 0
 zero(::Type{Infinity}) = 0
 
-struct RealInfinity <: Real
-    signbit::Bool
-end
+abstract type RealInfinity <: Real end
+struct PositiveInfinity <: RealInfinity end
+struct NegativeInfinity <: RealInfinity end
 
-RealInfinity() = RealInfinity(false)
-RealInfinity(::Infinity) = RealInfinity()
+signbit(::PositiveInfinity) = false
+signbit(::NegativeInfinity) = true
+one(::RealInfinity) = 1.0
+
+RealInfinity() = PositiveInfinity()
+RealInfinity(::Infinity) = PositiveInfinity()
 RealInfinity(x::RealInfinity) = x
+RealInfinity(x::Bool) = ifelse(x, NegativeInfinity(), PositiveInfinity())
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
 _convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
@@ -63,7 +68,6 @@ for Typ in (RealInfinity, Infinity)
     @eval Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x)) # ambiguity fix
 end
 
-signbit(y::RealInfinity) = y.signbit
 sign(y::RealInfinity) = 1-2signbit(y)
 angle(x::RealInfinity) = π*signbit(x)
 
