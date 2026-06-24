@@ -177,6 +177,29 @@ using Aqua
         @test (-∞)*2 ≡ 2*(-∞) ≡ -2 * ∞ ≡ ∞ * (-2) ≡ (-2) * RealInfinity() ≡ -∞
         @test (-∞)*2.3 ≡ 2.3*(-∞) ≡ -2.3 * ∞ ≡ ∞ * (-2.3) ≡ (-2.3) * RealInfinity() ≡ -∞
 
+        @testset "power" begin
+            # zero
+            @test (+∞)^0.0 ≡ (-∞)^0.0 ≡ 1.0
+
+            # positive even/odd/fraction
+            @test (+∞)^2.0 ≡ (-∞)^2.0 ≡ +∞
+            @test (+∞)^1.0 ≡ +∞
+            @test (-∞)^1.0 ≡ -∞
+            @test (+∞)^0.5 ≡ +∞
+            @test_throws DomainError (-∞)^0.5
+
+            # negative even/odd/fraction
+            @test (+∞)^(-2.0) ≡ (-∞)^(-2.0) ≡ 0.0
+            @test (+∞)^(-1.0) ≡ 0.0
+            @test (-∞)^(-1.0) ≡ -0.0
+            @test (+∞)^(-0.5) ≡ 0.0
+            @test_throws DomainError (-∞)^(-0.5)
+
+            # irrational
+            @test (+∞)^π ≡ +∞
+            @test_throws DomainError (-∞)^π
+        end
+
         @test isinf(-∞)
         @test !isfinite(-∞)
 
@@ -301,14 +324,26 @@ using Aqua
         @test Base.literal_pow(^, ℵ₀, Val(0)) ≡ ℵ₀^0 ≡ 1
         @test Base.literal_pow(^, ℵ₀, Val(1)) ≡ ℵ₀^1 ≡ ℵ₀
         @test Base.literal_pow(^, ℵ₀, Val(-1)) ≡ ℵ₀^(-1) ≡ 0
+        @test Base.literal_pow(^, ℵ₀, Val(2)) ≡ ℵ₀^2 ≡ ℵ₀
+        @test Base.literal_pow(^, ℵ₀, Val(-2)) ≡ ℵ₀^(-2) ≡ 0
 
         @test Base.literal_pow(^, ∞, Val(0)) ≡ ∞^0 ≡ 1
         @test Base.literal_pow(^, ∞, Val(1)) ≡ ∞^1 ≡ ∞
         @test Base.literal_pow(^, ∞, Val(-1)) ≡ ∞^(-1) ≡ 0
+        @test Base.literal_pow(^, ∞, Val(2)) ≡ ∞^2 ≡ ∞
+        @test Base.literal_pow(^, ∞, Val(-2)) ≡ ∞^(-2) ≡ 0
+
+        @test Base.literal_pow(^, +∞, Val(0)) ≡ (+∞)^0 ≡ 1.0
+        @test Base.literal_pow(^, +∞, Val(1)) ≡ (+∞)^1 ≡ +∞
+        @test Base.literal_pow(^, +∞, Val(-1)) ≡ (+∞)^(-1) ≡ 0.0
+        @test Base.literal_pow(^, +∞, Val(2)) ≡ (+∞)^2 ≡ +∞
+        @test Base.literal_pow(^, +∞, Val(-2)) ≡ (+∞)^(-2) ≡ 0.0
 
         @test Base.literal_pow(^, -∞, Val(0)) ≡ (-∞)^0 ≡ 1.0
         @test Base.literal_pow(^, -∞, Val(1)) ≡ (-∞)^1 ≡ -∞
         @test Base.literal_pow(^, -∞, Val(-1)) ≡ (-∞)^(-1) ≡ (VERSION < v"1.12-" ?  0.0 : -0.0)
+        @test Base.literal_pow(^, -∞, Val(2)) ≡ (-∞)^2 ≡ +∞
+        @test Base.literal_pow(^, -∞, Val(-2)) ≡ (-∞)^(-2) ≡ 0.0
 
         @test Base.literal_pow(^, ComplexInfinity(0.1), Val(0)) ≡ ComplexInfinity(0.1)^0 ≡ 1.0+0.0im
         @test Base.literal_pow(^, ComplexInfinity(0.1), Val(1)) ≡ (ComplexInfinity(0.1))^1 ≡ ComplexInfinity(0.1)
