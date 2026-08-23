@@ -12,3 +12,20 @@ promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfi
 promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
 promote_rule(::Type{ComplexInfinity{T}}, ::Type{<:RealInfinity}) where T<:Integer = ComplexInfinity{T}
 promote_rule(::Type{ComplexInfinity{T}}, ::Type{ComplexInfinity{S}}) where {T, S} = ComplexInfinity{promote_type(T, S)}
+
+function tryparse(::Type{NegativeInfinity}, s::AbstractString)
+    i = findfirst(!isspace, s)
+    s[i] == '-' || return nothing
+    i = findnext(!isspace, s, nextind(s, i)) # A space can have multiple codeunits
+    s[i] == '∞' || return nothing
+    return findnext(!isspace, s, i + ncodeunits('∞')) |> isnothing ? NegativeInfinity() : nothing
+end
+
+function tryparse(::Type{PositiveInfinity}, s::AbstractString)
+    i = findfirst(!isspace, s)
+    if s[i] == '+'
+        i = findnext(!isspace, s, nextind(s, i)) # A space can have multiple codeunits
+    end
+    s[i] == '∞' || return nothing
+    return findnext(!isspace, s, i + ncodeunits('∞')) |> isnothing ? PositiveInfinity() : nothing
+end

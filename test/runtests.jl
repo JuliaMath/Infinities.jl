@@ -359,6 +359,24 @@ using Aqua
         @test zero(-∞) ≡ zero(RealInfinity) ≡ 0.0
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
     end
+
+    @testset "parsing" begin
+        @test tryparse(NegativeInfinity, "-∞") == NegativeInfinity()
+        @test tryparse(NegativeInfinity, " - ∞ ") == NegativeInfinity()
+        @test tryparse(NegativeInfinity, "∞ ") === nothing
+        @test tryparse(NegativeInfinity, "3-∞") === nothing
+        @test tryparse(NegativeInfinity, "-+∞") === nothing
+        @test tryparse(NegativeInfinity, "-∞2") === nothing
+
+        @test tryparse(PositiveInfinity, "+∞") == PositiveInfinity()
+        @test tryparse(PositiveInfinity, " + ∞ ") == PositiveInfinity()
+        @test tryparse(PositiveInfinity, "∞") == PositiveInfinity()
+        @test tryparse(PositiveInfinity, " ∞ ") == PositiveInfinity()
+        @test tryparse(PositiveInfinity, "-∞") === nothing
+        @test tryparse(PositiveInfinity, "+-∞") === nothing
+        @test tryparse(PositiveInfinity, "--∞") === nothing
+        @test tryparse(PositiveInfinity, "-∞∞") === nothing
+    end
 end
 
 
