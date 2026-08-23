@@ -31,12 +31,12 @@ one(::Type{<:InfiniteCardinal}) = 1
 oneunit(::Type{<:InfiniteCardinal}) = 1
 oneunit(::InfiniteCardinal) = 1
 
-Integer(::Infinity) = InfiniteCardinal{0}()
-function Integer(x::RealInfinity)
+Base.Integer(::Infinity) = InfiniteCardinal{0}()
+function Base.Integer(x::RealInfinity)
     signbit(x) && throw(InexactError(:Integer, Integer, x))
     ℵ₀
 end
-function Integer(x::ComplexInfinity)
+function Base.Integer(x::ComplexInfinity)
     iszero(angle(x)) || throw(InexactError(:Integer, Integer, x))
     ℵ₀
 end

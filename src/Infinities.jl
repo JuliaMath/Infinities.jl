@@ -65,7 +65,7 @@ _convert(::Type{T}, x::RealInfinity) where {T<:Real} = sign(x)*convert(T, Inf)
 (::Type{T})(x::RealInfinity) where {T<:Real} = _convert(T, x)
 
 for Typ in (RealInfinity, Infinity)
-    @eval Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x)) # ambiguity fix
+    @eval Base.Bool(x::$Typ) = throw(InexactError(:Bool, Bool, x)) # ambiguity fix
 end
 
 sign(y::RealInfinity) = 1-2signbit(y)
