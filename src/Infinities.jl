@@ -2,7 +2,7 @@ module Infinities
 
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
                 +, -, *, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
-                string, show, promote_rule, convert, getindex, tryparse
+                string, show, promote_rule, convert, getindex, tryparse,
                 Bool, Integer
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
