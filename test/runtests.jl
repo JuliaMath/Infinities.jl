@@ -393,6 +393,16 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test tryparse(PositiveInfinity, "") === nothing
         @test tryparse(PositiveInfinity, "  ") === nothing
         @test tryparse(PositiveInfinity, "+ ") === nothing
+
+        @test tryparse(RealInfinity, "-∞") == NegativeInfinity()
+        @test tryparse(RealInfinity, " - ∞ ") == NegativeInfinity()
+        @test tryparse(RealInfinity, "+∞") == PositiveInfinity()
+        @test tryparse(RealInfinity, " ∞ ") == PositiveInfinity()
+        @test tryparse(RealInfinity, "") === nothing
+        @test tryparse(RealInfinity, "  ") === nothing
+        @test tryparse(RealInfinity, "-∞2") === nothing
+        @test tryparse(RealInfinity, "3") === nothing
+
         @testset "strings whose indices are not byte offsets" begin
             @test tryparse(NegativeInfinity, CharString("-∞")) == NegativeInfinity()
             @test tryparse(NegativeInfinity, CharString(" - ∞ ")) == NegativeInfinity()
@@ -400,6 +410,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test tryparse(PositiveInfinity, CharString("+∞")) == PositiveInfinity()
             @test tryparse(PositiveInfinity, CharString(" ∞ ")) == PositiveInfinity()
             @test tryparse(PositiveInfinity, CharString("∞∞")) === nothing
+            @test tryparse(RealInfinity, CharString("-∞")) == NegativeInfinity()
+            @test tryparse(RealInfinity, CharString("∞")) == PositiveInfinity()
+            @test tryparse(RealInfinity, CharString("")) === nothing
         end
     end
 end

@@ -31,4 +31,9 @@ function tryparse(::Type{PositiveInfinity}, s::AbstractString)
     s[i] == '∞' || return nothing
     return findnext(!isspace, s, nextind(s, i)) |> isnothing ? PositiveInfinity() : nothing
 end
+
+function tryparse(::Type{RealInfinity}, s::AbstractString)
+    negative = tryparse(NegativeInfinity, s)
+    isnothing(negative) || return negative
+    return tryparse(PositiveInfinity, s)
 end
