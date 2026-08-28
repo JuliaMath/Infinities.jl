@@ -57,6 +57,7 @@ RealInfinity() = PositiveInfinity()
 RealInfinity(::Infinity) = PositiveInfinity()
 RealInfinity(x::RealInfinity) = x
 RealInfinity(x::Bool) = ifelse(x, NegativeInfinity(), PositiveInfinity())
+PositiveInfinity(::Infinity) = PositiveInfinity() # otherwise the generic `(::Type{T})(::Infinity) where T<:Real` would route through `Inf`
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
 _convert(::Type{Float32}, x::RealInfinity) = sign(x)*Inf32
