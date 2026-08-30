@@ -72,8 +72,9 @@ Base.Checked.checked_mul(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = ℵ₀
 ##
 # hash
 ##
-Base.hash(::InfiniteCardinal{0}) = 0x775431eef01bca90 # made up
-Base.hash(::InfiniteCardinal{1}) = 0x55437c69b794f8ce # made up
+# `isequal(a, b)` implies `hash(a) == hash(b)` so conform as ℵ₀ is `isequal` to `Inf`.
+Base.hash(::InfiniteCardinal{0}, h::UInt)::UInt = hash(Inf, h)
+Base.hash(x::InfiniteCardinal, h::UInt)::UInt = hash(typeof(x), h)
 
 
 # avoid stack overflow

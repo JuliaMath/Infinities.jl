@@ -129,7 +129,21 @@ oneunit(::ComplexInfinity) = oneunit(ComplexF64)
 zero(::ComplexInfinity) = zero(ComplexF64)
 zero(::Type{<:ComplexInfinity}) = zero(ComplexF64)
 
-Base.hash(::Infinity) = 0x020113134b21797f # made up
+
+# `isequal` implies equal hashes, so the infinities have to hash like the float
+# infinities they compare equal to. The interface requires implementing `hash(x, h::UInt)`.
+
+Base.hash(::Infinity, h::UInt)::UInt = hash(Inf, h)
+Base.hash(::PositiveInfinity, h::UInt)::UInt = hash(Inf, h)
+Base.hash(::NegativeInfinity, h::UInt)::UInt = hash(-Inf, h)
+
+# Equality of ComplexInfinity is equality of the angle, hence so is the hash.
+function Base.hash(x::ComplexInfinity, h::UInt)::UInt
+    θ = angle(x)
+    θ == angle(PositiveInfinity()) && return hash(Inf, h)
+    θ == angle(NegativeInfinity()) && return hash(-Inf, h)
+    hash(ComplexInfinity, hash(θ, h))
+end
 
 
 include("cardinality.jl")
