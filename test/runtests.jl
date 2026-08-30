@@ -320,6 +320,25 @@ using Aqua
         @test 2 ∉ s
     end
 
+    @testset "hash" begin
+        infinities = (∞, +∞, -∞, Inf, -Inf, Inf32, Inf16, big(Inf),
+                      InfiniteCardinal{0}(), ComplexInfinity(false),
+                      ComplexInfinity(true), ComplexInfinity(0.1))
+
+        # isequal must imply equal hashes
+        for a in infinities, b in infinities
+            isequal(a, b) && @test hash(a) == hash(b)
+        end
+
+        @test hash(+∞) ≠ hash(-∞)
+        @test hash(ℵ₀) ≠ hash(ℵ₁)
+
+        for x in (infinities..., ℵ₁)
+            @test hash(x, UInt(1)) isa UInt
+            @test hash((x,)) isa UInt
+        end
+    end
+
     @testset "Base.literal_pow" begin
         @test Base.literal_pow(^, ℵ₀, Val(0)) ≡ ℵ₀^0 ≡ 1
         @test Base.literal_pow(^, ℵ₀, Val(1)) ≡ ℵ₀^1 ≡ ℵ₀
