@@ -97,8 +97,11 @@ using Aqua
         @test RealInfinity(∞) ≡ convert(RealInfinity, ∞) ≡ RealInfinity() ≡
                 RealInfinity(false) ≡ RealInfinity(RealInfinity())
 
-        @test promote_type(Infinity, RealInfinity) == RealInfinity
+        @test promote_type(Infinity, PositiveInfinity) == PositiveInfinity
         @test promote(∞, RealInfinity()) ≡ (RealInfinity(),RealInfinity())
+        # ∞ and -∞ have no common concrete type, just like +∞ and -∞
+        @test_throws ErrorException promote(∞, -∞)
+        @test_throws ErrorException promote(+∞, -∞)
 
         @test -∞ ≡ RealInfinity(true)
         @test +∞ ≡ RealInfinity()
@@ -203,7 +206,8 @@ using Aqua
         @test isinf(-∞)
         @test !isfinite(-∞)
 
-        @test [∞, -∞] isa Vector{RealInfinity}
+        @test [∞, -∞] isa Vector{Real}
+        @test [+∞, -∞] isa Vector{RealInfinity}
 
         @test mod(-∞, 5) isa NotANumber
         @test mod(-∞, -∞) isa NotANumber
