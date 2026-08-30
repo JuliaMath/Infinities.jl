@@ -16,17 +16,25 @@ promote_rule(::Type{ComplexInfinity{T}}, ::Type{ComplexInfinity{S}}) where {T, S
 
 function tryparse(::Type{NegativeInfinity}, s::AbstractString)
     i = findfirst(!isspace, s)
-    s[i] == '-' || return nothing
+    (isnothing(i) || s[i] != '-') && return nothing
     i = findnext(!isspace, s, nextind(s, i)) # A space can have multiple codeunits
-    s[i] == '∞' || return nothing
-    return findnext(!isspace, s, i + ncodeunits('∞')) |> isnothing ? NegativeInfinity() : nothing
+    (isnothing(i) || s[i] != '∞') && return nothing
+    return findnext(!isspace, s, nextind(s, i)) |> isnothing ? NegativeInfinity() : nothing
 end
 
 function tryparse(::Type{PositiveInfinity}, s::AbstractString)
     i = findfirst(!isspace, s)
+    isnothing(i) && return nothing
     if s[i] == '+'
         i = findnext(!isspace, s, nextind(s, i)) # A space can have multiple codeunits
+        isnothing(i) && return nothing
     end
     s[i] == '∞' || return nothing
-    return findnext(!isspace, s, i + ncodeunits('∞')) |> isnothing ? PositiveInfinity() : nothing
+    return findnext(!isspace, s, nextind(s, i)) |> isnothing ? PositiveInfinity() : nothing
+end
+
+function tryparse(::Type{RealInfinity}, s::AbstractString)
+    negative = tryparse(NegativeInfinity, s)
+    isnothing(negative) || return negative
+    return tryparse(PositiveInfinity, s)
 end

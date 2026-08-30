@@ -3,6 +3,17 @@ import Infinities: Infinity
 
 using Aqua
 
+"An `AbstractString` indexed by character position, so that byte arithmetic on indices is invalid."
+struct CharString <: AbstractString
+    chars::Vector{Char}
+end
+CharString(s::AbstractString) = CharString(collect(s))
+Base.ncodeunits(s::CharString) = length(s.chars)
+Base.codeunit(::CharString) = Char
+Base.codeunit(s::CharString, i::Integer) = s.chars[i]
+Base.isvalid(s::CharString, i::Integer) = 1 ≤ i ≤ ncodeunits(s)
+Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i], i + 1) : nothing
+
 @testset "∞" begin
     @testset "∞" begin
         @test ∞ ≠ 1
@@ -390,6 +401,9 @@ using Aqua
         @test tryparse(NegativeInfinity, "3-∞") === nothing
         @test tryparse(NegativeInfinity, "-+∞") === nothing
         @test tryparse(NegativeInfinity, "-∞2") === nothing
+        @test tryparse(NegativeInfinity, "") === nothing
+        @test tryparse(NegativeInfinity, "  ") === nothing
+        @test tryparse(NegativeInfinity, "- ") === nothing
 
         @test tryparse(PositiveInfinity, "+∞") == PositiveInfinity()
         @test tryparse(PositiveInfinity, " + ∞ ") == PositiveInfinity()
@@ -399,6 +413,30 @@ using Aqua
         @test tryparse(PositiveInfinity, "+-∞") === nothing
         @test tryparse(PositiveInfinity, "--∞") === nothing
         @test tryparse(PositiveInfinity, "-∞∞") === nothing
+        @test tryparse(PositiveInfinity, "") === nothing
+        @test tryparse(PositiveInfinity, "  ") === nothing
+        @test tryparse(PositiveInfinity, "+ ") === nothing
+
+        @test tryparse(RealInfinity, "-∞") == NegativeInfinity()
+        @test tryparse(RealInfinity, " - ∞ ") == NegativeInfinity()
+        @test tryparse(RealInfinity, "+∞") == PositiveInfinity()
+        @test tryparse(RealInfinity, " ∞ ") == PositiveInfinity()
+        @test tryparse(RealInfinity, "") === nothing
+        @test tryparse(RealInfinity, "  ") === nothing
+        @test tryparse(RealInfinity, "-∞2") === nothing
+        @test tryparse(RealInfinity, "3") === nothing
+
+        @testset "strings whose indices are not byte offsets" begin
+            @test tryparse(NegativeInfinity, CharString("-∞")) == NegativeInfinity()
+            @test tryparse(NegativeInfinity, CharString(" - ∞ ")) == NegativeInfinity()
+            @test tryparse(NegativeInfinity, CharString("-∞2")) === nothing
+            @test tryparse(PositiveInfinity, CharString("+∞")) == PositiveInfinity()
+            @test tryparse(PositiveInfinity, CharString(" ∞ ")) == PositiveInfinity()
+            @test tryparse(PositiveInfinity, CharString("∞∞")) === nothing
+            @test tryparse(RealInfinity, CharString("-∞")) == NegativeInfinity()
+            @test tryparse(RealInfinity, CharString("∞")) == PositiveInfinity()
+            @test tryparse(RealInfinity, CharString("")) === nothing
+        end
     end
 end
 
