@@ -450,6 +450,20 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test sorted[1] === -∞ && sorted[2] === 1.0 && sorted[3] === ∞ && isnan(sorted[4])
     end
 
+    @testset "NaN arithmetic" begin
+        for nan in (NaN, NaN32, NaN16, big(NaN)),
+            inf in (∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity())
+
+            for op in (+, -, *, div, fld, cld)
+                @test isnan(op(nan, inf)) && isnan(op(inf, nan))
+            end
+            @test isnan(mod(nan, inf)) # the other direction is `NotANumber` for every argument
+        end
+        for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (+∞, -∞)
+            @test isnan(inf^nan)
+        end
+    end
+
     @testset "ordinary values" begin
         for inf in (∞, +∞, ℵ₀)
             @test 1.0 < inf && !(inf < 1.0) && 1.0 ≤ inf && inf ≥ 1.0
