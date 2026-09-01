@@ -479,6 +479,20 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test max(-∞, ∞) === ∞ && min(-∞, ∞) === -∞
     end
 
+    @testset "against the floats" begin
+        values = (0, 1, -2, 1.5, -1.5, 0.0, -0.0, NaN, NaN32, Inf, -Inf,
+                  prevfloat(Inf), nextfloat(-Inf), nextfloat(0.0))
+        for x in values, (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
+            for op in (<, ≤, >, ≥, ==, isless, isequal)
+                @test op(x, inf) == op(x, flt)
+                @test op(inf, x) == op(flt, x)
+            end
+            for op in (max, min)
+                @test isequal(op(x, inf), op(x, flt)) && isequal(op(inf, x), op(flt, x))
+            end
+        end
+    end
+
     @testset "parsing" begin
         @test tryparse(NegativeInfinity, "-∞") == NegativeInfinity()
         @test tryparse(NegativeInfinity, " - ∞ ") == NegativeInfinity()
