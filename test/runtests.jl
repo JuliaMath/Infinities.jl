@@ -394,6 +394,37 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
     end
 
+    @testset "NaN" begin
+        for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (∞, +∞, -∞, ℵ₀)
+            # a numeric comparison is false in every direction
+            for op in (<, ≤, >, ≥, ==)
+                @test !op(nan, inf) && !op(inf, nan)
+            end
+
+            # the sort order puts `NaN` after every value, an infinity included
+            @test isless(inf, nan) && !isless(nan, inf)
+            @test (isless(nan, inf), isless(inf, nan), isequal(nan, inf)) |> count == 1
+
+            # `max` and `min` propagate `NaN`, as they do over the floats alone
+            @test isnan(max(nan, inf)) && isnan(max(inf, nan))
+            @test isnan(min(nan, inf)) && isnan(min(inf, nan))
+        end
+        sorted = sort([∞, NaN, 1.0, -∞])
+        @test sorted[1] === -∞ && sorted[2] === 1.0 && sorted[3] === ∞ && isnan(sorted[4])
+    end
+
+    @testset "ordinary values" begin
+        for inf in (∞, +∞, ℵ₀)
+            @test 1.0 < inf && !(inf < 1.0) && 1.0 ≤ inf && inf ≥ 1.0
+            @test isless(1.0, inf) && !isless(inf, 1.0)
+            @test max(1.0, inf) === max(inf, 1.0) === inf
+            @test min(1.0, inf) === min(inf, 1.0) === 1.0
+        end
+        @test -∞ < 1 < ∞ && -∞ ≤ -∞ && ∞ ≤ ∞
+        @test !(Inf < ∞) && !(∞ < Inf) && Inf ≤ ∞
+        @test max(-∞, ∞) === ∞ && min(-∞, ∞) === -∞
+    end
+
     @testset "parsing" begin
         @test tryparse(NegativeInfinity, "-∞") == NegativeInfinity()
         @test tryparse(NegativeInfinity, " - ∞ ") == NegativeInfinity()

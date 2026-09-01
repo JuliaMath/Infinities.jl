@@ -9,27 +9,32 @@
 ==(x::AllInfinities, y::AllInfinities) = _infeq(x, y)
 
 # isless
+# `isless` is the sort order. `NaN` sorts after every other value, infinities included.
 isless(x::AllRealInfinities, y::AllRealInfinities) = signbit(x) && !signbit(y)
 @generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
+# The leading `signbit` call discards its result. It is there to reject a non-real `Number`.
 for Typ in (Number, Real, AbstractFloat)
     @eval begin
-        isless(x::AllRealInfinities, y::$Typ) = (signbit(y); signbit(x) && y ≠ -∞)
-        isless(x::$Typ, y::AllRealInfinities) = (signbit(x); !signbit(y) && x ≠ ∞)
+        isless(x::AllRealInfinities, y::$Typ) = (signbit(y); isnan(y) || signbit(x) && y ≠ -∞)
+        isless(x::$Typ, y::AllRealInfinities) = (signbit(x); !isnan(x) && !signbit(y) && x ≠ ∞)
     end
 end
 for Typ in (Number, Real, AbstractFloat, AllRealInfinities)
     @eval begin
-        isless(::InfiniteCardinal, x::$Typ) = false
+        isless(::InfiniteCardinal, x::$Typ) = isnan(x)
         isless(x::$Typ, y::InfiniteCardinal) = isless(x, ∞) || isless(ℵ₀, y)
     end
 end
 isless(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 
 # minmax, <, ≤
-@inline _max(x, y) = ifelse(y < x, x, y)
-@inline _min(x, y) = ifelse(y < x, y, x)
+# `<`, `max` and `min` use the numeric comparison, not the sort order. They differ at `NaN`:
+# it compares false against everything and propagates through `max` and `min`.
+@inline _lt(x, y) = !isnan(x) && !isnan(y) && isless(x, y)
 @inline _le(x, y) = x < y || x == y
-for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :isless), (:≤, :_le))
+@inline _max(x, y) = isnan(x) ? x : isnan(y) ? y : ifelse(_lt(y, x), x, y)
+@inline _min(x, y) = isnan(x) ? x : isnan(y) ? y : ifelse(_lt(y, x), y, x)
+for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :_lt), (:≤, :_le))
     for Typ in (Real, )
         @eval begin
             $op(x::AllInfinities, y::$Typ) = $fop(x, y)
@@ -38,4 +43,3 @@ for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :isless), (:≤, :_le))
     end
     @eval $op(x::AllInfinities, y::AllInfinities) = $fop(x, y)
 end
-        
