@@ -6,6 +6,9 @@
 @inline infpromote(x::RealInfinity, y::Union{Integer, Rational}) = (x, float(y))
 @inline infpromote(x::Union{Integer, Rational}, y::RealInfinity) = (float(x), y)
 @inline infpromote(x::RealInfinity, ::InfiniteCardinal) = (x, ∞)
+# `Base` promotes every `Real` to `BigFloat`, which would convert the infinity away.
+@inline infpromote(x::BigFloat, y::Union{Infinity,RealInfinity}) = (x, y)
+@inline infpromote(x::Union{Infinity,RealInfinity}, y::BigFloat) = (x, y)
 
 
 # sign

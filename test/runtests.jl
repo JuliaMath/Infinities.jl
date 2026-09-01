@@ -404,6 +404,8 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
                 @test T(-Inf) == inf == T(-Inf)
                 @test T(Inf) ≠ inf
             end
+            @test T(2) + ∞ ≡ ∞ + T(2) ≡ ∞
+            @test T(2) * +∞ ≡ (+∞)^T(2) ≡ +∞
         end
     end
 
