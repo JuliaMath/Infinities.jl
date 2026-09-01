@@ -49,7 +49,8 @@
 # multiplication
 
 @inline _sb(x) = signbit(x)
-@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy 
+@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy
+@inline _sb(x::ComplexInfinity) = x.signbit # the whole angle, not just its sign
 
 @inline __mul(x, y::AllInfinities) = RealInfinity(_sb(x) ⊻ _sb(y))
 @inline __mul(x, y::ComplexInfinity) = ComplexInfinity(_sb(x) + _sb(y))

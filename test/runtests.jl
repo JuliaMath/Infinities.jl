@@ -326,6 +326,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
 
         @test signbit(ComplexInfinity(3))
         @test !signbit(ComplexInfinity(100))
+        # `signbit` answers with a `Bool` for every angle, as it does over the reals
+        @test signbit(ComplexInfinity(1.0)) === signbit(-ComplexInfinity()) === true
+        @test signbit(ComplexInfinity(0.5)) === signbit(ComplexInfinity()) === false
     end
 
     @testset "Set" begin
