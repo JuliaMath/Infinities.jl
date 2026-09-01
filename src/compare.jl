@@ -1,6 +1,11 @@
+# The direction of an infinity, as a precision-independent angle.
+# `angle` evaluates π in the precision of its argument, so `angle(-Inf32) ≠ angle(-Inf)`.
+_angle(x::Real) = angle(RealInfinity(signbit(x)))
+_angle(x::Number) = angle(x)
+
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀
-@inline _eq(x, y::AllInfinities) = isinf(x) && angle(y) == angle(x)
+@inline _eq(x, y::AllInfinities) = isinf(x) && angle(y) == _angle(x)
 @inline _infeq(x, y) = _eq(x, y)
 @inline _infeq(x::InfiniteCardinal, y) = _eq(y, x)
 @inline _infeq(x::InfiniteCardinal, y::InfiniteCardinal) = !(x<y) & !(y<x)

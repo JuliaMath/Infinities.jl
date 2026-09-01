@@ -336,7 +336,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     end
 
     @testset "hash" begin
-        infinities = (∞, +∞, -∞, Inf, -Inf, Inf32, Inf16, big(Inf),
+        infinities = (∞, +∞, -∞, Inf, -Inf, Inf32, -Inf32, Inf16, -Inf16, big(Inf), -big(Inf),
                       InfiniteCardinal{0}(), ComplexInfinity(false),
                       ComplexInfinity(true), ComplexInfinity(0.1))
 
@@ -392,6 +392,19 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test zero(ℵ₀) ≡ zero(∞) ≡ zero(Infinity) ≡ zero(InfiniteCardinal{0}) ≡ 0
         @test zero(-∞) ≡ zero(RealInfinity) ≡ 0.0
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
+    end
+
+    @testset "float precisions" begin
+        for T in (Float16, Float32, Float64, BigFloat)
+            for inf in (∞, +∞, ComplexInfinity(), ℵ₀)
+                @test T(Inf) == inf == T(Inf)
+                @test T(-Inf) ≠ inf
+            end
+            for inf in (-∞, -ComplexInfinity())
+                @test T(-Inf) == inf == T(-Inf)
+                @test T(Inf) ≠ inf
+            end
+        end
     end
 
     @testset "NaN" begin
