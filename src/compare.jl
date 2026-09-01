@@ -3,9 +3,20 @@
 _angle(x::Real) = angle(RealInfinity(signbit(x)))
 _angle(x::Number) = angle(x)
 
+# isinf
+"""
+    isinf(x, y)
+
+test whether `x` is an infinity pointing in the same direction as the infinity `y`,
+e.g. `isinf(-Inf, -∞)`. Everything that is not such an infinity gives `false`, a value
+of a type outside the numeric hierarchy included.
+"""
+isinf(_, ::AllInfinities) = false
+isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
+
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀
-@inline _eq(x, y::AllInfinities) = isinf(x) && angle(y) == _angle(x)
+@inline _eq(x, y::AllInfinities) = isinf(x, y)
 @inline _infeq(x, y) = _eq(x, y)
 @inline _infeq(x::InfiniteCardinal, y) = _eq(y, x)
 @inline _infeq(x::InfiniteCardinal, y::InfiniteCardinal) = !(x<y) & !(y<x)

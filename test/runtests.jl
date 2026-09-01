@@ -1,5 +1,5 @@
 using Infinities, Base64, Test
-import Infinities: Infinity
+import Infinities: Infinity, AllInfinities
 
 using Aqua, JET
 
@@ -405,6 +405,28 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
                 @test T(Inf) ≠ inf
             end
         end
+    end
+
+    @testset "isinf(x, y)" begin
+        # ℵ₁ points in the same direction as ∞, even though `ℵ₁ == ∞` is false
+        positive = (∞, +∞, ℵ₀, ℵ₁, ComplexInfinity(), Inf, Inf32, Inf16, big(Inf))
+        negative = (-∞, -ComplexInfinity(), -Inf, -Inf32, -Inf16, -big(Inf))
+        imaginary = (ComplexInfinity(0.5), complex(0.0, Inf))
+        others = (0, 1.5, -2, -1.5, 0.0, -0.0, NaN, NaN32, prevfloat(Inf), nextfloat(-Inf),
+                  nextfloat(0.0), prevfloat(-0.0), "∞", "-∞")
+
+        for xs in (positive, negative, imaginary, others), ys in (positive, negative, imaginary)
+            for x in xs, y in ys
+                y isa AllInfinities || continue # only our own infinities are admissible as a reference
+                @test isinf(x, y) == (xs === ys)
+                # `==` asks the narrower question, and `ℵ₁` is the whole of the difference
+                if x !== ℵ₁ && y !== ℵ₁
+                    @test isinf(x, y) == (x == y)
+                end
+            end
+        end
+        @test isinf(ℵ₁, ∞) && isinf(∞, ℵ₁) && isinf(Inf, ℵ₁) && isinf(ℵ₁, ℵ₀)
+        @test ℵ₁ ≠ ∞ && ∞ ≠ ℵ₁ && Inf ≠ ℵ₁ && ℵ₁ ≠ ℵ₀
     end
 
     @testset "NaN" begin
