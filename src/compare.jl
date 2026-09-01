@@ -13,6 +13,9 @@ of a type outside the numeric hierarchy included.
 """
 isinf(_, ::AllInfinities) = false
 isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
+# On the real line the direction is a comparison against zero.
+# `signbit(y)` is constant, so the branch folds away and the check becomes a single instruction.
+isinf(x::Real, y::AllRealInfinities) = isinf(x) && (signbit(y) ? x < zero(x) : x > zero(x))
 
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀
