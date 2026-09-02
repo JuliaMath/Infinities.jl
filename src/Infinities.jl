@@ -1,7 +1,8 @@
 module Infinities
 
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
-                +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
+                +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, rem, divrem, min, max,
+                sign, signbit,
                 string, show, promote_rule, convert, getindex, tryparse, conj,
                 isinteger, round, floor, ceil, trunc,
                 Bool, Integer
