@@ -1,6 +1,6 @@
 module Infinities
 
-import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
+import Base: angle, isone, iszero, isinf, isfinite, isnan, isreal, abs, one, oneunit, zero, isless, isequal, inv,
                 +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, rem, divrem, min, max,
                 sign, signbit, isapprox,
                 string, show, promote_rule, convert, getindex, tryparse, conj,
@@ -12,11 +12,17 @@ export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, N
 # export Infinity
 
 """
-NotANumber()
+    NotANumber()
 
 represents something that is undefined, for example, `0 * ∞`.
+
+Every float type has a `NaN` of its own. This one belongs to none of them.
 """
-struct NotANumber <: Number end
+struct NotANumber <: Real end
+
+(::Type{T})(::NotANumber) where {T<:AbstractFloat} = T(NaN)
+float(::NotANumber) = NaN
+Base.hash(::NotANumber, h::UInt)::UInt = hash(NaN, h)
 
 
 """

@@ -7,12 +7,31 @@ iszero(::AllInfinities) = false
 isinf(::AllInfinities) = true
 isfinite(::AllInfinities) = false
 
+# `NotANumber` is no value at all, so it is neither finite nor infinite.
+isnan(::NotANumber) = true
+isinf(::NotANumber) = false
+isfinite(::NotANumber) = false
+iszero(::NotANumber) = false
+isone(::NotANumber) = false
+isinteger(::NotANumber) = false
+signbit(::NotANumber) = false
+
+# Undefined wins against every second argument, so it needs a method wherever `Base` or this
+# package owns a slot of its own. A narrower slot simply beats a wider one. `Number` looks
+# redundant against the types here, but without it a foreign `Number` reaches `Base`'s
+# promoting fallback instead.
+const NotANumberRivals = (Number, Real, AbstractFloat, AbstractIrrational, AllInfinities,
+                          IntegerInfinities, RealInfinity,
+                          InfiniteCardinal)
+# A complex operand makes the undefined result complex, as it does over the floats.
+const NotANumberComplexRivals = (Complex, Complex{Bool}, ComplexInfinity)
+
 # `InfiniteCardinal` is absent because `Base` already answers `true` for it through `Integer`.
 isinteger(::Union{Infinity, RealInfinity, ComplexInfinity}) = false
 for f in (:round, :floor, :ceil, :trunc)
-    @eval $f(x::AllInfinities; kwargs...) = x
+    @eval $f(x::Union{AllInfinities, NotANumber}; kwargs...) = x
 end
-round(x::AllInfinities, ::RoundingMode; kwargs...) = x
+round(x::Union{AllInfinities, NotANumber}, ::RoundingMode; kwargs...) = x
 
 # `Infinity` is positive, so it has no common type with `NegativeInfinity` (as is already the case for `PositiveInfinity`).
 promote_rule(::Type{Infinity}, ::Type{PositiveInfinity}) = PositiveInfinity

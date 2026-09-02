@@ -555,6 +555,42 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         end
     end
 
+    @testset "NotANumber" begin
+        nan = NotANumber()
+        # every operand it can meet, itself included
+        operands = (nan, 0, 1.5, ∞, +∞, -∞, ℵ₀, ComplexInfinity(), NaN, NaN32)
+        @test isnan(nan) && !isinf(nan) && !isfinite(nan) && !iszero(nan) && !isone(nan) && !signbit(nan)
+        @test !isinteger(nan)
+        # a `NaN` of any real type is real, and this is the type-independent one
+        @test isreal(nan)
+        for f in (round, floor, ceil, trunc)
+            @test f(nan) ≡ f(nan; digits=2) ≡ nan
+        end
+        for r in (RoundNearest, RoundUp, RoundDown, RoundToZero)
+            @test round(nan, r) ≡ round(nan, r; digits=2) ≡ nan
+        end
+
+        # a numeric comparison is false in every direction, against itself included
+        for op in (==, <, ≤, >, ≥), x in operands
+            @test !op(nan, x) && !op(x, nan)
+        end
+
+        # `isequal` and `hash` still identify it, as they do for `NaN`
+        @test isequal(nan, nan) && isequal(nan, NaN) && isequal(NaN32, nan)
+        @test hash(nan) == hash(NaN)
+
+        # the sort order puts it last, alongside `NaN`
+        @test sort([1.0, nan, ∞, -∞])[end] ≡ nan
+        for x in operands
+            @test !isless(nan, x) && isless(x, nan) == !isnan(x)
+        end
+
+        # it converts to the `NaN` of whichever float type is asked for
+        @test Float64(nan) ≡ float(nan) ≡ NaN
+        @test Float32(nan) ≡ NaN32 && Float16(nan) ≡ NaN16
+        @test isnan(BigFloat(nan))
+    end
+
     @testset "ordinary values" begin
         for inf in (∞, +∞, ℵ₀)
             @test 1.0 < inf && !(inf < 1.0) && 1.0 ≤ inf && inf ≥ 1.0
