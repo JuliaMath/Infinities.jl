@@ -57,6 +57,11 @@ end
 isapprox(x::AllInfinities, y::Number; kwargs...) = x == y
 isapprox(x::Number, y::AllInfinities; kwargs...) = x == y
 isapprox(x::AllInfinities, y::AllInfinities; kwargs...) = x == y
+for Typ in (Number, AllInfinities)
+    @eval isapprox(::NotANumber, ::$Typ; kwargs...) = false
+    @eval isapprox(::$Typ, ::NotANumber; kwargs...) = false
+end
+isapprox(::NotANumber, ::NotANumber; kwargs...) = false
 
 # isless
 # `isless` is the sort order. `NaN` sorts after every other value, infinities included.
