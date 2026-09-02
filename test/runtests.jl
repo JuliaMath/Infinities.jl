@@ -44,7 +44,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test ∞ - 1 ≡ ∞ - 1.0 ≡ ∞
         @test *(∞) ≡ ∞
         @test ∞*∞ ≡ ∞
-        @test_throws ArgumentError ∞ - ∞
+        @test ∞ - ∞ ≡ NotANumber()
 
         @test one(∞) ≡ one(Infinity) ≡ oneunit(∞) ≡ oneunit(Infinity) ≡ 1
         @test zero(∞) ≡ 0
@@ -170,23 +170,17 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test (1∞) + (1∞) ≡ 1∞
         @test ∞ + (1∞) ≡ (1∞) + ∞ ≡ 1∞
 
-        @test_throws ArgumentError ∞ + (-∞)
-        @test_throws ArgumentError (1∞) + (-∞)
-        @test_throws ArgumentError (-∞) + ∞
+        @test ∞ + (-∞) ≡ (1∞) + (-∞) ≡ (-∞) + ∞ ≡ NotANumber()
 
         @test ∞ - (-∞) ≡ +∞
         @test (-∞) - ∞ ≡ -∞
         @test (1∞) - (-∞) ≡ 1∞
         @test (-∞) - (1∞) ≡ -∞
 
-        @test_throws ArgumentError ∞ - (1∞)
-        @test_throws ArgumentError (1∞) - ∞
-        @test_throws ArgumentError (1∞) - (1∞)
-        @test_throws ArgumentError (-∞) - (-∞)
-        @test_throws ArgumentError 0*∞
-        @test_throws ArgumentError 0*(-∞)
-        @test_throws ArgumentError Inf - RealInfinity()
-        @test_throws ArgumentError RealInfinity() - Inf
+        # summing opposite directions is undefined, as it is over the floats
+        @test ∞ - (1∞) ≡ (1∞) - ∞ ≡ (1∞) - (1∞) ≡ (-∞) - (-∞) ≡ NotANumber()
+        @test Inf - RealInfinity() ≡ RealInfinity() - Inf ≡ NotANumber()
+        @test 0*∞ ≡ 0*(-∞) ≡ NotANumber()
 
         @test (-∞)*2 ≡ 2*(-∞) ≡ -2 * ∞ ≡ ∞ * (-2) ≡ (-2) * RealInfinity() ≡ -∞
         @test (-∞)*2.3 ≡ 2.3*(-∞) ≡ -2.3 * ∞ ≡ ∞ * (-2.3) ≡ (-2.3) * RealInfinity() ≡ -∞

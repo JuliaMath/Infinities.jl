@@ -26,7 +26,7 @@
 @inline toinf(x::Complex) = ComplexInfinity(angle(x))
 @inline toinf(x::ComplexInfinity) = x
 
-@inline _infadd(x, y) = angle(x) == angle(y) ? y : throw(ArgumentError("Angles must be the same to add ∞"))
+@inline _infadd(x, y) = angle(x) == angle(y) ? y : NotANumber()
 
 @inline __add(x, y::AllInfinities) = isinf(x) ? _infadd(toinf(x), y) : y
 @inline __add(x::Integer, y::InfiniteCardinal) = max(x, y)
@@ -61,7 +61,7 @@
 
 @inline function _mul(x, y)
     isnan(x) && return x
-    iszero(x) && throw(ArgumentError("Cannot multiply $x * $y"))
+    iszero(x) && return NotANumber()
     __mul(infpromote(x, y)...)
 end
 
