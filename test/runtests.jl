@@ -450,6 +450,27 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test divrem(big(3), ∞) == divrem(big(3), ℵ₀) == (0, 3)
     end
 
+    @testset "isapprox" begin
+        @test ∞ ≈ Inf && -∞ ≈ -Inf32 && ℵ₀ ≈ ∞ && ∞ ≈ ∞
+        @test !(∞ ≈ 1e300) && !(∞ ≈ -∞)
+        @test Inf ≈ ∞ && -Inf32 ≈ -∞ && !(1e300 ≈ ∞) # the infinity may stand on either side
+        # an `InfiniteCardinal` is an `Integer`, for which `Base` has its own `isapprox`
+        @test ℵ₀ ≈ ℵ₀ && !(ℵ₀ ≈ ℵ₁)
+        @test !(ℵ₀ ≈ 3) && !(3 ≈ ℵ₀)
+        @test isapprox(∞, Inf; atol=1) # the keywords are accepted, but nothing is near an infinity
+        @test !isapprox(∞, 1; atol=∞)
+
+        @testset "infinite tolerance" begin
+            values = (0, 1, -2, 1.5, 0.0, NaN, Inf, -Inf)
+            for x in values, y in values, (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
+                @test isapprox(x, y; atol=inf) == isapprox(x, y; atol=flt)
+                # Skipped over a `Base` bug: its `Integer` method evaluates `rtol * 0` for two zeros, so `isapprox(0, 0; rtol=Inf)` is `false`.
+                x isa Integer && y isa Integer && iszero(x) && iszero(y) && continue
+                @test isapprox(x, y; rtol=inf) == isapprox(x, y; rtol=flt)
+            end
+        end
+    end
+
     @testset "float precisions" begin
         for T in (Float16, Float32, Float64, BigFloat)
             for inf in (∞, +∞, ComplexInfinity(), ℵ₀)
