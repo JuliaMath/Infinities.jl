@@ -423,6 +423,17 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         end
     end
 
+    @testset "division" begin
+        @test ∞ / 2 ≡ 2 \ ∞ ≡ +∞
+        @test (-∞) / 2 ≡ ∞ / -2 ≡ -∞
+        @test ∞ / 0 ≡ +∞
+        @test ComplexInfinity(0.5) / 2 ≡ ComplexInfinity(0.5)
+        @test 2 / -∞ ≡ -0.0
+        @test 2 / ∞ == ∞ \ 2 == 2 / ℵ₀ == 0 # the type follows `inv`, which answers in `Int` for `∞`
+        @test ∞ / ∞ isa NotANumber
+        @test isnan(NaN / ∞) && isnan(∞ / NaN)
+    end
+
     @testset "float precisions" begin
         for T in (Float16, Float32, Float64, BigFloat)
             for inf in (∞, +∞, ComplexInfinity(), ℵ₀)

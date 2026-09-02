@@ -19,12 +19,15 @@ for Typ in (Rational, BigInt, BigFloat, Complex, AbstractIrrational)
 end
 
 for Typ in (Complex, Rational, Complex{Bool}, Integer)
-    @eval +(x::AllInfinities, y::$Typ) = _add(y, x)
-    @eval +(x::$Typ, y::AllInfinities) = _add(x, y)
-    @eval -(x::AllInfinities, y::$Typ) = _sub(x, y)
-    @eval -(x::$Typ, y::AllInfinities) = _sub(x, y)
-    @eval *(x::AllInfinities, y::$Typ) = _mul(y, x)
-    @eval *(x::$Typ, y::AllInfinities) = _mul(x, y)
+    # `_add` and `_mul` dispatch on the infinity being second; `_sub` and `_div` delegate to them.
+    for (op, fop) in ((:+, :_add), (:*, :_mul))
+        @eval $op(x::AllInfinities, y::$Typ) = $fop(y, x)
+        @eval $op(x::$Typ, y::AllInfinities) = $fop(x, y)
+    end
+    for (op, fop) in ((:-, :_sub), (:/, :_div))
+        @eval $op(x::AllInfinities, y::$Typ) = $fop(x, y)
+        @eval $op(x::$Typ, y::AllInfinities) = $fop(x, y)
+    end
 end
 
 ^(x::RealInfinity, y::Rational) = _infpow(infpromote(x, y)...)

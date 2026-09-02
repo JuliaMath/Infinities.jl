@@ -76,6 +76,14 @@ end
 *(::Infinity, ::Infinity) = ∞
 
 
+# division
+# `\` needs nothing of its own, `Base` defining it as `y / x`.
+@inline _div(x, y) = x * inv(y)
+
+/(x::AllInfinities, y::Number) = _div(x, y)
+/(x::Number, y::AllInfinities) = _div(x, y)
+/(x::AllInfinities, y::AllInfinities) = NotANumber()
+
 # mod
 @inline function _mod(x::Real, y::IntegerInfinities)
     isnan(x) && return x
