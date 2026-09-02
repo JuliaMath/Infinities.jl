@@ -414,6 +414,15 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
     end
 
+    @testset "isinteger/round" begin
+        @test !isinteger(∞) && !isinteger(+∞) && !isinteger(-∞)
+        @test isinteger(ℵ₀) # an `InfiniteCardinal` is an `Integer`
+        @test ∞ ∉ 1:5 # `in` asks a range for `isinteger` before comparing
+        for f in (round, floor, ceil, trunc)
+            @test f(∞) ≡ ∞ && f(+∞) ≡ +∞ && f(-∞) ≡ -∞ && f(ℵ₀) ≡ ℵ₀
+        end
+    end
+
     @testset "float precisions" begin
         for T in (Float16, Float32, Float64, BigFloat)
             for inf in (∞, +∞, ComplexInfinity(), ℵ₀)
