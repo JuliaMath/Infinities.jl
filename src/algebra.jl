@@ -94,6 +94,16 @@ mod(x::Real, y::IntegerInfinities) = _mod(x, y)
 mod(::IntegerInfinities, ::Real) = NotANumber()
 mod(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
 
+# rem, divrem
+# `rem` keeps the sign of the dividend, so unlike `mod` it stays bounded either way.
+rem(x::Real, ::IntegerInfinities) = x
+rem(::IntegerInfinities, ::Real) = NotANumber()
+rem(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
+# `Base` computes the remainder of two `Integer`s as `a - div(a,b)*b`, which an `InfiniteCardinal` cannot evaluate.
+divrem(x::Real, y::IntegerInfinities) = (div(x, y), rem(x, y))
+divrem(x::IntegerInfinities, y::Real) = (div(x, y), rem(x, y))
+divrem(x::IntegerInfinities, y::IntegerInfinities) = (div(x, y), rem(x, y))
+
 # fld, cld, div
 _divinf(x) = isnan(x) ? x : zero(x)
 _fldinf(x) = isnan(x) ? x : signbit(x) ? -one(x) : zero(x)

@@ -434,6 +434,22 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test isnan(NaN / ∞) && isnan(∞ / NaN)
     end
 
+    @testset "rem/divrem" begin
+        @test 3 % ∞ ≡ rem(3, -∞) ≡ 3 % ℵ₀ ≡ 3
+        @test -3 % ∞ ≡ -3 # `rem` keeps the sign of the dividend, where `mod(-3, ∞)` is unbounded
+        @test rem(∞, 3) isa NotANumber && rem(∞, ∞) isa NotANumber
+        @test isnan(rem(NaN, ∞))
+        @test divrem(3, ∞) ≡ (0, 3) && divrem(-3, ∞) ≡ (0, -3)
+        # `Base` has an `Integer`-only `divrem` that avoids `rem`, and `ℵ₀` is an `Integer`
+        @test divrem(3, ℵ₀) ≡ (0, 3)
+        @test divrem(ℵ₀, 3) ≡ (ℵ₀, NotANumber())
+        @test divrem(ℵ₀, ℵ₀) ≡ (NotANumber(), NotANumber())
+        # `Rational` and `BigInt` bring their own `Base` methods, which need their own answer
+        @test rem(1//2, ∞) ≡ rem(1//2, ℵ₀) ≡ 1//2
+        @test rem(ℵ₀, 1//2) isa NotANumber
+        @test divrem(big(3), ∞) == divrem(big(3), ℵ₀) == (0, 3)
+    end
+
     @testset "float precisions" begin
         for T in (Float16, Float32, Float64, BigFloat)
             for inf in (∞, +∞, ComplexInfinity(), ℵ₀)

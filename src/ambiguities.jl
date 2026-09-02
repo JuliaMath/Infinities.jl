@@ -35,6 +35,8 @@ end
 for Typ in (Rational, )
     @eval mod(::IntegerInfinities, ::$Typ) = NotANumber()
     @eval mod(x::$Typ, y::IntegerInfinities) = _mod(x, y)
+    @eval rem(::InfiniteCardinal, ::$Typ) = NotANumber()
+    @eval rem(x::$Typ, ::IntegerInfinities) = x
     for op in (:fld, :cld, :div)
         @eval $op(x::InfiniteCardinal, y::$Typ) = _inffcd(x, y)
     end
@@ -42,3 +44,5 @@ for Typ in (Rational, )
     @eval fld(x::$Typ, ::IntegerInfinities) = _fldinf(x)
     @eval cld(x::$Typ, ::IntegerInfinities) = _cldinf(x)
 end
+
+divrem(x::BigInt, y::IntegerInfinities) = (div(x, y), rem(x, y))
