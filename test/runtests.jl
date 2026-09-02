@@ -571,7 +571,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         end
 
         # a numeric comparison is false in every direction, against itself included
-        for op in (==, <, ≤, >, ≥), x in operands
+        for op in (==, <, ≤, >, ≥, isapprox), x in operands
             @test !op(nan, x) && !op(x, nan)
         end
 
@@ -589,6 +589,16 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test Float64(nan) ≡ float(nan) ≡ NaN
         @test Float32(nan) ≡ NaN32 && Float16(nan) ≡ NaN16
         @test isnan(BigFloat(nan))
+
+        # anything computed from it is undefined again
+        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in operands
+            @test op(nan, x) ≡ op(x, nan) ≡ nan
+        end
+        for x in operands
+            @test divrem(nan, x) ≡ divrem(x, nan) ≡ (nan, nan)
+        end
+        @test nan^(1//2) ≡ (1//2)^nan ≡ ℯ^nan ≡ nan
+        @test -nan ≡ +nan ≡ abs(nan) ≡ inv(nan) ≡ sign(nan) ≡ conj(nan) ≡ nan
     end
 
     @testset "ordinary values" begin

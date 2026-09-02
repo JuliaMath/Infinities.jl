@@ -138,3 +138,31 @@ end
 inv(::Union{Infinity,InfiniteCardinal}) = 0
 inv(x::RealInfinity) = inv(float(x))
 inv(x::ComplexInfinity) = zero(ComplexF64)
+
+
+# NotANumber
+# Anything computed from an undefined value is undefined again, as it is for `NaN`.
+for op in (:+, :-, :*, :/, :^, :div, :fld, :cld, :mod, :rem, :min, :max)
+    for Typ in NotANumberRivals
+        @eval $op(x::NotANumber, ::$Typ) = x
+        @eval $op(::$Typ, y::NotANumber) = y
+    end
+    for Typ in NotANumberComplexRivals
+        @eval $op(::NotANumber, ::$Typ) = complex(NotANumber(), NotANumber())
+        @eval $op(::$Typ, ::NotANumber) = complex(NotANumber(), NotANumber())
+    end
+    @eval $op(x::NotANumber, ::NotANumber) = x
+end
+for Typ in NotANumberRivals
+    @eval divrem(x::NotANumber, ::$Typ) = (x, x)
+    @eval divrem(::$Typ, y::NotANumber) = (y, y)
+end
+divrem(x::NotANumber, ::NotANumber) = (x, x)
+# `Base` has its own `^(::Number, ::Integer)`, which a literal exponent also routes through.
+^(x::NotANumber, ::Integer) = x
+^(::Integer, y::NotANumber) = y
+^(x::NotANumber, ::Rational) = x
+^(::Irrational{:ℯ}, y::NotANumber) = y
+for f in (:+, :-, :abs, :inv, :sign, :conj)
+    @eval $f(x::NotANumber) = x
+end
