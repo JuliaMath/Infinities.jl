@@ -16,6 +16,7 @@
 -(::Infinity) = RealInfinity(true)
 -(y::RealInfinity) = RealInfinity(!signbit(y))
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
+-(y::ComplexInfinity) = ComplexInfinity(mod(y.signbit + 1, 2))
 +(x::InfiniteCardinal) = x
 -(::InfiniteCardinal) = -∞
 

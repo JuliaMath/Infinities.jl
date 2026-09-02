@@ -329,6 +329,23 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         # `signbit` answers with a `Bool` for every angle, as it does over the reals
         @test signbit(ComplexInfinity(1.0)) === signbit(-ComplexInfinity()) === true
         @test signbit(ComplexInfinity(0.5)) === signbit(ComplexInfinity()) === false
+
+        @testset "abs/sign/conj/-" begin
+            @test -ComplexInfinity(0.5) ≡ ComplexInfinity(1.5)
+            @test -(-ComplexInfinity(0.5)) ≡ ComplexInfinity(0.5)
+            @test -ComplexInfinity() ≡ ComplexInfinity(true)
+            @test abs(ComplexInfinity()) ≡ abs(ComplexInfinity(0.5)) ≡ ∞
+            @test sign(ComplexInfinity(0.5)) ≡ complex(0.0, 1.0)
+            @test sign(ComplexInfinity(0.0)) ≡ complex(1.0, 0.0)
+            @test sign(ComplexInfinity(1.0)) ≡ complex(-1.0, 0.0)
+            # an integer angle stays on the real line, where the sign is a real ±1
+            @test sign(ComplexInfinity(false)) ≡ 1
+            @test sign(ComplexInfinity(true)) ≡ -1
+            # off the axes conjugation and negation part company: `-ComplexInfinity(0.25)` is `ComplexInfinity(1.25)`
+            @test conj(ComplexInfinity(0.25)) ≡ ComplexInfinity(1.75)
+            @test conj(conj(ComplexInfinity(0.25))) ≡ ComplexInfinity(0.25)
+            @test conj(ComplexInfinity(true)) ≡ ComplexInfinity(true) # the narrow type survives
+        end
     end
 
     @testset "Set" begin

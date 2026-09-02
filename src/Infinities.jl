@@ -2,7 +2,7 @@ module Infinities
 
 import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
                 +, -, *, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
-                string, show, promote_rule, convert, getindex, tryparse,
+                string, show, promote_rule, convert, getindex, tryparse, conj,
                 Bool, Integer
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
@@ -117,8 +117,12 @@ convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T
 convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
 
 
-sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
+sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit, 2) == 0 ? 1 : -1
+sign(y::ComplexInfinity) = cispi(y.signbit)
 angle(x::ComplexInfinity) = π*x.signbit
+abs(::ComplexInfinity) = ∞
+conj(y::ComplexInfinity{<:Integer}) = y # an integer factor points along the real axis
+conj(y::ComplexInfinity) = ComplexInfinity(mod(-y.signbit, 2))
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
