@@ -17,6 +17,31 @@ _isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
 # `signbit(y)` is constant, so the branch folds away and the check becomes a single instruction.
 _isinf(x::Real, y::AllRealInfinities) = isinf(x) && (signbit(y) ? x < zero(x) : x > zero(x))
 
+# NotANumber
+# Undefined compares false against everything, itself included, as `NaN` does.
+for op in (:(==), :<, :≤, :>, :≥)
+    for Typ in (NotANumberRivals..., NotANumberComplexRivals...)
+        @eval $op(::NotANumber, ::$Typ) = false
+        @eval $op(::$Typ, ::NotANumber) = false
+    end
+    @eval $op(::NotANumber, ::NotANumber) = false
+end
+
+# `isequal` and `hash` still have to identify it, so that a container can hold one.
+isequal(::NotANumber, ::NotANumber) = true
+for Typ in (NotANumberRivals..., NotANumberComplexRivals...)
+    @eval isequal(::NotANumber, y::$Typ) = isnan(y)
+    @eval isequal(x::$Typ, ::NotANumber) = isnan(x)
+end
+
+# The sort order puts it after every value, `NaN` included, so that sorting stays total.
+# `isless` is the only operator for which `AllRealInfinities` is not covered by a wider slot.
+isless(::NotANumber, ::NotANumber) = false
+for Typ in (NotANumberRivals..., NotANumberComplexRivals..., AllRealInfinities)
+    @eval isless(::NotANumber, ::$Typ) = false
+    @eval isless(x::$Typ, ::NotANumber) = !isnan(x)
+end
+
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀
 @inline _eq(x, y::AllInfinities) = _isinf(x, y)
