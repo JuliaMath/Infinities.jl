@@ -46,3 +46,8 @@ for Typ in (Rational, )
 end
 
 divrem(x::BigInt, y::IntegerInfinities) = (div(x, y), rem(x, y))
+
+# an `InfiniteCardinal` is an `Integer`, for which `Base` has its own `isapprox`
+isapprox(x::InfiniteCardinal, y::Integer; kwargs...) = x == y
+isapprox(x::Integer, y::InfiniteCardinal; kwargs...) = x == y
+isapprox(x::InfiniteCardinal, y::InfiniteCardinal; kwargs...) = x == y
