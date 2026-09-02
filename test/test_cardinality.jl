@@ -1,5 +1,12 @@
 using Infinities, Base64, Base.Checked, Test
 
+"A vector with an infinite axis, so that `ℵ₀` passes `checkbounds` and reaches an element."
+struct InfVector <: AbstractVector{Int} end
+Base.size(::InfVector) = (ℵ₀,)
+Base.axes(::InfVector) = (Base.OneTo(ℵ₀),)
+Base.getindex(::InfVector, i::Int) = i
+Base.getindex(::InfVector, ::InfiniteCardinal{0}) = 42
+
 @testset "InfiniteCardinal" begin
     @testset "basics" begin
         @test !isone(ℵ₀)
@@ -192,9 +199,11 @@ using Infinities, Base64, Base.Checked, Test
 
     @testset "indexing" begin
         @test_throws BoundsError randn(3)[ℵ₀]
-        @test_throws ErrorException Base._unsafe_getindex(IndexCartesian(),permutedims(1:3)',ℵ₀)
-        @test_throws BoundsError view(randn(3),1:2)[ℵ₀]
+        @test_throws ErrorException Base._unsafe_getindex(IndexCartesian(), permutedims(1:3)', ℵ₀)
+        @test_throws BoundsError view(randn(3), 1:2)[ℵ₀]
         # check ambiguity is not introduced
-        @test view(collect(1:5),2)[] == 2
+        @test view(collect(1:5), 2)[] == 2
+        @test view(InfVector(), :)[ℵ₀] ≡ 42
+        @test view(InfVector(), :)[2] ≡ 2
     end
 end
