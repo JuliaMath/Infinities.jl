@@ -1,7 +1,7 @@
 using Infinities, Base64, Test
 import Infinities: Infinity
 
-using Aqua
+using Aqua, JET
 
 "An `AbstractString` indexed by character position, so that byte arithmetic on indices is invalid."
 struct CharString <: AbstractString
@@ -447,4 +447,5 @@ include("test_ambiguity.jl")
 
 @testset "Project quality" begin
     Aqua.test_all(Infinities)
+    test_package(Infinities)
 end
