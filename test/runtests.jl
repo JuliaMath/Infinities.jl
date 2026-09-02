@@ -438,6 +438,25 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         end
     end
 
+    @testset "division" begin
+        @test ∞ / 2 ≡ 2 \ ∞ ≡ +∞
+        @test (-∞) / 2 ≡ ∞ / -2 ≡ -∞
+        # a zero divisor keeps the direction, and its own sign is the one that counts
+        @test ∞ / 0 ≡ ∞ / 0.0 ≡ (-∞) / (-0.0) ≡ +∞
+        @test (-∞) / 0 ≡ (-∞) / 0.0 ≡ ∞ / (-0.0) ≡ -∞
+        @test ComplexInfinity(0.5) / 2 ≡ ComplexInfinity(0.5)
+        # dividing by a complex turns the direction by its angle
+        @test (+∞) / (1+im) ≡ (1-im)*∞
+        @test 2 / -∞ ≡ -0.0
+        @test 2 / ∞ == ∞ \ 2 == 2 / ℵ₀ == 0 # the type follows `inv`, which returns an `Int` for `∞`
+        # `∞` is positive, so the quotient keeps the dividend exact; a signed infinity
+        # needs a float to carry `-0.0`
+        @test (2//3) / ∞ ≡ (2//3) / ℵ₀ ≡ 0//1
+        @test (2//3) / (+∞) ≡ 0.0
+        @test ∞ / ∞ isa NotANumber
+        @test isnan(NaN / ∞) && isnan(∞ / NaN)
+    end
+
     @testset "float precisions" begin
         for T in (Float16, Float32, Float64, BigFloat)
             for inf in (∞, +∞, ComplexInfinity(), ℵ₀)
