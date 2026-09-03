@@ -326,6 +326,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
 
         @test signbit(ComplexInfinity(3))
         @test !signbit(ComplexInfinity(100))
+        # `signbit` answers with a `Bool` for every angle, as it does over the reals
+        @test signbit(ComplexInfinity(1.0)) === signbit(-ComplexInfinity()) === true
+        @test signbit(ComplexInfinity(0.5)) === signbit(ComplexInfinity()) === false
     end
 
     @testset "Set" begin
@@ -404,6 +407,8 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
                 @test T(-Inf) == inf == T(-Inf)
                 @test T(Inf) ≠ inf
             end
+            @test T(2) + ∞ ≡ ∞ + T(2) ≡ ∞
+            @test T(2) * +∞ ≡ (+∞)^T(2) ≡ +∞
         end
     end
 
@@ -448,6 +453,20 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test sorted[1] === -∞ && sorted[2] === 1.0 && sorted[3] === ∞ && isnan(sorted[4])
     end
 
+    @testset "NaN arithmetic" begin
+        for nan in (NaN, NaN32, NaN16, big(NaN)),
+            inf in (∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity())
+
+            for op in (+, -, *, div, fld, cld)
+                @test isnan(op(nan, inf)) && isnan(op(inf, nan))
+            end
+            @test isnan(mod(nan, inf)) # the other direction is `NotANumber` for every argument
+        end
+        for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (+∞, -∞)
+            @test isnan(inf^nan)
+        end
+    end
+
     @testset "ordinary values" begin
         for inf in (∞, +∞, ℵ₀)
             @test 1.0 < inf && !(inf < 1.0) && 1.0 ≤ inf && inf ≥ 1.0
@@ -458,6 +477,20 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test -∞ < 1 < ∞ && -∞ ≤ -∞ && ∞ ≤ ∞
         @test !(Inf < ∞) && !(∞ < Inf) && Inf ≤ ∞
         @test max(-∞, ∞) === ∞ && min(-∞, ∞) === -∞
+    end
+
+    @testset "against the floats" begin
+        values = (0, 1, -2, 1.5, -1.5, 0.0, -0.0, NaN, NaN32, Inf, -Inf,
+                  prevfloat(Inf), nextfloat(-Inf), nextfloat(0.0))
+        for x in values, (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
+            for op in (<, ≤, >, ≥, ==, isless, isequal)
+                @test op(x, inf) == op(x, flt)
+                @test op(inf, x) == op(flt, x)
+            end
+            for op in (max, min)
+                @test isequal(op(x, inf), op(x, flt)) && isequal(op(inf, x), op(flt, x))
+            end
+        end
     end
 
     @testset "parsing" begin
