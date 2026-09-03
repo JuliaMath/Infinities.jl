@@ -5,21 +5,21 @@ _angle(x::Number) = angle(x)
 
 # isinf
 """
-    isinf(x, y)
+    _isinf(x, y)
 
 test whether `x` is an infinity pointing in the same direction as the infinity `y`,
-e.g. `isinf(-Inf, -∞)`. Everything that is not such an infinity gives `false`, a value
+e.g. `_isinf(-Inf, -∞)`. Everything that is not such an infinity gives `false`, a value
 of a type outside the numeric hierarchy included.
 """
-isinf(_, ::AllInfinities) = false
-isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
+_isinf(_, ::AllInfinities) = false
+_isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
 # On the real line the direction is a comparison against zero.
 # `signbit(y)` is constant, so the branch folds away and the check becomes a single instruction.
-isinf(x::Real, y::AllRealInfinities) = isinf(x) && (signbit(y) ? x < zero(x) : x > zero(x))
+_isinf(x::Real, y::AllRealInfinities) = isinf(x) && (signbit(y) ? x < zero(x) : x > zero(x))
 
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀
-@inline _eq(x, y::AllInfinities) = isinf(x, y)
+@inline _eq(x, y::AllInfinities) = _isinf(x, y)
 @inline _infeq(x, y) = _eq(x, y)
 @inline _infeq(x::InfiniteCardinal, y) = _eq(y, x)
 @inline _infeq(x::InfiniteCardinal, y::InfiniteCardinal) = !(x<y) & !(y<x)

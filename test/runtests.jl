@@ -1,5 +1,5 @@
 using Infinities, Base64, Test
-import Infinities: Infinity, AllInfinities
+import Infinities: Infinity, AllInfinities, _isinf
 
 using Aqua, JET
 
@@ -407,7 +407,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         end
     end
 
-    @testset "isinf(x, y)" begin
+    @testset "_isinf(x, y)" begin
         # ℵ₁ points in the same direction as ∞, even though `ℵ₁ == ∞` is false
         positive = (∞, +∞, ℵ₀, ℵ₁, ComplexInfinity(), Inf, Inf32, Inf16, big(Inf))
         negative = (-∞, -ComplexInfinity(), -Inf, -Inf32, -Inf16, -big(Inf))
@@ -418,14 +418,14 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         for xs in (positive, negative, imaginary, others), ys in (positive, negative, imaginary)
             for x in xs, y in ys
                 y isa AllInfinities || continue # only our own infinities are admissible as a reference
-                @test isinf(x, y) == (xs === ys)
+                @test _isinf(x, y) == (xs === ys)
                 # `==` asks the narrower question, and `ℵ₁` is the whole of the difference
                 if x !== ℵ₁ && y !== ℵ₁
-                    @test isinf(x, y) == (x == y)
+                    @test _isinf(x, y) == (x == y)
                 end
             end
         end
-        @test isinf(ℵ₁, ∞) && isinf(∞, ℵ₁) && isinf(Inf, ℵ₁) && isinf(ℵ₁, ℵ₀)
+        @test _isinf(ℵ₁, ∞) && _isinf(∞, ℵ₁) && _isinf(Inf, ℵ₁) && _isinf(ℵ₁, ℵ₀)
         @test ℵ₁ ≠ ∞ && ∞ ≠ ℵ₁ && Inf ≠ ℵ₁ && ℵ₁ ≠ ℵ₀
     end
 
