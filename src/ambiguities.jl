@@ -7,7 +7,7 @@ end
 ComplexInfinity{T}(x::ComplexInfinity{T}) where T<:Real = x
 
 for Typ in (Rational, BigInt, BigFloat)
-    for (op, fop) in ((:<, :isless), (:≤, :_le))
+    for (op, fop) in ((:<, :_lt), (:≤, :_le))
         @eval $op(x::InfiniteCardinal, y::$Typ) = $fop(x, y)
         @eval $op(x::$Typ, y::InfiniteCardinal) = $fop(x, y)
     end

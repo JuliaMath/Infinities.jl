@@ -1,5 +1,5 @@
 using Infinities, Base64, Test
-import Infinities: Infinity
+import Infinities: Infinity, AllInfinities, _isinf
 
 using Aqua, JET
 
@@ -336,7 +336,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     end
 
     @testset "hash" begin
-        infinities = (∞, +∞, -∞, Inf, -Inf, Inf32, Inf16, big(Inf),
+        infinities = (∞, +∞, -∞, Inf, -Inf, Inf32, -Inf32, Inf16, -Inf16, big(Inf), -big(Inf),
                       InfiniteCardinal{0}(), ComplexInfinity(false),
                       ComplexInfinity(true), ComplexInfinity(0.1))
 
@@ -392,6 +392,72 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test zero(ℵ₀) ≡ zero(∞) ≡ zero(Infinity) ≡ zero(InfiniteCardinal{0}) ≡ 0
         @test zero(-∞) ≡ zero(RealInfinity) ≡ 0.0
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
+    end
+
+    @testset "float precisions" begin
+        for T in (Float16, Float32, Float64, BigFloat)
+            for inf in (∞, +∞, ComplexInfinity(), ℵ₀)
+                @test T(Inf) == inf == T(Inf)
+                @test T(-Inf) ≠ inf
+            end
+            for inf in (-∞, -ComplexInfinity())
+                @test T(-Inf) == inf == T(-Inf)
+                @test T(Inf) ≠ inf
+            end
+        end
+    end
+
+    @testset "_isinf(x, y)" begin
+        # ℵ₁ points in the same direction as ∞, even though `ℵ₁ == ∞` is false
+        positive = (∞, +∞, ℵ₀, ℵ₁, ComplexInfinity(), Inf, Inf32, Inf16, big(Inf))
+        negative = (-∞, -ComplexInfinity(), -Inf, -Inf32, -Inf16, -big(Inf))
+        imaginary = (ComplexInfinity(0.5), complex(0.0, Inf))
+        others = (0, 1.5, -2, -1.5, 0.0, -0.0, NaN, NaN32, prevfloat(Inf), nextfloat(-Inf),
+                  nextfloat(0.0), prevfloat(-0.0), "∞", "-∞")
+
+        for xs in (positive, negative, imaginary, others), ys in (positive, negative, imaginary)
+            for x in xs, y in ys
+                y isa AllInfinities || continue # only our own infinities are admissible as a reference
+                @test _isinf(x, y) == (xs === ys)
+                # `==` asks the narrower question, and `ℵ₁` is the whole of the difference
+                if x !== ℵ₁ && y !== ℵ₁
+                    @test _isinf(x, y) == (x == y)
+                end
+            end
+        end
+        @test _isinf(ℵ₁, ∞) && _isinf(∞, ℵ₁) && _isinf(Inf, ℵ₁) && _isinf(ℵ₁, ℵ₀)
+        @test ℵ₁ ≠ ∞ && ∞ ≠ ℵ₁ && Inf ≠ ℵ₁ && ℵ₁ ≠ ℵ₀
+    end
+
+    @testset "NaN" begin
+        for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (∞, +∞, -∞, ℵ₀)
+            # a numeric comparison is false in every direction
+            for op in (<, ≤, >, ≥, ==)
+                @test !op(nan, inf) && !op(inf, nan)
+            end
+
+            # the sort order puts `NaN` after every value, an infinity included
+            @test isless(inf, nan) && !isless(nan, inf)
+            @test (isless(nan, inf), isless(inf, nan), isequal(nan, inf)) |> count == 1
+
+            # `max` and `min` propagate `NaN`, as they do over the floats alone
+            @test isnan(max(nan, inf)) && isnan(max(inf, nan))
+            @test isnan(min(nan, inf)) && isnan(min(inf, nan))
+        end
+        sorted = sort([∞, NaN, 1.0, -∞])
+        @test sorted[1] === -∞ && sorted[2] === 1.0 && sorted[3] === ∞ && isnan(sorted[4])
+    end
+
+    @testset "ordinary values" begin
+        for inf in (∞, +∞, ℵ₀)
+            @test 1.0 < inf && !(inf < 1.0) && 1.0 ≤ inf && inf ≥ 1.0
+            @test isless(1.0, inf) && !isless(inf, 1.0)
+            @test max(1.0, inf) === max(inf, 1.0) === inf
+            @test min(1.0, inf) === min(inf, 1.0) === 1.0
+        end
+        @test -∞ < 1 < ∞ && -∞ ≤ -∞ && ∞ ≤ ∞
+        @test !(Inf < ∞) && !(∞ < Inf) && Inf ≤ ∞
+        @test max(-∞, ∞) === ∞ && min(-∞, ∞) === -∞
     end
 
     @testset "parsing" begin

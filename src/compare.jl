@@ -1,6 +1,25 @@
+# The direction of an infinity, as a precision-independent angle.
+# `angle` evaluates π in the precision of its argument, so `angle(-Inf32) ≠ angle(-Inf)`.
+_angle(x::Real) = angle(RealInfinity(signbit(x)))
+_angle(x::Number) = angle(x)
+
+# isinf
+"""
+    _isinf(x, y)
+
+test whether `x` is an infinity pointing in the same direction as the infinity `y`,
+e.g. `_isinf(-Inf, -∞)`. Everything that is not such an infinity gives `false`, a value
+of a type outside the numeric hierarchy included.
+"""
+_isinf(_, ::AllInfinities) = false
+_isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
+# On the real line the direction is a comparison against zero.
+# `signbit(y)` is constant, so the branch folds away and the check becomes a single instruction.
+_isinf(x::Real, y::AllRealInfinities) = isinf(x) && (signbit(y) ? x < zero(x) : x > zero(x))
+
 # ==
 @inline _eq(x, y::InfiniteCardinal) = x == ∞ && y == ℵ₀
-@inline _eq(x, y::AllInfinities) = isinf(x) && angle(y) == angle(x)
+@inline _eq(x, y::AllInfinities) = _isinf(x, y)
 @inline _infeq(x, y) = _eq(x, y)
 @inline _infeq(x::InfiniteCardinal, y) = _eq(y, x)
 @inline _infeq(x::InfiniteCardinal, y::InfiniteCardinal) = !(x<y) & !(y<x)
@@ -9,27 +28,32 @@
 ==(x::AllInfinities, y::AllInfinities) = _infeq(x, y)
 
 # isless
+# `isless` is the sort order. `NaN` sorts after every other value, infinities included.
 isless(x::AllRealInfinities, y::AllRealInfinities) = signbit(x) && !signbit(y)
 @generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
+# The leading `signbit` call discards its result. It is there to reject a non-real `Number`.
 for Typ in (Number, Real, AbstractFloat)
     @eval begin
-        isless(x::AllRealInfinities, y::$Typ) = (signbit(y); signbit(x) && y ≠ -∞)
-        isless(x::$Typ, y::AllRealInfinities) = (signbit(x); !signbit(y) && x ≠ ∞)
+        isless(x::AllRealInfinities, y::$Typ) = (signbit(y); isnan(y) || signbit(x) && y ≠ -∞)
+        isless(x::$Typ, y::AllRealInfinities) = (signbit(x); !isnan(x) && !signbit(y) && x ≠ ∞)
     end
 end
 for Typ in (Number, Real, AbstractFloat, AllRealInfinities)
     @eval begin
-        isless(::InfiniteCardinal, x::$Typ) = false
+        isless(::InfiniteCardinal, x::$Typ) = isnan(x)
         isless(x::$Typ, y::InfiniteCardinal) = isless(x, ∞) || isless(ℵ₀, y)
     end
 end
 isless(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 
 # minmax, <, ≤
-@inline _max(x, y) = ifelse(y < x, x, y)
-@inline _min(x, y) = ifelse(y < x, y, x)
+# `<`, `max` and `min` use the numeric comparison, not the sort order. They differ at `NaN`:
+# it compares false against everything and propagates through `max` and `min`.
+@inline _lt(x, y) = !isnan(x) && !isnan(y) && isless(x, y)
 @inline _le(x, y) = x < y || x == y
-for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :isless), (:≤, :_le))
+@inline _max(x, y) = isnan(x) ? x : isnan(y) ? y : ifelse(_lt(y, x), x, y)
+@inline _min(x, y) = isnan(x) ? x : isnan(y) ? y : ifelse(_lt(y, x), y, x)
+for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :_lt), (:≤, :_le))
     for Typ in (Real, )
         @eval begin
             $op(x::AllInfinities, y::$Typ) = $fop(x, y)
@@ -38,4 +62,3 @@ for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :isless), (:≤, :_le))
     end
     @eval $op(x::AllInfinities, y::AllInfinities) = $fop(x, y)
 end
-        
