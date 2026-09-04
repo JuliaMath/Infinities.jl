@@ -31,8 +31,8 @@
 @inline __add(x, y::AllInfinities) = isinf(x) ? _infadd(toinf(x), y) : y
 @inline __add(x::Integer, y::InfiniteCardinal) = max(x, y)
 
-# A `NaN` argument is returned unchanged, as it is over the floats. Types with no `NaN` fold the test away.
-@inline _add(x, y) = isnan(x) ? x : __add(infpromote(x, y)...)
+# A `NaN` argument makes the result undefined. Types with no `NaN` fold the test away.
+@inline _add(x, y) = isnan(x) ? NotANumber() : __add(infpromote(x, y)...)
 
 +(x::Number, y::AllInfinities) = _add(x, y)
 +(x::AllInfinities, y::Number) = _add(y, x)
@@ -60,7 +60,7 @@
 @inline __mul(x::Integer, y::InfiniteCardinal) = x > 0 ? y : throw(ArgumentError("Cannot multiply $x * $y"))
 
 @inline function _mul(x, y)
-    isnan(x) && return x
+    isnan(x) && return NotANumber()
     iszero(x) && return NotANumber()
     __mul(infpromote(x, y)...)
 end
@@ -86,7 +86,7 @@ end
 
 # mod
 @inline function _mod(x::Real, y::IntegerInfinities)
-    isnan(x) && return x
+    isnan(x) && return NotANumber()
     signbit(x) == signbit(y) || throw(ArgumentError("mod($x,$y) is unbounded"))
     x
 end
@@ -96,7 +96,7 @@ mod(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
 
 # rem, divrem
 # `rem` keeps the sign of the dividend, so unlike `mod` it stays bounded either way.
-rem(x::Real, ::IntegerInfinities) = x
+rem(x::Real, ::IntegerInfinities) = isnan(x) ? NotANumber() : x
 rem(::IntegerInfinities, ::Real) = NotANumber()
 rem(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
 # `Base` computes the remainder of two `Integer`s as `a - div(a,b)*b`, which an `InfiniteCardinal` cannot evaluate.
@@ -105,14 +105,14 @@ divrem(x::IntegerInfinities, y::Real) = (div(x, y), rem(x, y))
 divrem(x::IntegerInfinities, y::IntegerInfinities) = (div(x, y), rem(x, y))
 
 # fld, cld, div
-_divinf(x) = isnan(x) ? x : zero(x)
-_fldinf(x) = isnan(x) ? x : signbit(x) ? -one(x) : zero(x)
-_cldinf(x) = isnan(x) ? x : signbit(x) ? zero(x) : one(x)
+_divinf(x) = isnan(x) ? NotANumber() : zero(x)
+_fldinf(x) = isnan(x) ? NotANumber() : signbit(x) ? -one(x) : zero(x)
+_cldinf(x) = isnan(x) ? NotANumber() : signbit(x) ? zero(x) : one(x)
 div(x::Real, ::IntegerInfinities) = _divinf(x)
 fld(x::Real, ::IntegerInfinities) = _fldinf(x)
 cld(x::Real, ::IntegerInfinities) = _cldinf(x)
 
-_inffcd(x, y) = isnan(y) ? y : signbit(y) ? -x : x
+_inffcd(x, y) = isnan(y) ? NotANumber() : signbit(y) ? -x : x
 for OP in (:fld,:cld,:div)
     @eval begin
         $OP(x::IntegerInfinities, y::Real) = _inffcd(x, y)
@@ -123,9 +123,9 @@ end
 # power
 # Although the base implementation can cover these cases, it can change overtime and yield inconsistent results.
 # ref: https://github.com/JuliaMath/Infinities.jl/actions/runs/19993302836/
-_infpow(::PositiveInfinity, p) = isnan(p) ? p : ifelse(iszero(p), one(p), ifelse(p > 0, +∞, +zero(p)))
+_infpow(::PositiveInfinity, p) = isnan(p) ? NotANumber() : ifelse(iszero(p), one(p), ifelse(p > 0, +∞, +zero(p)))
 function _infpow(x::NegativeInfinity, p)
-    isnan(p) && return p
+    isnan(p) && return NotANumber()
     !isinteger(p) && throw(Base.Math.throw_exp_domainerror(x))
     iszero(p) && return one(p)
     isodd(p) && return ifelse(p > 0, -∞, -zero(p))

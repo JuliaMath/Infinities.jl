@@ -536,16 +536,18 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     end
 
     @testset "NaN arithmetic" begin
+        # the answer is the package's own undefined value, as `Inf + ∞` is its own infinity
         for nan in (NaN, NaN32, NaN16, big(NaN)),
             inf in (∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity())
 
             for op in (+, -, *, div, fld, cld)
-                @test isnan(op(nan, inf)) && isnan(op(inf, nan))
+                @test op(nan, inf) ≡ op(inf, nan) ≡ NotANumber()
             end
-            @test isnan(mod(nan, inf)) # the other direction is `NotANumber` for every argument
+            # `mod(inf, x)` discards `x`, so only one order is needed
+            @test mod(nan, inf) ≡ NotANumber()
         end
         for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (+∞, -∞)
-            @test isnan(inf^nan)
+            @test inf^nan ≡ NotANumber()
         end
     end
 
