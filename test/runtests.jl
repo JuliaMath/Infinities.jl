@@ -346,6 +346,15 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test conj(conj(ComplexInfinity(0.25))) ≡ ComplexInfinity(0.25)
             @test conj(ComplexInfinity(true)) ≡ ComplexInfinity(true) # the narrow type survives
         end
+
+        @testset "float" begin
+            @test float(ComplexInfinity()) ≡ float(ComplexInfinity(0.0)) ≡ complex(Inf, 0.0)
+            @test float(ComplexInfinity(1/2)) ≡ complex(0.0, Inf)
+            @test float(ComplexInfinity(1.0)) ≡ float(ComplexInfinity(true)) ≡ complex(-Inf, 0.0)
+            @test float(ComplexInfinity(-1/2)) ≡ float(ComplexInfinity(3/2)) ≡ complex(0.0, -Inf)
+            # `Complex` points along eight rays only, so every other angle collapses onto the nearest
+            @test float(ComplexInfinity(1/4)) ≡ float(ComplexInfinity(0.3)) ≡ complex(Inf, Inf)
+        end
     end
 
     @testset "Set" begin
@@ -415,11 +424,16 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     end
 
     @testset "isinteger/round" begin
+        infinities = (∞, +∞, -∞, ℵ₀, ComplexInfinity(), ComplexInfinity(1/4))
         @test !isinteger(∞) && !isinteger(+∞) && !isinteger(-∞)
+        @test !isinteger(ComplexInfinity()) && !isinteger(ComplexInfinity(1/4))
         @test isinteger(ℵ₀) # an `InfiniteCardinal` is an `Integer`
         @test ∞ ∉ 1:5 # `in` asks a range for `isinteger` before comparing
-        for f in (round, floor, ceil, trunc)
-            @test f(∞) ≡ ∞ && f(+∞) ≡ +∞ && f(-∞) ≡ -∞ && f(ℵ₀) ≡ ℵ₀
+        for f in (round, floor, ceil, trunc), x in infinities
+            @test f(x) ≡ f(x; digits=2) ≡ x
+        end
+        for r in (RoundNearest, RoundUp, RoundDown, RoundToZero), x in infinities
+            @test round(x, r) ≡ round(x, r; digits=2) ≡ x
         end
     end
 

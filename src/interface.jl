@@ -7,11 +7,12 @@ iszero(::AllInfinities) = false
 isinf(::AllInfinities) = true
 isfinite(::AllInfinities) = false
 
-# `InfiniteCardinal` is an `Integer`, so `Base` already answers for it.
-isinteger(::Union{Infinity,RealInfinity}) = false
+# `InfiniteCardinal` is absent because `Base` already answers `true` for it through `Integer`.
+isinteger(::Union{Infinity, RealInfinity, ComplexInfinity}) = false
 for f in (:round, :floor, :ceil, :trunc)
-    @eval $f(x::Union{Infinity,RealInfinity}) = x
+    @eval $f(x::AllInfinities; kwargs...) = x
 end
+round(x::AllInfinities, ::RoundingMode; kwargs...) = x
 
 # `Infinity` is positive, so it has no common type with `NegativeInfinity` (as is already the case for `PositiveInfinity`).
 promote_rule(::Type{Infinity}, ::Type{PositiveInfinity}) = PositiveInfinity
