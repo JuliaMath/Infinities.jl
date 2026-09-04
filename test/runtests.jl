@@ -295,6 +295,18 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test exp(im*π/4)+∞ == ∞
         @test Inf + im + ∞ ≡ ComplexInfinity()
 
+        # An infinite summand reaches `_infadd` through `toinf`, which has to answer in half-turns.
+        @test complex(Inf, 0.0) + ∞ ≡ ComplexInfinity()
+        @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
+        @test complex(0.0, Inf) + ComplexInfinity(1/2) ≡ ComplexInfinity(1/2)
+        @test complex(0.0, -Inf) + ComplexInfinity(-1/2) ≡ ComplexInfinity(-1/2)
+        @test_throws ArgumentError complex(0.0, Inf) + ∞
+
+        # Two infinite parts are the only way an infinite `Complex` points off the axes.
+        for (x, y, s) in ((Inf, Inf, 1/4), (-Inf, Inf, 3/4), (-Inf, -Inf, -3/4), (Inf, -Inf, -1/4))
+            @test complex(x, y) + ComplexInfinity(s) ≡ ComplexInfinity(s)
+        end
+
         @test Inf == ComplexInfinity()
         @test ComplexInfinity() == Inf
 
