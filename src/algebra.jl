@@ -19,7 +19,7 @@
 
 # addition
 @inline toinf(x) = RealInfinity(signbit(x))
-@inline toinf(x::Complex) = ComplexInfinity(angle(x))
+@inline toinf(x::Complex) = ComplexInfinity(_sb(x)) # the field counts half-turns, not radians
 @inline toinf(x::ComplexInfinity) = x
 
 @inline _infadd(x, y) = angle(x) == angle(y) ? y : throw(ArgumentError("Angles must be the same to add ∞"))

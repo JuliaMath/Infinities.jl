@@ -283,11 +283,29 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
              ComplexInfinity() * ∞ ≡ ComplexInfinity() * RealInfinity() ≡ ComplexInfinity()
 
         @test  2.0im*∞ ≡ ∞*2.0im ≡ 2.0im * RealInfinity() ≡ RealInfinity() * 2.0im ≡ ComplexInfinity(1/2)
+        # On an axis `angle(x)/π` is exact, `angle` giving exactly `0`, `±π/2` or `π` and halving being exact.
+        @test (2.0+0.0im)*∞ ≡ ComplexInfinity(0.0) && (-2.0+0.0im)*∞ ≡ ComplexInfinity(1.0)
+        @test -2.0im*∞ ≡ ComplexInfinity(-0.5)
         @test 2ComplexInfinity() ≡ ComplexInfinity()*2 ≡ ComplexInfinity()
 
-        @test exp(im*π/4)*∞ == Inf+im*Inf
+        # Off the axes it is not exact in general: `angle(exp(im*π/8))/π` gives 0.12500000000000003.
+        for θ in (π/8, π/4, 0.3, -2.4)
+            @test angle(exp(im*θ)*∞) ≈ angle(∞*exp(im*θ)) ≈ θ
+        end
         @test exp(im*π/4)+∞ == ∞
         @test Inf + im + ∞ ≡ ComplexInfinity()
+
+        # An infinite summand reaches `_infadd` through `toinf`, which has to answer in half-turns.
+        @test complex(Inf, 0.0) + ∞ ≡ ComplexInfinity()
+        @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
+        @test complex(0.0, Inf) + ComplexInfinity(1/2) ≡ ComplexInfinity(1/2)
+        @test complex(0.0, -Inf) + ComplexInfinity(-1/2) ≡ ComplexInfinity(-1/2)
+        @test_throws ArgumentError complex(0.0, Inf) + ∞
+
+        # Two infinite parts are the only way an infinite `Complex` points off the axes.
+        for (x, y, s) in ((Inf, Inf, 1/4), (-Inf, Inf, 3/4), (-Inf, -Inf, -3/4), (Inf, -Inf, -1/4))
+            @test complex(x, y) + ComplexInfinity(s) ≡ ComplexInfinity(s)
+        end
 
         @test Inf == ComplexInfinity()
         @test ComplexInfinity() == Inf
