@@ -4,7 +4,7 @@ import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isl
                 +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, rem, divrem, min, max,
                 sign, signbit, isapprox,
                 string, show, promote_rule, convert, getindex, tryparse, conj,
-                isinteger, round, floor, ceil, trunc,
+                isinteger, round, floor, ceil, trunc, float,
                 Bool, Integer
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
@@ -125,6 +125,14 @@ angle(x::ComplexInfinity) = π*x.signbit
 abs(::ComplexInfinity) = ∞
 conj(y::ComplexInfinity{<:Integer}) = y # an integer factor points along the real axis
 conj(y::ComplexInfinity) = ComplexInfinity(mod(-y.signbit, 2))
+
+# An exact zero has to stay finite, `Inf * 0` being a `NaN`.
+@inline _ray(c) = iszero(c) ? c : copysign(Inf, c)
+# `Complex` reaches only the eight rays of its two saturating parts, so the direction lands on the nearest of them.
+function float(x::ComplexInfinity)
+    s, c = sincospi(x.signbit)
+    complex(_ray(c), _ray(s))
+end
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
