@@ -1,8 +1,10 @@
 module Infinities
 
-import Base: angle, isone, iszero, isinf, isfinite, abs, one, oneunit, zero, isless, inv,
-                +, -, *, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, min, max, sign, signbit,
-                string, show, promote_rule, convert, getindex, tryparse,
+import Base: angle, isone, iszero, isinf, isfinite, isnan, isreal, abs, one, oneunit, zero, isless, isequal, inv,
+                +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, rem, divrem, min, max,
+                sign, signbit, isapprox,
+                string, show, promote_rule, convert, getindex, tryparse, conj,
+                isinteger, round, floor, ceil, trunc, float,
                 Bool, Integer
 
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
@@ -10,11 +12,17 @@ export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, N
 # export Infinity
 
 """
-NotANumber()
+    NotANumber()
 
 represents something that is undefined, for example, `0 * ∞`.
+
+Every float type has a `NaN` of its own. This one belongs to none of them.
 """
-struct NotANumber <: Number end
+struct NotANumber <: Real end
+
+(::Type{T})(::NotANumber) where {T<:AbstractFloat} = T(NaN)
+float(::NotANumber) = NaN
+Base.hash(::NotANumber, h::UInt)::UInt = hash(NaN, h)
 
 
 """
@@ -107,11 +115,9 @@ ComplexInfinity{T}(::Infinity) where T<:Real = ComplexInfinity{T}()
 ComplexInfinity(::Infinity) = ComplexInfinity()
 ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x))
 ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
-ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(signbit(x))) # ambiguity fix
+ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(x.signbit)) # ambiguity fix
 
-signbit(y::ComplexInfinity{Bool}) = y.signbit
-signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
-signbit(y::ComplexInfinity) = y.signbit
+signbit(y::ComplexInfinity) = mod(y.signbit, 2) == 1
 
 convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
@@ -119,8 +125,20 @@ convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T
 convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
 
 
-sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit,2) == 0 ? 1 : -1
+sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit, 2) == 0 ? 1 : -1
+sign(y::ComplexInfinity) = cispi(y.signbit)
 angle(x::ComplexInfinity) = π*x.signbit
+abs(::ComplexInfinity) = ∞
+conj(y::ComplexInfinity{<:Integer}) = y # an integer factor points along the real axis
+conj(y::ComplexInfinity) = ComplexInfinity(mod(-y.signbit, 2))
+
+# An exact zero has to stay finite, `Inf * 0` being a `NaN`.
+@inline _ray(c) = iszero(c) ? c : copysign(Inf, c)
+# `Complex` reaches only the eight rays of its two saturating parts, so the direction lands on the nearest of them.
+function float(x::ComplexInfinity)
+    s, c = sincospi(x.signbit)
+    complex(_ray(c), _ray(s))
+end
 
 show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
 
