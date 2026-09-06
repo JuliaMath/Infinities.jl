@@ -25,6 +25,7 @@ const NotANumberRivals = (Number, Real, AbstractFloat, AbstractIrrational, AllIn
                           InfiniteCardinal)
 # A complex operand makes the undefined result complex, as it does over the floats.
 const NotANumberComplexRivals = (Complex, Complex{Bool}, ComplexInfinity)
+const ComplexNotANumber = complex(NotANumber(), NotANumber())
 
 # `InfiniteCardinal` is absent because `Base` already returns `true` for it through `Integer`.
 isinteger(::Union{Infinity, RealInfinity, ComplexInfinity}) = false

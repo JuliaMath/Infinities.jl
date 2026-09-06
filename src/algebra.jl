@@ -25,13 +25,17 @@
 @inline toinf(x::Complex) = ComplexInfinity(_directionof(x))
 @inline toinf(x::ComplexInfinity) = x
 
-@inline _infadd(x, y) = angle(x) == angle(y) ? y : NotANumber()
+# The undefined value that matches the operands, as `Base` returns `NaN` or `NaN + NaN*im`.
+@inline _undefined(x, y) =
+    x isa ExtendedComplex || y isa ExtendedComplex ? ComplexNotANumber : NotANumber()
+
+@inline _infadd(x, y) = angle(x) == angle(y) ? y : _undefined(x, y)
 
 @inline __add(x, y::AllInfinities) = isinf(x) ? _infadd(toinf(x), y) : y
 @inline __add(x::Integer, y::InfiniteCardinal) = max(x, y)
 
 # A `NaN` argument makes the result undefined. Types with no `NaN` fold the test away.
-@inline _add(x, y) = isnan(x) ? NotANumber() : __add(infpromote(x, y)...)
+@inline _add(x, y) = isnan(x) ? _undefined(x, y) : __add(infpromote(x, y)...)
 
 +(x::Number, y::AllInfinities) = _add(x, y)
 +(x::AllInfinities, y::Number) = _add(y, x)
@@ -59,8 +63,8 @@
 @inline __mul(x::Integer, y::InfiniteCardinal) = x > 0 ? y : throw(ArgumentError("Cannot multiply $x * $y"))
 
 @inline function _mul(x, y)
-    isnan(x) && return NotANumber()
-    iszero(x) && return NotANumber()
+    isnan(x) && return _undefined(x, y)
+    iszero(x) && return _undefined(x, y)
     __mul(infpromote(x, y)...)
 end
 
@@ -81,7 +85,7 @@ end
 
 /(x::AllInfinities, y::Number) = _div(x, y)
 /(x::Number, y::AllInfinities) = _div(x, y)
-/(x::AllInfinities, y::AllInfinities) = NotANumber()
+/(x::AllInfinities, y::AllInfinities) = _undefined(x, y)
 
 # mod
 @inline function _mod(x::Real, y::IntegerInfinities)
@@ -147,14 +151,18 @@ for op in (:+, :-, :*, :/, :^, :div, :fld, :cld, :mod, :rem, :min, :max)
         @eval $op(::$Typ, y::NotANumber) = y
     end
     for Typ in NotANumberComplexRivals
-        @eval $op(::NotANumber, ::$Typ) = complex(NotANumber(), NotANumber())
-        @eval $op(::$Typ, ::NotANumber) = complex(NotANumber(), NotANumber())
+        @eval $op(::NotANumber, ::$Typ) = ComplexNotANumber
+        @eval $op(::$Typ, ::NotANumber) = ComplexNotANumber
     end
     @eval $op(x::NotANumber, ::NotANumber) = x
 end
 for Typ in NotANumberRivals
     @eval divrem(x::NotANumber, ::$Typ) = (x, x)
     @eval divrem(::$Typ, y::NotANumber) = (y, y)
+end
+for Typ in NotANumberComplexRivals
+    @eval divrem(::NotANumber, ::$Typ) = (ComplexNotANumber, ComplexNotANumber)
+    @eval divrem(::$Typ, ::NotANumber) = (ComplexNotANumber, ComplexNotANumber)
 end
 divrem(x::NotANumber, ::NotANumber) = (x, x)
 # `Base` has its own `^(::Number, ::Integer)`, which a literal exponent also routes through.
