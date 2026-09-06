@@ -312,10 +312,12 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         rays = (∞, (1+im)*∞, im*∞, (-1+im)*∞, -∞, (-1-im)*∞, -im*∞, (1-im)*∞)
         for x in rays, y in rays
             z = float(x) + float(y)
-            @test isequal(x + y, isnan(z) ? NotANumber() : z*∞)
+            @test isequal(x + y, !isnan(z) ? z*∞ :
+                                 z isa Complex ? complex(NotANumber(), NotANumber()) : NotANumber())
         end
         @test ∞ + im*∞ ≡ im*∞ + ∞ ≡ complex(∞, ∞) ≡ (1+im)*∞
-        @test exp(0.1im)*∞ + ∞ ≡ ComplexInfinity(0x7fffffffffffffff) + (-ComplexInfinity()) ≡ NotANumber()
+        @test exp(0.1im)*∞ + ∞ ≡ ComplexInfinity(0x7fffffffffffffff) + (-ComplexInfinity()) ≡
+              complex(NotANumber(), NotANumber())
         # two infinite parts are the only way an infinite `Complex` points off the axes
         for (z, inf) in ((complex(Inf, Inf), (1+im)*∞), (complex(-Inf, Inf), (-1+im)*∞),
                          (complex(-Inf, -Inf), (-1-im)*∞), (complex(Inf, -Inf), (1-im)*∞))
@@ -333,7 +335,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test complex(x, y) ≡ inf
         end
         for nan in (NaN, NotANumber())
-            @test isnan(complex(∞, nan)) && isnan(complex(nan, -∞))
+            @test complex(∞, nan) ≡ complex(nan, -∞) ≡ complex(NotANumber(), NotANumber())
         end
         @test complex(ComplexInfinity()) ≡ ComplexInfinity() && complex(im*∞) ≡ im*∞
         @test complex(Infinity) ≡ complex(RealInfinity) ≡ complex(PositiveInfinity) ≡
@@ -523,6 +525,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test (2//3) / ∞ ≡ (2//3) / ℵ₀ ≡ 0//1
         @test (2//3) / (+∞) ≡ 0.0
         @test ∞ / ∞ isa NotANumber
+        # a complex operand on either side makes the undefined quotient complex
+        @test ComplexInfinity() / ∞ ≡ ∞ / ComplexInfinity() ≡
+              ComplexInfinity() / ComplexInfinity() ≡ complex(NotANumber(), NotANumber())
         @test isnan(NaN / ∞) && isnan(∞ / NaN)
     end
 
@@ -629,8 +634,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test mod(nan, inf) ≡ NotANumber()
         end
         for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (ComplexInfinity(), -ComplexInfinity())
+            # arithmetic is defined for a complex operand, so the undefined result is complex
             for op in (+, -, *)
-                @test op(nan, inf) ≡ op(inf, nan) ≡ NotANumber()
+                @test op(nan, inf) ≡ op(inf, nan) ≡ complex(NotANumber(), NotANumber())
             end
             # `Base` defines no integer operation for a `Complex`, and neither do we
             for op in (div, fld, cld, mod, rem)
@@ -687,8 +693,11 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in complexes
             @test op(nan, x) ≡ op(x, nan) ≡ complex(nan, nan)
         end
-        for x in operands
+        for x in reals
             @test divrem(nan, x) ≡ divrem(x, nan) ≡ (nan, nan)
+        end
+        for x in complexes
+            @test divrem(nan, x) ≡ divrem(x, nan) ≡ (complex(nan, nan), complex(nan, nan))
         end
         @test nan^(1//2) ≡ (1//2)^nan ≡ ℯ^nan ≡ nan
         @test -nan ≡ +nan ≡ abs(nan) ≡ inv(nan) ≡ sign(nan) ≡ conj(nan) ≡ nan
