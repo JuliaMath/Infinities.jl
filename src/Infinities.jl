@@ -144,6 +144,11 @@ ComplexInfinity(x::RealInfinity) = ComplexInfinity(_directionof(x))
 ComplexInfinity(x::ComplexInfinity) = x
 
 signbit(y::ComplexInfinity) = y.turns == _HALFTURN
+isreal(y::ComplexInfinity) = iszero(y.turns) || signbit(y)
+
+# `Base` converts a `Complex` to a `Real` the same way, and throws the same error off the axis.
+RealInfinity(x::ComplexInfinity) = isreal(x) ? RealInfinity(signbit(x)) :
+                                   throw(InexactError(:RealInfinity, RealInfinity, x))
 
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
 convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
