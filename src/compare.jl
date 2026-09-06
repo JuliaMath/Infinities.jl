@@ -16,6 +16,10 @@ _isinf(x::Number, y::AllInfinities) = isinf(x) && _angle(x) == angle(y)
 # On the real line the direction is a comparison against zero.
 # `signbit(y)` is constant, so the branch folds away and the check becomes a single instruction.
 _isinf(x::Real, y::AllRealInfinities) = isinf(x) && (signbit(y) ? x < zero(x) : x > zero(x))
+# A direction in the plane is decided by the count, which is exact where an angle in a
+# `Float64` is not: the count has 64 bits and the angle has 53.
+_isinf(x::Number, y::ComplexInfinity) = isinf(x) && _directionof(x) == y.turns
+_isinf(x::ComplexInfinity, y::AllRealInfinities) = x.turns == _directionof(y)
 
 # NotANumber
 # Undefined compares false against everything, itself included, as `NaN` does.

@@ -41,6 +41,9 @@ function Integer(x::ComplexInfinity)
     ℵ₀
 end
 
+# Every cardinal is a positive real infinity, so it points along the positive real axis.
+ComplexInfinity(::InfiniteCardinal) = ComplexInfinity()
+
 Base.to_index(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
 Base.to_shape(::Union{Infinity,InfiniteCardinal{0}}) = ℵ₀
 
