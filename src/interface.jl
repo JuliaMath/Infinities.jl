@@ -1,7 +1,7 @@
 const AllInfinities = Union{Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal}
-const AllRealInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}}
-const IntegerInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}, InfiniteCardinal}
-const ExtendedComplex{T} = Union{Complex{T}, ComplexInfinity{T}}
+const AllRealInfinities = Union{Infinity, RealInfinity}
+const IntegerInfinities = Union{Infinity, RealInfinity, InfiniteCardinal}
+const ExtendedComplex = Union{Complex, ComplexInfinity}
 
 iszero(::AllInfinities) = false
 isinf(::AllInfinities) = true
@@ -35,10 +35,8 @@ round(x::Union{AllInfinities, NotANumber}, ::RoundingMode; kwargs...) = x
 
 # `Infinity` is positive, so it has no common type with `NegativeInfinity` (as is already the case for `PositiveInfinity`).
 promote_rule(::Type{Infinity}, ::Type{PositiveInfinity}) = PositiveInfinity
-promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{ComplexInfinity{T}}, ::Type{<:RealInfinity}) where T<:Integer = ComplexInfinity{T}
-promote_rule(::Type{ComplexInfinity{T}}, ::Type{ComplexInfinity{S}}) where {T, S} = ComplexInfinity{promote_type(T, S)}
+promote_rule(::Type{Infinity}, ::Type{ComplexInfinity}) = ComplexInfinity
+promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity}) = ComplexInfinity
 
 function tryparse(::Type{NegativeInfinity}, s::AbstractString)
     i = findfirst(!isspace, s)

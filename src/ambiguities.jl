@@ -1,10 +1,9 @@
 for Typ in (Base.TwicePrecision, AbstractChar, Complex)
-    @eval begin
-        RealInfinity(x::$Typ) = throw(MethodError(RealInfinity, x))
-        ComplexInfinity{T}(x::$Typ) where T<:Real = ComplexInfinity(T(x))
-    end
+    @eval RealInfinity(x::$Typ) = throw(MethodError(RealInfinity, x))
 end
-ComplexInfinity{T}(x::ComplexInfinity{T}) where T<:Real = x
+# `Base` builds a `TwicePrecision` of any type by adding its two halves, which for two opposed
+# directions is undefined.
+ComplexInfinity(x::Base.TwicePrecision) = ComplexInfinity(halfturns = Float64(x))
 
 for Typ in (Rational, BigInt, BigFloat)
     for (op, fop) in ((:<, :_lt), (:≤, :_le))

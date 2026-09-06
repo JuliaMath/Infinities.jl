@@ -15,20 +15,14 @@
 +(::Infinity) = RealInfinity()
 -(::Infinity) = RealInfinity(true)
 -(y::RealInfinity) = RealInfinity(!signbit(y))
--(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
--(y::ComplexInfinity) = ComplexInfinity(mod(y.signbit + 1, 2))
+-(y::ComplexInfinity) = ComplexInfinity(y.turns ⊻ _HALFTURN)
 +(x::InfiniteCardinal) = x
 -(::InfiniteCardinal) = -∞
 
 
 # addition
-@inline _sb(x) = signbit(x)
-@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy
-@inline _sb(x::ComplexInfinity) = x.signbit # the whole angle, not just its sign
-
 @inline toinf(x) = RealInfinity(signbit(x))
-# The field counts half turns, so the radians of `angle` have to be scaled.
-@inline toinf(x::Complex) = ComplexInfinity(_sb(x))
+@inline toinf(x::Complex) = ComplexInfinity(_directionof(x))
 @inline toinf(x::ComplexInfinity) = x
 
 @inline _infadd(x, y) = angle(x) == angle(y) ? y : NotANumber()
@@ -54,10 +48,14 @@
 
 # multiplication
 
-@inline __mul(x, y::AllInfinities) = RealInfinity(_sb(x) ⊻ _sb(y))
-@inline __mul(x, y::ComplexInfinity) = ComplexInfinity(_sb(x) + _sb(y))
-@inline __mul(x, y::ComplexInfinity{Bool}) = ComplexInfinity(_sb(x) ⊻ _sb(y))
-@inline __mul(x::Complex, y::ComplexInfinity{Bool}) = ComplexInfinity(_sb(x) + _sb(y))
+# The count of the direction a value points in. `_turns` instead reads its argument as a
+# number of half turns.
+@inline _directionof(x::Real) = signbit(x) ? _HALFTURN : zero(UInt64)
+@inline _directionof(x::Complex) = _turns(angle(x) / π) # overloading `signbit` causes type piracy
+@inline _directionof(x::ComplexInfinity) = x.turns
+
+@inline __mul(x, y::AllInfinities) = RealInfinity(signbit(x) ⊻ signbit(y))
+@inline __mul(x, y::ComplexInfinity) = ComplexInfinity(_directionof(x) + _directionof(y))
 @inline __mul(x::Integer, y::InfiniteCardinal) = x > 0 ? y : throw(ArgumentError("Cannot multiply $x * $y"))
 
 @inline function _mul(x, y)
