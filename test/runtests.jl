@@ -279,11 +279,26 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test ComplexInfinity(true)+1 == ComplexInfinity(true)
         @test ComplexInfinity(false)+1 == ComplexInfinity(false)
 
+        # An infinite summand reaches `_infadd` through `toinf`, which has to give half turns
+        @test complex(Inf, 0.0) + ∞ ≡ ComplexInfinity()
+        @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
+        @test complex(0.0, Inf) + im*∞ ≡ im*∞
+        @test complex(0.0, -Inf) + (-im*∞) ≡ -im*∞
+        @test_throws ArgumentError complex(0.0, Inf) + ∞
+        # two infinite parts are the only way an infinite `Complex` points off the axes
+        for (z, inf) in ((complex(Inf, Inf), (1+im)*∞), (complex(-Inf, Inf), (-1+im)*∞),
+                         (complex(-Inf, -Inf), (-1-im)*∞), (complex(Inf, -Inf), (1-im)*∞))
+            @test z + inf ≡ inf
+        end
+
         @test ∞ * ComplexInfinity() ≡ RealInfinity() * ComplexInfinity() ≡
              ComplexInfinity() * ∞ ≡ ComplexInfinity() * RealInfinity() ≡ ComplexInfinity()
 
         @test  2.0im*∞ ≡ ∞*2.0im ≡ 2.0im * RealInfinity() ≡ RealInfinity() * 2.0im ≡ ComplexInfinity(1/2)
         @test 2ComplexInfinity() ≡ ComplexInfinity()*2 ≡ ComplexInfinity()
+        # a factor gives the direction it actually has, so rescaling moves it once it rounds
+        @test 4*(0.3+0.1im)*∞ ≡ (0.3+0.1im)*∞
+        @test 3*(0.3+0.1im)*∞ ≢ (0.3+0.1im)*∞
 
         @test exp(im*π/4)*∞ == Inf+im*Inf
         @test exp(im*π/4)+∞ == ∞

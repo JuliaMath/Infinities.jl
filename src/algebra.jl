@@ -22,8 +22,13 @@
 
 
 # addition
+@inline _sb(x) = signbit(x)
+@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy
+@inline _sb(x::ComplexInfinity) = x.signbit # the whole angle, not just its sign
+
 @inline toinf(x) = RealInfinity(signbit(x))
-@inline toinf(x::Complex) = ComplexInfinity(angle(x))
+# The field counts half turns, so the radians of `angle` have to be scaled.
+@inline toinf(x::Complex) = ComplexInfinity(_sb(x))
 @inline toinf(x::ComplexInfinity) = x
 
 @inline _infadd(x, y) = angle(x) == angle(y) ? y : throw(ArgumentError("Angles must be the same to add ∞"))
@@ -48,10 +53,6 @@
 -(x::AllInfinities, y::AllInfinities) = _sub(x, y)
 
 # multiplication
-
-@inline _sb(x) = signbit(x)
-@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy
-@inline _sb(x::ComplexInfinity) = x.signbit # the whole angle, not just its sign
 
 @inline __mul(x, y::AllInfinities) = RealInfinity(_sb(x) ⊻ _sb(y))
 @inline __mul(x, y::ComplexInfinity) = ComplexInfinity(_sb(x) + _sb(y))
