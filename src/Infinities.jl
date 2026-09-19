@@ -107,11 +107,9 @@ ComplexInfinity{T}(::Infinity) where T<:Real = ComplexInfinity{T}()
 ComplexInfinity(::Infinity) = ComplexInfinity()
 ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x))
 ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
-ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(signbit(x))) # ambiguity fix
+ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(x.signbit)) # ambiguity fix
 
-signbit(y::ComplexInfinity{Bool}) = y.signbit
-signbit(y::ComplexInfinity{<:Integer}) = !(mod(y.signbit,2) == 0)
-signbit(y::ComplexInfinity) = y.signbit
+signbit(y::ComplexInfinity) = mod(y.signbit, 2) == 1
 
 convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()

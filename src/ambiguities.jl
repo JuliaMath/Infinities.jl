@@ -35,7 +35,7 @@ for Typ in (Rational, )
     for op in (:fld, :cld, :div)
         @eval $op(x::InfiniteCardinal, y::$Typ) = _inffcd(x, y)
     end
-    @eval div(::T, ::IntegerInfinities) where T <: $Typ = _divinf(T)
+    @eval div(x::$Typ, ::IntegerInfinities) = _divinf(x)
     @eval fld(x::$Typ, ::IntegerInfinities) = _fldinf(x)
     @eval cld(x::$Typ, ::IntegerInfinities) = _cldinf(x)
 end
