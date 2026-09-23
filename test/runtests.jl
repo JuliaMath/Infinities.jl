@@ -2,6 +2,7 @@ using Infinities, Base64, Test
 import Infinities: Infinity, AllInfinities, _isinf
 
 using Aqua, JET
+using Static: Static
 
 "An `AbstractString` indexed by character position, so that byte arithmetic on indices is invalid."
 struct CharString <: AbstractString
@@ -15,6 +16,14 @@ Base.isvalid(s::CharString, i::Integer) = 1 ≤ i ≤ ncodeunits(s)
 Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i], i + 1) : nothing
 
 @testset "∞" begin
+    @testset "Boolean arithmetic" begin
+        for inf in (∞, +∞, -∞, ℵ₀, ℵ₁, NotANumber(), ComplexInfinity(), im*∞), value in (false, true),
+            (args, expected) in (((inf, value), (inf, Int(value))), ((value, inf), (Int(value), inf))),
+            op in (+, -, *)
+
+            @test isequal(op(args...), op(expected...))
+        end
+    end
     @testset "∞" begin
         @test ∞ ≠ 1
         @test 1 ≠ ∞
@@ -779,6 +788,7 @@ end
 
 include("test_cardinality.jl")
 include("test_ambiguity.jl")
+include("test_static.jl")
 
 @testset "Project quality" begin
     Aqua.test_all(Infinities)

@@ -1,4 +1,5 @@
 @inline infpromote(x, y) = Base._promote(x, y)
+@inline infpromote(x::Bool, y::Union{Infinity, ComplexInfinity}) = (x, y)
 @inline infpromote(x::ExtendedComplex, y::AllInfinities) = (x, ComplexInfinity(y))
 @inline infpromote(x::ExtendedComplex, y::ComplexInfinity) = Base._promote(x, y)
 @inline infpromote(x::Real, ::InfiniteCardinal) = (x, ∞)
