@@ -16,13 +16,19 @@
 -(::Infinity) = RealInfinity(true)
 -(y::RealInfinity) = RealInfinity(!signbit(y))
 -(y::ComplexInfinity{B}) where B<:Integer = sign(y) == 1 ? ComplexInfinity(one(B)) : ComplexInfinity(zero(B))
+-(y::ComplexInfinity) = ComplexInfinity(mod(y.signbit + 1, 2))
 +(x::InfiniteCardinal) = x
 -(::InfiniteCardinal) = -∞
 
 
 # addition
+@inline _sb(x) = signbit(x)
+@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy
+@inline _sb(x::ComplexInfinity) = x.signbit # the whole angle, not just its sign
+
 @inline toinf(x) = RealInfinity(signbit(x))
-@inline toinf(x::Complex) = ComplexInfinity(angle(x))
+# The field counts half turns, so the radians of `angle` have to be scaled.
+@inline toinf(x::Complex) = ComplexInfinity(_sb(x))
 @inline toinf(x::ComplexInfinity) = x
 
 @inline _infadd(x, y) = angle(x) == angle(y) ? y : throw(ArgumentError("Angles must be the same to add ∞"))
@@ -48,10 +54,6 @@
 
 # multiplication
 
-@inline _sb(x) = signbit(x)
-@inline _sb(x::Complex) = angle(x)/π # overloading `signbit` causes type piracy
-@inline _sb(x::ComplexInfinity) = x.signbit # the whole angle, not just its sign
-
 @inline __mul(x, y::AllInfinities) = RealInfinity(_sb(x) ⊻ _sb(y))
 @inline __mul(x, y::ComplexInfinity) = ComplexInfinity(_sb(x) + _sb(y))
 @inline __mul(x, y::ComplexInfinity{Bool}) = ComplexInfinity(_sb(x) ⊻ _sb(y))
@@ -75,6 +77,14 @@ end
 *(::Infinity, ::Infinity) = ∞
 
 
+# division
+# `\` needs nothing of its own, `Base` defining it as `y / x`.
+@inline _div(x, y) = x * inv(y)
+
+/(x::AllInfinities, y::Number) = _div(x, y)
+/(x::Number, y::AllInfinities) = _div(x, y)
+/(x::AllInfinities, y::AllInfinities) = NotANumber()
+
 # mod
 @inline function _mod(x::Real, y::IntegerInfinities)
     isnan(x) && return x
@@ -84,6 +94,16 @@ end
 mod(x::Real, y::IntegerInfinities) = _mod(x, y)
 mod(::IntegerInfinities, ::Real) = NotANumber()
 mod(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
+
+# rem, divrem
+# `rem` keeps the sign of the dividend, so unlike `mod` it stays bounded either way.
+rem(x::Real, ::IntegerInfinities) = x
+rem(::IntegerInfinities, ::Real) = NotANumber()
+rem(::IntegerInfinities, ::IntegerInfinities) = NotANumber()
+# `Base` computes the remainder of two `Integer`s as `a - div(a,b)*b`, which an `InfiniteCardinal` cannot evaluate.
+divrem(x::Real, y::IntegerInfinities) = (div(x, y), rem(x, y))
+divrem(x::IntegerInfinities, y::Real) = (div(x, y), rem(x, y))
+divrem(x::IntegerInfinities, y::IntegerInfinities) = (div(x, y), rem(x, y))
 
 # fld, cld, div
 _divinf(x) = isnan(x) ? x : zero(x)

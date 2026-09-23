@@ -279,11 +279,26 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test ComplexInfinity(true)+1 == ComplexInfinity(true)
         @test ComplexInfinity(false)+1 == ComplexInfinity(false)
 
+        # An infinite summand reaches `_infadd` through `toinf`, which has to give half turns
+        @test complex(Inf, 0.0) + ∞ ≡ ComplexInfinity()
+        @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
+        @test complex(0.0, Inf) + im*∞ ≡ im*∞
+        @test complex(0.0, -Inf) + (-im*∞) ≡ -im*∞
+        @test_throws ArgumentError complex(0.0, Inf) + ∞
+        # two infinite parts are the only way an infinite `Complex` points off the axes
+        for (z, inf) in ((complex(Inf, Inf), (1+im)*∞), (complex(-Inf, Inf), (-1+im)*∞),
+                         (complex(-Inf, -Inf), (-1-im)*∞), (complex(Inf, -Inf), (1-im)*∞))
+            @test z + inf ≡ inf
+        end
+
         @test ∞ * ComplexInfinity() ≡ RealInfinity() * ComplexInfinity() ≡
              ComplexInfinity() * ∞ ≡ ComplexInfinity() * RealInfinity() ≡ ComplexInfinity()
 
         @test  2.0im*∞ ≡ ∞*2.0im ≡ 2.0im * RealInfinity() ≡ RealInfinity() * 2.0im ≡ ComplexInfinity(1/2)
         @test 2ComplexInfinity() ≡ ComplexInfinity()*2 ≡ ComplexInfinity()
+        # a factor gives the direction it actually has, so rescaling moves it once it rounds
+        @test 4*(0.3+0.1im)*∞ ≡ (0.3+0.1im)*∞
+        @test 3*(0.3+0.1im)*∞ ≢ (0.3+0.1im)*∞
 
         @test exp(im*π/4)*∞ == Inf+im*Inf
         @test exp(im*π/4)+∞ == ∞
@@ -329,6 +344,32 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         # `signbit` returns a `Bool` for every angle, as it does over the reals
         @test signbit(ComplexInfinity(1.0)) === signbit(-ComplexInfinity()) === true
         @test signbit(ComplexInfinity(0.5)) === signbit(ComplexInfinity()) === false
+
+        @testset "abs/sign/conj/-" begin
+            @test -ComplexInfinity(0.5) ≡ ComplexInfinity(1.5)
+            @test -(-ComplexInfinity(0.5)) ≡ ComplexInfinity(0.5)
+            @test -ComplexInfinity() ≡ ComplexInfinity(true)
+            @test abs(ComplexInfinity()) ≡ abs(ComplexInfinity(0.5)) ≡ ∞
+            @test sign(ComplexInfinity(0.5)) ≡ complex(0.0, 1.0)
+            @test sign(ComplexInfinity(0.0)) ≡ complex(1.0, 0.0)
+            @test sign(ComplexInfinity(1.0)) ≡ complex(-1.0, 0.0)
+            # an integer angle stays on the real line, where the sign is a real ±1
+            @test sign(ComplexInfinity(false)) ≡ 1
+            @test sign(ComplexInfinity(true)) ≡ -1
+            # off the axes conjugation and negation part company: `-ComplexInfinity(0.25)` is `ComplexInfinity(1.25)`
+            @test conj(ComplexInfinity(0.25)) ≡ ComplexInfinity(1.75)
+            @test conj(conj(ComplexInfinity(0.25))) ≡ ComplexInfinity(0.25)
+            @test conj(ComplexInfinity(true)) ≡ ComplexInfinity(true) # the narrow type survives
+        end
+
+        @testset "float" begin
+            @test float(ComplexInfinity()) ≡ float(ComplexInfinity(0.0)) ≡ complex(Inf, 0.0)
+            @test float(ComplexInfinity(1/2)) ≡ complex(0.0, Inf)
+            @test float(ComplexInfinity(1.0)) ≡ float(ComplexInfinity(true)) ≡ complex(-Inf, 0.0)
+            @test float(ComplexInfinity(-1/2)) ≡ float(ComplexInfinity(3/2)) ≡ complex(0.0, -Inf)
+            # `Complex` points along eight rays only, so every other angle collapses onto the nearest
+            @test float(ComplexInfinity(1/4)) ≡ float(ComplexInfinity(0.3)) ≡ complex(Inf, Inf)
+        end
     end
 
     @testset "Set" begin
@@ -395,6 +436,76 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test zero(ℵ₀) ≡ zero(∞) ≡ zero(Infinity) ≡ zero(InfiniteCardinal{0}) ≡ 0
         @test zero(-∞) ≡ zero(RealInfinity) ≡ 0.0
         @test zero(exp(0.1im)∞) ≡ zero(ComplexInfinity) ≡ 0.0+0.0im
+    end
+
+    @testset "isinteger/round" begin
+        infinities = (∞, +∞, -∞, ℵ₀, ComplexInfinity(), ComplexInfinity(1/4))
+        @test !isinteger(∞) && !isinteger(+∞) && !isinteger(-∞)
+        @test !isinteger(ComplexInfinity()) && !isinteger(ComplexInfinity(1/4))
+        @test isinteger(ℵ₀) # an `InfiniteCardinal` is an `Integer`
+        @test ∞ ∉ 1:5 # `in` asks a range for `isinteger` before comparing
+        for f in (round, floor, ceil, trunc), x in infinities
+            @test f(x) ≡ f(x; digits=2) ≡ x
+        end
+        for r in (RoundNearest, RoundUp, RoundDown, RoundToZero), x in infinities
+            @test round(x, r) ≡ round(x, r; digits=2) ≡ x
+        end
+    end
+
+    @testset "division" begin
+        @test ∞ / 2 ≡ 2 \ ∞ ≡ +∞
+        @test (-∞) / 2 ≡ ∞ / -2 ≡ -∞
+        # a zero divisor keeps the direction, and its own sign is the one that counts
+        @test ∞ / 0 ≡ ∞ / 0.0 ≡ (-∞) / (-0.0) ≡ +∞
+        @test (-∞) / 0 ≡ (-∞) / 0.0 ≡ ∞ / (-0.0) ≡ -∞
+        @test ComplexInfinity(0.5) / 2 ≡ ComplexInfinity(0.5)
+        # dividing by a complex turns the direction by its angle
+        @test (+∞) / (1+im) ≡ (1-im)*∞
+        @test 2 / -∞ ≡ -0.0
+        @test 2 / ∞ == ∞ \ 2 == 2 / ℵ₀ == 0 # the type follows `inv`, which returns an `Int` for `∞`
+        # `∞` is positive, so the quotient keeps the dividend exact; a signed infinity
+        # needs a float to carry `-0.0`
+        @test (2//3) / ∞ ≡ (2//3) / ℵ₀ ≡ 0//1
+        @test (2//3) / (+∞) ≡ 0.0
+        @test ∞ / ∞ isa NotANumber
+        @test isnan(NaN / ∞) && isnan(∞ / NaN)
+    end
+
+    @testset "rem/divrem" begin
+        @test 3 % ∞ ≡ rem(3, -∞) ≡ 3 % ℵ₀ ≡ 3
+        @test -3 % ∞ ≡ -3 # `rem` keeps the sign of the dividend, where `mod(-3, ∞)` is unbounded
+        @test rem(∞, 3) isa NotANumber && rem(∞, ∞) isa NotANumber
+        @test isnan(rem(NaN, ∞))
+        @test divrem(3, ∞) ≡ (0, 3) && divrem(-3, ∞) ≡ (0, -3)
+        # `Base` has an `Integer`-only `divrem` that avoids `rem`, and `ℵ₀` is an `Integer`
+        @test divrem(3, ℵ₀) ≡ (0, 3)
+        @test divrem(ℵ₀, 3) ≡ (ℵ₀, NotANumber())
+        @test divrem(ℵ₀, ℵ₀) ≡ (NotANumber(), NotANumber())
+        # `Rational` and `BigInt` bring their own `Base` methods, which need methods of their own
+        @test rem(1//2, ∞) ≡ rem(1//2, ℵ₀) ≡ 1//2
+        @test rem(ℵ₀, 1//2) isa NotANumber
+        @test divrem(big(3), ∞) == divrem(big(3), ℵ₀) == (0, 3)
+    end
+
+    @testset "isapprox" begin
+        @test ∞ ≈ Inf && -∞ ≈ -Inf32 && ℵ₀ ≈ ∞ && ∞ ≈ ∞
+        @test !(∞ ≈ 1e300) && !(∞ ≈ -∞)
+        @test Inf ≈ ∞ && -Inf32 ≈ -∞ && !(1e300 ≈ ∞) # the infinity may stand on either side
+        # an `InfiniteCardinal` is an `Integer`, for which `Base` has its own `isapprox`
+        @test ℵ₀ ≈ ℵ₀ && !(ℵ₀ ≈ ℵ₁)
+        @test !(ℵ₀ ≈ 3) && !(3 ≈ ℵ₀)
+        @test isapprox(∞, Inf; atol=1) # the keywords are accepted, but nothing is near an infinity
+        @test !isapprox(∞, 1; atol=∞)
+
+        @testset "infinite tolerance" begin
+            values = (0, 1, -2, 1.5, 0.0, NaN, Inf, -Inf)
+            for x in values, y in values, (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
+                @test isapprox(x, y; atol=inf) == isapprox(x, y; atol=flt)
+                # Skipped over a `Base` bug: its `Integer` method evaluates `rtol * 0` for two zeros, so `isapprox(0, 0; rtol=Inf)` is `false`.
+                x isa Integer && y isa Integer && iszero(x) && iszero(y) && continue
+                @test isapprox(x, y; rtol=inf) == isapprox(x, y; rtol=flt)
+            end
+        end
     end
 
     @testset "float precisions" begin
