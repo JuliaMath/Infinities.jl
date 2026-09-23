@@ -136,6 +136,7 @@ end
 # power
 # Although the base implementation can cover these cases, it can change overtime and yield inconsistent results.
 # ref: https://github.com/JuliaMath/Infinities.jl/actions/runs/19993302836/
+_infpow(x::RealInfinity, p) = _infpow(RealInfinity(signbit(x)), p)
 _infpow(::PositiveInfinity, p) = isnan(p) ? NotANumber() : ifelse(iszero(p), one(p), ifelse(p > 0, +∞, +zero(p)))
 function _infpow(x::NegativeInfinity, p)
     isnan(p) && return NotANumber()

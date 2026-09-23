@@ -16,6 +16,33 @@ This Julia package is used to represent infinities, including:
 
 Note that we subtype based on interfaces, rather than strict mathematical definitions. For example,  `ℵ₀ isa Integer` as `Integer` is often used to represent the size of a set or vector. Similarly, `∞ isa Real`.
 
+## Extending `RealInfinity`
+
+To add another representation of positive or negative infinity, subtype `RealInfinity`
+and define `Base.signbit`: return `false` for positive infinity and `true` for negative infinity.
+
+```julia
+struct SignedInfinity <: RealInfinity
+	negative::Bool
+end
+Base.signbit(inf::SignedInfinity) = inf.negative
+
+SignedInfinity(true) == -∞            # true
+SignedInfinity(true)^2 === +∞         # true
+```
+
+Read the sign from your representation in `signbit`. Do not define it as `x < 0`,
+because the inherited comparisons call `signbit` and would cause infinite recursion.
+You do not need to implement arithmetic, comparisons, floating-point conversion, or
+hashing: your subtype inherits these operations from `RealInfinity`. Any additional
+fields you store are ignored when comparing or hashing values. Calling `zero` on your
+type or an instance returns `0.0`. Calling `one` or `oneunit` returns `1.0`.
+
+A subtype may represent only one sign. Results need not retain its concrete type or
+metadata: negation and powers may return `PositiveInfinity` or `NegativeInfinity`.
+Constructors and representation-preserving conversions are the subtype's responsibility.
+Specialize standard Base operations when representation preservation is needed.
+
 ## Static.jl integration
 
 Loading [Static.jl](https://github.com/SciML/Static.jl) enables an optional package extension.
