@@ -785,3 +785,5 @@ include("test_static.jl")
     Aqua.test_all(Infinities)
     test_package(Infinities; target_modules=(Infinities,))
 end
+
+include("test_forwarddiff.jl")
