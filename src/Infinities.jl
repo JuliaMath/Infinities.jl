@@ -53,10 +53,26 @@ oneunit(::Infinity) = 1
 zero(::Infinity) = 0
 zero(::Type{Infinity}) = 0
 
+"""
+    RealInfinity <: Real
+
+Represent a signed real infinity by subtyping `RealInfinity` and implementing `Base.signbit`.
+
+Every instance must represent exactly positive or negative infinity. Define
+`Base.signbit(x::YourInfinity)::Bool` directly, without relying on comparisons that
+use `signbit`. Additional fields do not affect numeric equality or hashing.
+
+Inherited operations follow the built-in signed infinities' value semantics, but
+need not preserve the concrete type or its metadata. A subtype need not represent
+both signs. Finite identities are `0.0` and `1.0`, including `zero`, `one`, and
+`oneunit` called on the type. Define constructors and specialize Base operations
+separately when representation preservation is needed.
+"""
 abstract type RealInfinity <: Real end
 struct PositiveInfinity <: RealInfinity end
 struct NegativeInfinity <: RealInfinity end
 
+signbit(x::RealInfinity) = throw(ArgumentError("$(typeof(x)) must implement Base.signbit"))
 signbit(::PositiveInfinity) = false
 signbit(::NegativeInfinity) = true
 one(::RealInfinity) = 1.0
@@ -85,11 +101,11 @@ show(io::IO, y::RealInfinity) = print(io, string(y))
 
 Base.to_index(i::RealInfinity) = convert(Integer, i)
 
-one(::Type{RealInfinity}) = 1.0
-oneunit(::Type{RealInfinity}) = 1.0
+one(::Type{<:RealInfinity}) = 1.0
+oneunit(::Type{<:RealInfinity}) = 1.0
 oneunit(::RealInfinity) = 1.0
 zero(::RealInfinity) = 0.0
-zero(::Type{RealInfinity}) = 0.0
+zero(::Type{<:RealInfinity}) = 0.0
 
 
 #######
@@ -195,8 +211,7 @@ zero(::Type{ComplexInfinity}) = zero(ComplexF64)
 # infinities they compare equal to. The interface requires implementing `hash(x, h::UInt)`.
 
 Base.hash(::Infinity, h::UInt)::UInt = hash(Inf, h)
-Base.hash(::PositiveInfinity, h::UInt)::UInt = hash(Inf, h)
-Base.hash(::NegativeInfinity, h::UInt)::UInt = hash(-Inf, h)
+Base.hash(x::RealInfinity, h::UInt)::UInt = hash(signbit(x) ? -Inf : Inf, h)
 
 # The two real directions have to hash like the real infinities they compare equal to.
 function Base.hash(x::ComplexInfinity, h::UInt)::UInt
