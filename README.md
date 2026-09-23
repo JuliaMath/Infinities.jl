@@ -8,8 +8,8 @@ A Julia package for representing infinity in all its forms
 
 This Julia package is used to represent infinities, including:
 
-1. `InfiniteCardinal{k}`, for the cardinality of an infinite set, e.g., `ℵ₀` for the cardinality of the integers and `ℵ₁` for the cardinality of the reals. 
-2.  `∞` to represent the positive real infinity. 
+1. `InfiniteCardinal{k}`, for the cardinality of an infinite set, e.g., `ℵ₀` for the cardinality of the integers and `ℵ₁` for the first uncountable cardinal. The statement that `ℵ₁` is the cardinality of the reals is the continuum hypothesis, not an unconditional equality.
+2.  `∞` to represent the positive real infinity.
 3. `RealInfinity` to represent `±∞`.
 4. `ComplexInfinity` to represent an oriented infinity  `exp(im*θ)∞`
 
