@@ -23,7 +23,7 @@ isone(::InfiniteCardinal) = false
 
 signbit(::InfiniteCardinal) = false
 sign(::InfiniteCardinal) = 1
-angle(::InfiniteCardinal) = 0
+angle(::InfiniteCardinal) = 0.0
 abs(a::InfiniteCardinal) = a
 zero(::InfiniteCardinal) = 0
 zero(::Type{<:InfiniteCardinal}) = 0
