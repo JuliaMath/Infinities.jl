@@ -44,7 +44,7 @@ _convert(::Type{T}, ::Infinity) where {T<:Real} = convert(T, Inf)::T
 (::Type{T})(x::Infinity) where {T<:Real} = _convert(T, x)
 
 sign(y::Infinity) = 1
-angle(x::Infinity) = 0
+angle(x::Infinity) = 0.0
 signbit(::Infinity) = false
 
 one(::Type{Infinity}) = 1

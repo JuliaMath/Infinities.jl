@@ -54,7 +54,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test !signbit(∞)
 
         @test sign(∞) ≡ 1
-        @test angle(∞) ≡ 0
+        @test angle(∞) ≡ 0.0
 
         @test string(∞) == stringmime("text/plain", ∞) == "∞"
 
