@@ -92,6 +92,8 @@ end
 # division
 # `\` needs nothing of its own, `Base` defining it as `y / x`.
 @inline _div(x, y) = x * inv(y)
+# `Base` divides two `Integer`s in floating point.
+@inline _div(x::Integer, y::InfiniteCardinal) = float(x) * inv(y)
 
 /(x::AllInfinities, y::Number) = _div(x, y)
 /(x::Number, y::AllInfinities) = _div(x, y)

@@ -569,7 +569,10 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         # dividing by a complex turns the direction by its angle
         @test (+∞) / (1+im) ≡ (1-im)*∞
         @test 2 / -∞ ≡ -0.0
-        @test 2 / ∞ == ∞ \ 2 == 2 / ℵ₀ == 0 # the type follows `inv`, which returns an `Int` for `∞`
+        @test 2 / ∞ ≡ ∞ \ 2 ≡ 0 # the type follows `inv`, which returns an `Int` for `∞`
+        # `ℵ₀` is an `Integer`, and `Base` divides two of them in floating point
+        @test 2 / ℵ₀ ≡ ℵ₀ \ 2 ≡ true / ℵ₀ ≡ 0.0 && -2 / ℵ₀ ≡ -0.0
+        @test big(2) / ℵ₀ isa BigFloat && iszero(big(2) / ℵ₀)
         # `∞` is positive, so the quotient keeps the dividend exact; a signed infinity
         # needs a float to carry `-0.0`
         @test (2//3) / ∞ ≡ (2//3) / ℵ₀ ≡ 0//1
