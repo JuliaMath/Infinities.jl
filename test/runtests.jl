@@ -243,6 +243,15 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test convert(Float32, -∞) ≡ Float32(-∞) ≡ -Inf32
             @test convert(Float16, -∞) ≡ Float16(-∞) ≡ -Inf16
             @test convert(BigFloat, -∞)::BigFloat == BigFloat(-∞)::BigFloat == -BigFloat(Inf)
+            for negative in (false, true)
+                inf = RealInfinity(negative)
+                @test signbit(inf) === negative
+                @test convert(RealInfinity, inf) === inf
+                values = RealInfinity[inf]
+                @test_throws InexactError convert(RealInfinity, negative)
+                @test_throws InexactError values[1] = negative
+                @test values[1] === inf
+            end
         end
 
         @test Base.to_index(RealInfinity()) ≡ ℵ₀
@@ -255,6 +264,15 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             ComplexInfinity(ComplexInfinity()) ≡ ComplexInfinity(ℵ₀)
 
         @test convert(ComplexInfinity, -∞) ≡ -ComplexInfinity()
+        for turns in (UInt64(0), UInt64(1), 0x8000000000000000, typemax(UInt64))
+            inf = ComplexInfinity(turns)
+            @test reinterpret(UInt64, inf) === turns
+            @test convert(ComplexInfinity, inf) === inf
+            values = ComplexInfinity[inf]
+            @test_throws InexactError convert(ComplexInfinity, turns)
+            @test_throws InexactError values[1] = turns
+            @test values[1] === inf
+        end
         # one direction is one value, however it is spelled
         @test ComplexInfinity(halfturns = -0.5) ≡ ComplexInfinity(halfturns = 1.5) ≡ -im*∞
         @test ComplexInfinity(halfturns = 1) ≡ ComplexInfinity(halfturns = 3) ≡ ComplexInfinity(-∞)

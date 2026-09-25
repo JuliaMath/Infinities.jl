@@ -67,6 +67,9 @@ need not preserve the concrete type or its metadata. A subtype need not represen
 both signs. Finite identities are `0.0` and `1.0`, including `zero`, `one`, and
 `oneunit` called on the type. Define constructors and specialize Base operations
 separately when representation preservation is needed.
+
+Use `RealInfinity(negative::Bool)` to construct from a sign bit. This is not a numeric
+conversion: `convert(RealInfinity, negative)` throws `InexactError`.
 """
 abstract type RealInfinity <: Real end
 struct PositiveInfinity <: RealInfinity end
@@ -81,6 +84,7 @@ RealInfinity() = PositiveInfinity()
 RealInfinity(::Infinity) = PositiveInfinity()
 RealInfinity(x::RealInfinity) = x
 RealInfinity(x::Bool) = ifelse(x, NegativeInfinity(), PositiveInfinity())
+convert(::Type{RealInfinity}, x::Bool) = throw(InexactError(:convert, RealInfinity, x))
 PositiveInfinity(::Infinity) = PositiveInfinity() # otherwise the generic `(::Type{T})(::Infinity) where T<:Real` would route through `Inf`
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
@@ -123,6 +127,9 @@ The count wraps at a full turn, so the stored `UInt64` and the directions are bi
 `0x0` points along the positive real axis. Values increase counterclockwise.
 `0x8000000000000000` points along the negative real axis. Use `reinterpret(UInt64, x)` to
 read out the exact value.
+
+Pass a `UInt64` directly to construct from a direction count. `convert(ComplexInfinity, count)`
+throws `InexactError`, because the finite numeric value of the count is not an infinity.
 
 Multiplying by `∞` takes the direction from the other operand, which usually reads better
 than naming an angle:
@@ -171,6 +178,7 @@ RealInfinity(x::ComplexInfinity) = isreal(x) ? RealInfinity(signbit(x)) :
 
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
 convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
+convert(::Type{ComplexInfinity}, x::UInt64) = throw(InexactError(:convert, ComplexInfinity, x))
 
 
 sign(y::ComplexInfinity) = cispi(_halfturns(y))
