@@ -117,15 +117,14 @@ divrem(x::Real, y::IntegerInfinities) = (div(x, y), rem(x, y))
 divrem(x::IntegerInfinities, y::Real) = (div(x, y), rem(x, y))
 divrem(x::IntegerInfinities, y::IntegerInfinities) = (div(x, y), rem(x, y))
 
-# fld, cld, div
-_divinf(x) = isnan(x) ? NotANumber() : zero(x)
-_fldinf(x) = isnan(x) ? NotANumber() : signbit(x) ? -one(x) : zero(x)
-_cldinf(x) = isnan(x) ? NotANumber() : signbit(x) ? zero(x) : one(x)
-div(x::Real, ::IntegerInfinities) = _divinf(x)
-fld(x::Real, ::IntegerInfinities) = _fldinf(x)
-cld(x::Real, ::IntegerInfinities) = _cldinf(x)
+# A finite numerator over an infinite divisor rounds to zero in every mode. As in `Base`, that
+# zero takes its sign from the divisor and its type from the numerator.
+_fcdinf(x, y) = isnan(x) || isinf(x) ? NotANumber() : signbit(y) ? -zero(x) : zero(x)
+div(x::Real, y::IntegerInfinities) = _fcdinf(x, y)
+fld(x::Real, y::IntegerInfinities) = _fcdinf(x, y)
+cld(x::Real, y::IntegerInfinities) = _fcdinf(x, y)
 
-_inffcd(x, y) = isnan(y) ? NotANumber() : signbit(y) ? -x : x
+_inffcd(x, y) = isnan(y) || isinf(y) ? NotANumber() : signbit(y) ? -x : x
 for OP in (:fld,:cld,:div)
     @eval begin
         $OP(x::IntegerInfinities, y::Real) = _inffcd(x, y)

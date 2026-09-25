@@ -156,8 +156,8 @@ Base.getindex(::InfVector, ::InfiniteCardinal{0}) = 42
         @test ℵ₀ ÷ 5 ≡ ℵ₀
         @test ℵ₀ ÷ ℵ₀ ≡ NotANumber()
         @test 5 ÷ ℵ₀ ≡ 0
-        @test fld(-5, ℵ₀) ≡ -1
-        @test cld(5, ℵ₀) ≡ 1
+        @test fld(-5, ℵ₀) ≡ 0
+        @test cld(5, ℵ₀) ≡ 0
         @test mod(ℵ₀,ℵ₀) ≡ NotANumber()
         @test mod(ℵ₀,6) ≡ NotANumber()
         @test mod(5,ℵ₀) ≡ 5

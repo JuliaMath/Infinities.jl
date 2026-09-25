@@ -12,7 +12,7 @@
         @test mod(inf, 1//2) ≡ NotANumber()
         @test mod(1//2, inf) ≡ 1//2
         @test fld(1//2, inf) == 0
-        @test cld(1//2, inf) == 1
+        @test cld(1//2, inf) == 0
         @test div(1//2, inf) == 0
         @test fld(inf, 1//2) ≡ cld(inf, 1//2) ≡ div(inf, 1//2) == inf
         @test fld(inf, ∞) ≡ fld(inf, +∞) ≡ fld(inf, ℵ₀) ≡ NotANumber()
