@@ -307,12 +307,39 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
         @test complex(0.0, Inf) + im*∞ ≡ im*∞
         @test complex(0.0, -Inf) + (-im*∞) ≡ -im*∞
-        @test complex(0.0, Inf) + ∞ ≡ complex(NotANumber(), NotANumber())
+        @test complex(0.0, Inf) + ∞ ≡ (1+im)*∞
+        # on the eight rays the sum goes part by part, as the `Complex` sum does
+        rays = (∞, (1+im)*∞, im*∞, (-1+im)*∞, -∞, (-1-im)*∞, -im*∞, (1-im)*∞)
+        for x in rays, y in rays
+            z = float(x) + float(y)
+            @test isequal(x + y, !isnan(z) ? z*∞ :
+                                 z isa Complex ? complex(NotANumber(), NotANumber()) : NotANumber())
+        end
+        @test ∞ + im*∞ ≡ im*∞ + ∞ ≡ complex(∞, ∞) ≡ (1+im)*∞
+        @test exp(0.1im)*∞ + ∞ ≡ ComplexInfinity(0x7fffffffffffffff) + (-ComplexInfinity()) ≡
+              complex(NotANumber(), NotANumber())
         # two infinite parts are the only way an infinite `Complex` points off the axes
         for (z, inf) in ((complex(Inf, Inf), (1+im)*∞), (complex(-Inf, Inf), (-1+im)*∞),
                          (complex(-Inf, -Inf), (-1-im)*∞), (complex(Inf, -Inf), (1-im)*∞))
             @test z + inf ≡ inf
         end
+
+        # an infinite part makes the whole number infinite, pointing where the `Complex` would
+        @test complex(∞) ≡ complex(+∞) ≡ complex(ℵ₀) ≡ complex(∞, 0) ≡ complex(+∞, -2.5) ≡ ComplexInfinity()
+        @test complex(-∞) ≡ complex(-∞, 0) ≡ complex(-∞, -0.0) ≡ -ComplexInfinity()
+        @test complex(0, ∞) ≡ complex(-3, +∞) ≡ im*∞
+        @test complex(0.0, -∞) ≡ -im*∞
+        for (x, y, inf) in ((∞, ∞, (1+im)*∞), (0.5∞, ∞, (1+im)*∞), (-∞, +∞, (-1+im)*∞),
+                            (-∞, -∞, (-1-im)*∞), (ℵ₀, -∞, (1-im)*∞), (∞, Inf, (1+im)*∞),
+                            (-Inf, 0.5∞, (-1+im)*∞))
+            @test complex(x, y) ≡ inf
+        end
+        for nan in (NaN, NotANumber())
+            @test complex(∞, nan) ≡ complex(nan, -∞) ≡ complex(NotANumber(), NotANumber())
+        end
+        @test complex(ComplexInfinity()) ≡ ComplexInfinity() && complex(im*∞) ≡ im*∞
+        @test complex(Infinity) ≡ complex(RealInfinity) ≡ complex(PositiveInfinity) ≡
+              complex(InfiniteCardinal{0}) ≡ complex(ComplexInfinity) ≡ ComplexInfinity
 
         @test ∞ * ComplexInfinity() ≡ RealInfinity() * ComplexInfinity() ≡
              ComplexInfinity() * ∞ ≡ ComplexInfinity() * RealInfinity() ≡ ComplexInfinity()
@@ -348,11 +375,16 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test (1+im)*∞ * (im*∞) ≡ (-1+im)*∞
         @test (2.0+0.0im)*∞ + ComplexInfinity() ≡ ComplexInfinity() + (2.0+0.0im)*∞ ≡ ComplexInfinity()
 
-        @test stringmime("text/plain", ComplexInfinity()) == "cispi(0.0)∞"
+        @test stringmime("text/plain", ComplexInfinity()) == "∞ + 0im"
+        @test map(x -> sprint(show, ComplexInfinity(x)), rays) ==
+              ("∞ + 0im", "∞ + ∞*im", "0 + ∞*im", "-∞ + ∞*im",
+               "-∞ + 0im", "-∞ - ∞*im", "0 - ∞*im", "∞ - ∞*im")
+        @test sprint(show, ComplexInfinity(halfturns = 0.1)) == "cispi(0.1)∞"
         # a count an angle cannot name is shown as itself, so every form reads back
         @test sprint(show, ComplexInfinity(0x5555555555555555)) == "ComplexInfinity(0x5555555555555555)"
-        for u in (0x0000000000000000, 0x4000000000000000, 0x5555555555555555, 0xdeadbeefdeadbeef)
-            @test Core.eval(@__MODULE__, Meta.parse(sprint(show, ComplexInfinity(u)))) ≡ ComplexInfinity(u)
+        for x in (ComplexInfinity.(rays)..., ComplexInfinity(0x0ccccccccccccd00),
+                  ComplexInfinity(0x5555555555555555), ComplexInfinity(0xdeadbeefdeadbeef))
+            @test Core.eval(@__MODULE__, Meta.parse(sprint(show, x))) ≡ x
         end
 
         @testset "integer operations" begin

@@ -39,6 +39,15 @@ promote_rule(::Type{Infinity}, ::Type{PositiveInfinity}) = PositiveInfinity
 promote_rule(::Type{Infinity}, ::Type{ComplexInfinity}) = ComplexInfinity
 promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity}) = ComplexInfinity
 
+# An infinite part makes the whole number infinite, so `complex` gives the direction it points in.
+complex(x::IntegerInfinities) = ComplexInfinity(x)
+complex(x::ComplexInfinity) = x
+complex(::Type{<:IntegerInfinities}) = ComplexInfinity
+complex(::Type{ComplexInfinity}) = ComplexInfinity
+complex(x::IntegerInfinities, y::Real) = x + im*y
+complex(x::Real, y::IntegerInfinities) = x + im*y
+complex(x::IntegerInfinities, y::IntegerInfinities) = x + im*y
+
 function tryparse(::Type{NegativeInfinity}, s::AbstractString)
     i = findfirst(!isspace, s)
     (isnothing(i) || s[i] != '-') && return nothing

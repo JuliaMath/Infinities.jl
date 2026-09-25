@@ -29,7 +29,16 @@
 @inline _undefined(x, y) =
     x isa ExtendedComplex || y isa ExtendedComplex ? ComplexNotANumber : NotANumber()
 
-@inline _infadd(x, y) = angle(x) == angle(y) ? y : _undefined(x, y)
+@inline _infadd(x, y) = _directionof(x) == _directionof(y) ? y :
+    x isa ComplexInfinity || y isa ComplexInfinity ? _rayadd(x, y) : _undefined(x, y)
+
+# On the eight rays each part is infinite or exactly zero, so `Base` adds part by part.
+@inline function _rayadd(x, y)
+    (kx, ox), (ky, oy) = divrem(_directionof(x), _EIGHTH), divrem(_directionof(y), _EIGHTH)
+    iszero(ox | oy) || return _undefined(x, y)
+    (rx, ix), (ry, iy) = _RAYPARTS[kx + 1], _RAYPARTS[ky + 1]
+    rx * ry < 0 || ix * iy < 0 ? _undefined(x, y) : toinf(complex(sign(rx + ry), sign(ix + iy)))
+end
 
 @inline __add(x, y::AllInfinities) = isinf(x) ? _infadd(toinf(x), y) : y
 @inline __add(x::Integer, y::InfiniteCardinal) = max(x, y)
