@@ -385,7 +385,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test ComplexInfinity() == Inf
 
         # the complex plane carries no order, so these are undefined as they are for `Complex`
-        for op in (isless, <, ≤, >, ≥, min, max), y in (5, ComplexInfinity(), (1+im)*∞)
+        for op in (isless, <, ≤, >, ≥, min, max),
+            y in (5, Inf, -Inf, NaN, ∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity(), (1+im)*∞)
+
             @test_throws MethodError op(ComplexInfinity(), y)
             @test_throws MethodError op(y, ComplexInfinity())
         end

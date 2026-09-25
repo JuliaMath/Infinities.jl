@@ -1,7 +1,8 @@
 module InfinitiesStaticExt
 
 using Infinities: Infinity, PositiveInfinity, NegativeInfinity, InfiniteCardinal, NotANumber
-using Infinities: AllInfinities, AllRealInfinities, IntegerInfinities, ComplexInfinity, RealInfinity
+using Infinities: AllInfinities, AllRealInfinities, IntegerInfinities, OrderedInfinities
+using Infinities: ComplexInfinity, RealInfinity
 using Static: Static, dynamic, StaticNumber, StaticInteger, StaticFloat64, StaticInt, True
 
 for Typ in (Infinity, PositiveInfinity, NegativeInfinity, NotANumber)
@@ -20,10 +21,9 @@ for (ops, Types, StaticTypes) in (
     ((:+, :-, :*, :/, :(==)), (AllInfinities,), (StaticNumber,)),
     ((:isequal,), (NotANumber,), (StaticNumber,)),
     ((:div, :fld, :cld, :divrem), (IntegerInfinities,), (StaticNumber,)),
-    ((:<, :<=, :>, :>=), (AllInfinities,), (StaticInteger, StaticFloat64)),
+    ((:<, :<=, :>, :>=), (OrderedInfinities,), (StaticInteger, StaticFloat64)),
     ((:isless,), (AllRealInfinities, InfiniteCardinal, NotANumber), (StaticInteger, StaticFloat64)),
-    ((:min, :max), (AllInfinities, NotANumber), (StaticInteger,)),
-    ((:min, :max), (IntegerInfinities, ComplexInfinity, NotANumber), (StaticFloat64,)),
+    ((:min, :max), (OrderedInfinities, NotANumber), (StaticInteger, StaticFloat64)),
     ((:mod,), (IntegerInfinities, NotANumber), (StaticNumber,)),
     ((:rem,), (IntegerInfinities, NotANumber), (StaticInteger, StaticFloat64)),
     ((:*,), (InfiniteCardinal,), (StaticInt{0},)),
