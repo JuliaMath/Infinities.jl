@@ -112,7 +112,8 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
                 @test op(inf, x) ≡ NotANumber()
             end
 
-            for op in (div, fld, cld), x in (0.0, -0.0, 1.5, -1.5),
+            # before 1.13, `Base` itself gives e.g. `fld(-1.5, Inf) === NaN`
+            VERSION ≥ v"1.13" && for op in (div, fld, cld), x in (0.0, -0.0, 1.5, -1.5),
                 (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
 
                 @test op(x, inf) ≡ op(x, flt)
