@@ -1,7 +1,7 @@
 const AllInfinities = Union{Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal}
-const AllRealInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}}
-const IntegerInfinities = Union{Infinity, RealInfinity, ComplexInfinity{<:Integer}, InfiniteCardinal}
-const ExtendedComplex{T} = Union{Complex{T}, ComplexInfinity{T}}
+const AllRealInfinities = Union{Infinity, RealInfinity}
+const IntegerInfinities = Union{Infinity, RealInfinity, InfiniteCardinal}
+const ExtendedComplex = Union{Complex, ComplexInfinity}
 
 iszero(::AllInfinities) = false
 isinf(::AllInfinities) = true
@@ -25,6 +25,7 @@ const NotANumberRivals = (Number, Real, AbstractFloat, AbstractIrrational, AllIn
                           InfiniteCardinal)
 # A complex operand makes the undefined result complex, as it does over the floats.
 const NotANumberComplexRivals = (Complex, Complex{Bool}, ComplexInfinity)
+const ComplexNotANumber = complex(NotANumber(), NotANumber())
 
 # `InfiniteCardinal` is absent because `Base` already returns `true` for it through `Integer`.
 isinteger(::Union{Infinity, RealInfinity, ComplexInfinity}) = false
@@ -35,10 +36,17 @@ round(x::Union{AllInfinities, NotANumber}, ::RoundingMode; kwargs...) = x
 
 # `Infinity` is positive, so it has no common type with `NegativeInfinity` (as is already the case for `PositiveInfinity`).
 promote_rule(::Type{Infinity}, ::Type{PositiveInfinity}) = PositiveInfinity
-promote_rule(::Type{Infinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity{T}}) where T = ComplexInfinity{T}
-promote_rule(::Type{ComplexInfinity{T}}, ::Type{<:RealInfinity}) where T<:Integer = ComplexInfinity{T}
-promote_rule(::Type{ComplexInfinity{T}}, ::Type{ComplexInfinity{S}}) where {T, S} = ComplexInfinity{promote_type(T, S)}
+promote_rule(::Type{Infinity}, ::Type{ComplexInfinity}) = ComplexInfinity
+promote_rule(::Type{<:RealInfinity}, ::Type{ComplexInfinity}) = ComplexInfinity
+
+# An infinite part makes the whole number infinite, so `complex` gives the direction it points in.
+complex(x::IntegerInfinities) = ComplexInfinity(x)
+complex(x::ComplexInfinity) = x
+complex(::Type{<:IntegerInfinities}) = ComplexInfinity
+complex(::Type{ComplexInfinity}) = ComplexInfinity
+complex(x::IntegerInfinities, y::Real) = x + im*y
+complex(x::Real, y::IntegerInfinities) = x + im*y
+complex(x::IntegerInfinities, y::IntegerInfinities) = x + im*y
 
 function tryparse(::Type{NegativeInfinity}, s::AbstractString)
     i = findfirst(!isspace, s)
