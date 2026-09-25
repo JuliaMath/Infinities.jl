@@ -112,10 +112,12 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
                 @test op(inf, x) ≡ NotANumber()
             end
 
-            for op in (div, fld, cld), x in (0.0, -0.0, 1.5, -1.5),
+            # before 1.13, `Base` itself gives e.g. `fld(-1.5, Inf) === NaN`. The sign of the zero
+            # differs between versions, so only the value is compared. The loop above checks the sign.
+            VERSION ≥ v"1.13" && for op in (div, fld, cld), x in (0.0, -0.0, 1.5, -1.5),
                 (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
 
-                @test op(x, inf) ≡ op(x, flt)
+                @test op(x, inf) == op(x, flt)
             end
 
             for op in (div, fld, cld), x in (0, 2, -2), inf in (∞, +∞, -∞, ℵ₀)
