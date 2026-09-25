@@ -3,7 +3,7 @@ module Infinities
 import Base: angle, isone, iszero, isinf, isfinite, isnan, isreal, abs, one, oneunit, zero, isless, isequal, inv,
                 +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, rem, divrem, min, max,
                 sign, signbit, isapprox,
-                string, show, promote_rule, convert, getindex, tryparse, conj,
+                string, show, promote_rule, convert, getindex, tryparse, conj, complex,
                 isinteger, round, floor, ceil, trunc, float,
                 Bool, Integer
 
@@ -111,8 +111,8 @@ read out the exact value.
 Multiplying by `∞` takes the direction from the other operand, which usually reads better
 than naming an angle:
 
-    im*∞            # cispi(0.5)∞
-    (1+im)*∞        # cispi(0.25)∞
+    im*∞            # 0 + ∞*im
+    (1+im)*∞        # ∞ + ∞*im
     exp(im*π/4)*∞   # the same direction again
 
 Those forms and the `halfturns` keyword go through `angle`, so they round. It is exact on
@@ -124,8 +124,11 @@ struct ComplexInfinity <: Number
     ComplexInfinity(turns::UInt64) = new(turns)
 end
 
-# A full turn fills the `UInt64` range, so a half turn is 2^63 units.
-const _HALFTURN = UInt64(2)^63 # the negative real axis
+# Half of the `typemax(UInt64) + 1` counts of a full turn, a number that would overflow.
+const _HALFTURN = typemax(UInt64) ÷ 2 + 1 # the negative real axis
+# The signs of the parts along each of the eight rays, the axes and diagonals.
+const _EIGHTH = _HALFTURN ÷ 4
+const _RAYPARTS = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
 # `_turns` and `_halfturns` are inverse: half turns in, count out, and back again.
 # `mod` returns 2 itself for a tiny negative angle, since 2 + x rounds back to 2. A full
 # turn is the direction zero. Testing `== 2` rather than `< 2` still lets `NaN` throw.
@@ -167,9 +170,15 @@ function float(x::ComplexInfinity)
     complex(_ray(c), _ray(s))
 end
 
-# The readable form names an angle, which recovers most counts but not all, so it is used
-# only where reading it back gives the same direction.
+# The rays print as `Base` prints an infinite `Complex`. Off the rays the readable form
+# names an angle, which recovers most counts but not all, so it is used only where reading
+# it back gives the same direction.
 function show(io::IO, x::ComplexInfinity)
+    k, offset = divrem(x.turns, _EIGHTH)
+    if iszero(offset)
+        r, i = _RAYPARTS[k + 1]
+        return print(io, ("-∞", "0", "∞")[r + 2], (" - ∞*im", " + 0im", " + ∞*im")[i + 2])
+    end
     h = _halfturns(x)
     _directionof(cispi(h)) == x.turns ? print(io, "cispi($h)∞") :
                                     print(io, "ComplexInfinity(", repr(x.turns), ")")

@@ -25,7 +25,16 @@
 @inline toinf(x::Complex) = ComplexInfinity(_directionof(x))
 @inline toinf(x::ComplexInfinity) = x
 
-@inline _infadd(x, y) = angle(x) == angle(y) ? y : NotANumber()
+@inline _infadd(x, y) = _directionof(x) == _directionof(y) ? y :
+    x isa ComplexInfinity || y isa ComplexInfinity ? _rayadd(x, y) : NotANumber()
+
+# On the eight rays each part is infinite or exactly zero, so `Base` adds part by part.
+@inline function _rayadd(x, y)
+    (kx, ox), (ky, oy) = divrem(_directionof(x), _EIGHTH), divrem(_directionof(y), _EIGHTH)
+    iszero(ox | oy) || return NotANumber()
+    (rx, ix), (ry, iy) = _RAYPARTS[kx + 1], _RAYPARTS[ky + 1]
+    rx * ry < 0 || ix * iy < 0 ? NotANumber() : toinf(complex(sign(rx + ry), sign(ix + iy)))
+end
 
 @inline __add(x, y::AllInfinities) = isinf(x) ? _infadd(toinf(x), y) : y
 @inline __add(x::Integer, y::InfiniteCardinal) = max(x, y)
