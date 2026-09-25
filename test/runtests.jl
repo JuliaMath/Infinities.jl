@@ -44,7 +44,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test ∞ - 1 ≡ ∞ - 1.0 ≡ ∞
         @test *(∞) ≡ ∞
         @test ∞*∞ ≡ ∞
-        @test_throws ArgumentError ∞ - ∞
+        @test ∞ - ∞ ≡ NotANumber()
 
         @test one(∞) ≡ one(Infinity) ≡ oneunit(∞) ≡ oneunit(Infinity) ≡ 1
         @test zero(∞) ≡ 0
@@ -170,23 +170,17 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test (1∞) + (1∞) ≡ 1∞
         @test ∞ + (1∞) ≡ (1∞) + ∞ ≡ 1∞
 
-        @test_throws ArgumentError ∞ + (-∞)
-        @test_throws ArgumentError (1∞) + (-∞)
-        @test_throws ArgumentError (-∞) + ∞
+        @test ∞ + (-∞) ≡ (1∞) + (-∞) ≡ (-∞) + ∞ ≡ NotANumber()
 
         @test ∞ - (-∞) ≡ +∞
         @test (-∞) - ∞ ≡ -∞
         @test (1∞) - (-∞) ≡ 1∞
         @test (-∞) - (1∞) ≡ -∞
 
-        @test_throws ArgumentError ∞ - (1∞)
-        @test_throws ArgumentError (1∞) - ∞
-        @test_throws ArgumentError (1∞) - (1∞)
-        @test_throws ArgumentError (-∞) - (-∞)
-        @test_throws ArgumentError 0*∞
-        @test_throws ArgumentError 0*(-∞)
-        @test_throws ArgumentError Inf - RealInfinity()
-        @test_throws ArgumentError RealInfinity() - Inf
+        # summing opposite directions is undefined, as it is over the floats
+        @test ∞ - (1∞) ≡ (1∞) - ∞ ≡ (1∞) - (1∞) ≡ (-∞) - (-∞) ≡ NotANumber()
+        @test Inf - RealInfinity() ≡ RealInfinity() - Inf ≡ NotANumber()
+        @test 0*∞ ≡ 0*(-∞) ≡ NotANumber()
 
         @test (-∞)*2 ≡ 2*(-∞) ≡ -2 * ∞ ≡ ∞ * (-2) ≡ (-2) * RealInfinity() ≡ -∞
         @test (-∞)*2.3 ≡ 2.3*(-∞) ≡ -2.3 * ∞ ≡ ∞ * (-2.3) ≡ (-2.3) * RealInfinity() ≡ -∞
@@ -284,7 +278,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
         @test complex(0.0, Inf) + im*∞ ≡ im*∞
         @test complex(0.0, -Inf) + (-im*∞) ≡ -im*∞
-        @test_throws ArgumentError complex(0.0, Inf) + ∞
+        @test complex(0.0, Inf) + ∞ ≡ NotANumber()
         # two infinite parts are the only way an infinite `Complex` points off the axes
         for (z, inf) in ((complex(Inf, Inf), (1+im)*∞), (complex(-Inf, Inf), (-1+im)*∞),
                          (complex(-Inf, -Inf), (-1-im)*∞), (complex(Inf, -Inf), (1-im)*∞))
@@ -565,17 +559,69 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     end
 
     @testset "NaN arithmetic" begin
+        # the result is the package's own undefined value, as `Inf + ∞` is its own infinity
         for nan in (NaN, NaN32, NaN16, big(NaN)),
             inf in (∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity())
 
             for op in (+, -, *, div, fld, cld)
-                @test isnan(op(nan, inf)) && isnan(op(inf, nan))
+                @test op(nan, inf) ≡ op(inf, nan) ≡ NotANumber()
             end
-            @test isnan(mod(nan, inf)) # the other direction is `NotANumber` for every argument
+            # `mod(inf, x)` discards `x`, so only one order is needed
+            @test mod(nan, inf) ≡ NotANumber()
         end
         for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (+∞, -∞)
-            @test isnan(inf^nan)
+            @test inf^nan ≡ NotANumber()
         end
+    end
+
+    @testset "NotANumber" begin
+        nan = NotANumber()
+        # every operand it can meet, itself included
+        operands = (nan, 0, 1.5, ∞, +∞, -∞, ℵ₀, ComplexInfinity(), NaN, NaN32)
+        @test isnan(nan) && !isinf(nan) && !isfinite(nan) && !iszero(nan) && !isone(nan) && !signbit(nan)
+        @test !isinteger(nan)
+        # a `NaN` of any real type is real, and this is the type-independent one
+        @test isreal(nan)
+        for f in (round, floor, ceil, trunc)
+            @test f(nan) ≡ f(nan; digits=2) ≡ nan
+        end
+        for r in (RoundNearest, RoundUp, RoundDown, RoundToZero)
+            @test round(nan, r) ≡ round(nan, r; digits=2) ≡ nan
+        end
+
+        # a numeric comparison is false in every direction, against itself included
+        for op in (==, <, ≤, >, ≥, isapprox), x in operands
+            @test !op(nan, x) && !op(x, nan)
+        end
+
+        # `isequal` and `hash` still identify it, as they do for `NaN`
+        @test isequal(nan, nan) && isequal(nan, NaN) && isequal(NaN32, nan)
+        @test hash(nan) == hash(NaN)
+
+        # the sort order puts it last, alongside `NaN`
+        @test sort([1.0, nan, ∞, -∞])[end] ≡ nan
+        for x in operands
+            @test !isless(nan, x) && isless(x, nan) == !isnan(x)
+        end
+
+        # it converts to the `NaN` of whichever float type is asked for
+        @test Float64(nan) ≡ float(nan) ≡ NaN
+        @test Float32(nan) ≡ NaN32 && Float16(nan) ≡ NaN16
+        @test isnan(BigFloat(nan))
+
+        # anything computed from it is undefined again
+        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in operands
+            @test op(nan, x) ≡ op(x, nan) ≡ nan
+        end
+        # a complex operand makes the undefined result complex, as it does over the floats
+        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in (complex(1.0, 2.0), complex(true, false))
+            @test op(nan, x) ≡ op(x, nan) ≡ complex(nan, nan)
+        end
+        for x in operands
+            @test divrem(nan, x) ≡ divrem(x, nan) ≡ (nan, nan)
+        end
+        @test nan^(1//2) ≡ (1//2)^nan ≡ ℯ^nan ≡ nan
+        @test -nan ≡ +nan ≡ abs(nan) ≡ inv(nan) ≡ sign(nan) ≡ conj(nan) ≡ nan
     end
 
     @testset "ordinary values" begin
