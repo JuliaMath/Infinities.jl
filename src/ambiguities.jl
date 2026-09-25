@@ -38,10 +38,8 @@ for Typ in (Rational, )
     @eval rem(x::$Typ, ::IntegerInfinities) = x
     for op in (:fld, :cld, :div)
         @eval $op(x::InfiniteCardinal, y::$Typ) = _inffcd(x, y)
+        @eval $op(x::$Typ, y::IntegerInfinities) = _fcdinf(x, y)
     end
-    @eval div(x::$Typ, ::IntegerInfinities) = _divinf(x)
-    @eval fld(x::$Typ, ::IntegerInfinities) = _fldinf(x)
-    @eval cld(x::$Typ, ::IntegerInfinities) = _cldinf(x)
 end
 
 divrem(x::BigInt, y::IntegerInfinities) = (div(x, y), rem(x, y))

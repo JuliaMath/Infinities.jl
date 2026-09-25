@@ -88,12 +88,8 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test div(∞, 2) ≡ ∞
             @test fld(∞, 2) ≡ ∞
             @test cld(∞, 2) ≡ ∞
-            @test div(2, ∞) ≡ 0
-            @test fld(2, ∞) ≡ 0
-            @test cld(2, ∞) ≡ 1
-            @test div(-2, ∞) ≡ 0
-            @test fld(-2, ∞) ≡ -1
-            @test cld(-2, ∞) ≡ 0
+            @test div(2, ∞) ≡ fld(2, ∞) ≡ cld(2, ∞) ≡ 0
+            @test div(-2, ∞) ≡ fld(-2, ∞) ≡ cld(-2, ∞) ≡ 0
             @test mod(2,∞) ≡ 2
             @test div(∞,∞) isa NotANumber
             @test fld(∞,∞) isa NotANumber
@@ -101,6 +97,30 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test mod(∞,∞) isa NotANumber
             @test mod(∞,2) isa NotANumber
             @test_throws ArgumentError mod(-2,∞)
+
+            for op in (div, fld, cld), x in (0, 2, -2, 0.0, -0.0, 1.5, -1.5, 2//3, -2//3)
+                @test op(x, ∞) ≡ op(x, +∞) ≡ op(x, ℵ₀) ≡ zero(x)
+                @test op(x, -∞) ≡ -zero(x)
+            end
+
+            for op in (div, fld, cld), x in (big(3), big(-3.0))
+                @test op(x, ∞) == zero(x) && op(x, -∞) == zero(x)
+            end
+
+            for op in (div, fld, cld), x in (Inf, -Inf, NaN), inf in (∞, +∞, -∞, ℵ₀)
+                @test op(x, inf) ≡ NotANumber()
+                @test op(inf, x) ≡ NotANumber()
+            end
+
+            for op in (div, fld, cld), x in (0.0, -0.0, 1.5, -1.5),
+                (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
+
+                @test op(x, inf) ≡ op(x, flt)
+            end
+
+            for op in (div, fld, cld), x in (0, 2, -2), inf in (∞, +∞, -∞, ℵ₀)
+                @test op(x, inf) ≡ 0
+            end
         end
 
         @testset "convert" begin
