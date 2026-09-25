@@ -3,18 +3,30 @@ uuid = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
 authors = ["Sheehan Olver <solver@mac.com>"]
 version = "0.1.13"
 
+[weakdeps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+
+[extensions]
+InfinitiesForwardDiffExt = "ForwardDiff"
+InfinitiesStaticExt = "Static"
+
 [compat]
 Aqua = "0.8"
 Base64 = "1"
+ForwardDiff = "1"
 JET = "0.9, 0.10, 0.11, 0.12"
+Static = "1.4"
 Test = "1"
 julia = "1.10"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "Base64", "JET", "Test"]
+test = ["Aqua", "Base64", "ForwardDiff", "JET", "Static", "Test"]
