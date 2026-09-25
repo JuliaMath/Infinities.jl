@@ -71,14 +71,13 @@ isapprox(::NotANumber, ::NotANumber; kwargs...) = false
 # `isless` is the sort order. `NaN` sorts after every other value, infinities included.
 isless(x::AllRealInfinities, y::AllRealInfinities) = signbit(x) && !signbit(y)
 @generated isless(::InfiniteCardinal{N}, ::InfiniteCardinal{M}) where {N,M} = :($(isless(N, M)))
-# The leading `signbit` call discards its result. It is there to reject a non-real `Number`.
-for Typ in (Number, Real, AbstractFloat)
+for Typ in (Real, AbstractFloat)
     @eval begin
-        isless(x::AllRealInfinities, y::$Typ) = (signbit(y); isnan(y) || signbit(x) && y ≠ -∞)
-        isless(x::$Typ, y::AllRealInfinities) = (signbit(x); !isnan(x) && !signbit(y) && x ≠ ∞)
+        isless(x::AllRealInfinities, y::$Typ) = isnan(y) || signbit(x) && y ≠ -∞
+        isless(x::$Typ, y::AllRealInfinities) = !isnan(x) && !signbit(y) && x ≠ ∞
     end
 end
-for Typ in (Number, Real, AbstractFloat, AllRealInfinities)
+for Typ in (Real, AbstractFloat, AllRealInfinities)
     @eval begin
         isless(::InfiniteCardinal, x::$Typ) = isnan(x)
         isless(x::$Typ, y::InfiniteCardinal) = isless(x, ∞) || isless(ℵ₀, y)
@@ -96,9 +95,9 @@ isless(::InfiniteCardinal{0}, ::InfiniteCardinal{0}) = false
 for (op, fop) in ((:max, :_max), (:min, :_min), (:<, :_lt), (:≤, :_le))
     for Typ in (Real, )
         @eval begin
-            $op(x::AllInfinities, y::$Typ) = $fop(x, y)
-            $op(x::$Typ, y::AllInfinities) = $fop(x, y)
+            $op(x::OrderedInfinities, y::$Typ) = $fop(x, y)
+            $op(x::$Typ, y::OrderedInfinities) = $fop(x, y)
         end
     end
-    @eval $op(x::AllInfinities, y::AllInfinities) = $fop(x, y)
+    @eval $op(x::OrderedInfinities, y::OrderedInfinities) = $fop(x, y)
 end

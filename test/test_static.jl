@@ -31,7 +31,7 @@ using Static: Static, static, dynamic, is_static, known, eq, lt, True, False
         args in ((inf, static(value)), (static(value), inf))
 
         unsupported = inf isa ComplexInfinity ?
-            (div, fld, cld, mod, rem, divrem, isless, (isnan(value) ? () : (min, max, <, <=, >, >=))...) : ()
+            (div, fld, cld, mod, rem, divrem, isless, min, max, <, <=, >, >=) : ()
         unbounded = args[2] === inf && inf isa Union{Infinities.Infinity, RealInfinity, InfiniteCardinal} &&
                     !isnan(value) && signbit(value) != signbit(inf) ? (mod,) : ()
         invalid = inf isa InfiniteCardinal && value isa Integer && value < 0 ? (unbounded..., *) : unbounded

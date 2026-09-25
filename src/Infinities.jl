@@ -131,6 +131,10 @@ read out the exact value.
 Pass a `UInt64` directly to construct from a direction count. `convert(ComplexInfinity, count)`
 throws `InexactError`, because the finite numeric value of the count is not an infinity.
 
+The complex plane carries no order, so `isless`, `<`, `≤`, `min` and `max` have no method
+here, just as they have none for `Complex`. A direction along the real axis is no exception.
+Convert it with `RealInfinity` to compare it.
+
 Multiplying by `∞` takes the direction from the other operand, which usually reads better
 than naming an angle:
 
