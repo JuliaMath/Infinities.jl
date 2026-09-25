@@ -2,6 +2,7 @@ using Infinities, Base64, Test
 import Infinities: Infinity, AllInfinities, _isinf
 
 using Aqua, JET
+using Static: Static
 
 "An `AbstractString` indexed by character position, so that byte arithmetic on indices is invalid."
 struct CharString <: AbstractString
@@ -15,6 +16,14 @@ Base.isvalid(s::CharString, i::Integer) = 1 ≤ i ≤ ncodeunits(s)
 Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i], i + 1) : nothing
 
 @testset "∞" begin
+    @testset "Boolean arithmetic" begin
+        for inf in (∞, +∞, -∞, ℵ₀, ℵ₁, NotANumber(), ComplexInfinity(), im*∞), value in (false, true),
+            (args, expected) in (((inf, value), (inf, Int(value))), ((value, inf), (Int(value), inf))),
+            op in (+, -, *)
+
+            @test isequal(op(args...), op(expected...))
+        end
+    end
     @testset "∞" begin
         @test ∞ ≠ 1
         @test 1 ≠ ∞
@@ -54,7 +63,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test !signbit(∞)
 
         @test sign(∞) ≡ 1
-        @test angle(∞) ≡ 0
+        @test angle(∞) ≡ 0.0
 
         @test string(∞) == stringmime("text/plain", ∞) == "∞"
 
@@ -79,12 +88,8 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test div(∞, 2) ≡ ∞
             @test fld(∞, 2) ≡ ∞
             @test cld(∞, 2) ≡ ∞
-            @test div(2, ∞) ≡ 0
-            @test fld(2, ∞) ≡ 0
-            @test cld(2, ∞) ≡ 1
-            @test div(-2, ∞) ≡ 0
-            @test fld(-2, ∞) ≡ -1
-            @test cld(-2, ∞) ≡ 0
+            @test div(2, ∞) ≡ fld(2, ∞) ≡ cld(2, ∞) ≡ 0
+            @test div(-2, ∞) ≡ fld(-2, ∞) ≡ cld(-2, ∞) ≡ 0
             @test mod(2,∞) ≡ 2
             @test div(∞,∞) isa NotANumber
             @test fld(∞,∞) isa NotANumber
@@ -92,6 +97,31 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test mod(∞,∞) isa NotANumber
             @test mod(∞,2) isa NotANumber
             @test_throws ArgumentError mod(-2,∞)
+
+            for op in (div, fld, cld), x in (0, 2, -2, 0.0, -0.0, 1.5, -1.5, 2//3, -2//3)
+                @test op(x, ∞) ≡ op(x, +∞) ≡ op(x, ℵ₀) ≡ zero(x)
+                @test op(x, -∞) ≡ -zero(x)
+            end
+
+            for op in (div, fld, cld), x in (big(3), big(-3.0))
+                @test op(x, ∞) == zero(x) && op(x, -∞) == zero(x)
+            end
+
+            for op in (div, fld, cld), x in (Inf, -Inf, NaN), inf in (∞, +∞, -∞, ℵ₀)
+                @test op(x, inf) ≡ NotANumber()
+                @test op(inf, x) ≡ NotANumber()
+            end
+
+            # before 1.13, `Base` itself gives e.g. `fld(-1.5, Inf) === NaN`
+            VERSION ≥ v"1.13" && for op in (div, fld, cld), x in (0.0, -0.0, 1.5, -1.5),
+                (inf, flt) in ((∞, Inf), (+∞, Inf), (-∞, -Inf), (ℵ₀, Inf))
+
+                @test op(x, inf) ≡ op(x, flt)
+            end
+
+            for op in (div, fld, cld), x in (0, 2, -2), inf in (∞, +∞, -∞, ℵ₀)
+                @test op(x, inf) ≡ 0
+            end
         end
 
         @testset "convert" begin
@@ -234,23 +264,70 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
             @test convert(Float32, -∞) ≡ Float32(-∞) ≡ -Inf32
             @test convert(Float16, -∞) ≡ Float16(-∞) ≡ -Inf16
             @test convert(BigFloat, -∞)::BigFloat == BigFloat(-∞)::BigFloat == -BigFloat(Inf)
+            for negative in (false, true)
+                inf = RealInfinity(negative)
+                @test signbit(inf) === negative
+                @test convert(RealInfinity, inf) === inf
+                values = RealInfinity[inf]
+                @test_throws InexactError convert(RealInfinity, negative)
+                @test_throws InexactError values[1] = negative
+                @test values[1] === inf
+            end
         end
 
         @test Base.to_index(RealInfinity()) ≡ ℵ₀
     end
 
     @testset "ComplexInfinity" begin
+        # every spelling of the positive real axis is the same value, a cardinal included
         @test ComplexInfinity(∞) ≡ convert(ComplexInfinity, ∞) ≡ ComplexInfinity() ≡
-            ComplexInfinity(false) ≡ ComplexInfinity{Bool}(∞) ≡ ComplexInfinity{Bool}(RealInfinity()) ≡ ComplexInfinity{Bool}(ComplexInfinity())
+            ComplexInfinity(0x0000000000000000) ≡ ComplexInfinity(RealInfinity()) ≡
+            ComplexInfinity(ComplexInfinity()) ≡ ComplexInfinity(ℵ₀)
 
-        @test convert(ComplexInfinity{Bool}, ∞) ≡ convert(ComplexInfinity, ∞) ≡ ComplexInfinity()
-        @test convert(ComplexInfinity{Bool}, -∞) ≡ convert(ComplexInfinity, -∞) ≡ -ComplexInfinity()
+        @test convert(ComplexInfinity, -∞) ≡ -ComplexInfinity()
+        for turns in (UInt64(0), UInt64(1), 0x8000000000000000, typemax(UInt64))
+            inf = ComplexInfinity(turns)
+            @test reinterpret(UInt64, inf) === turns
+            @test convert(ComplexInfinity, inf) === inf
+            values = ComplexInfinity[inf]
+            @test_throws InexactError convert(ComplexInfinity, turns)
+            @test_throws InexactError values[1] = turns
+            @test values[1] === inf
+        end
+        # one direction is one value, however it is spelled
+        @test ComplexInfinity(halfturns = -0.5) ≡ ComplexInfinity(halfturns = 1.5) ≡ -im*∞
+        @test ComplexInfinity(halfturns = 1) ≡ ComplexInfinity(halfturns = 3) ≡ ComplexInfinity(-∞)
+        @test isreal(ComplexInfinity()) && isreal(-ComplexInfinity()) && !isreal((1+im)*∞)
+        # a rational direction converts without a float step
+        @test reinterpret(UInt64, ComplexInfinity(halfturns = 2//3)) ≡ 0x5555555555555555
+        # a numerator too wide for `Int128` takes the `BigInt` route to the same count
+        @test ComplexInfinity(halfturns = big(1)//3) ≡ ComplexInfinity(halfturns = 1//3)
+        @test ComplexInfinity(0x4000000000000000) ≡ ComplexInfinity(halfturns = 1//2) ≡ im*∞
+        # `mod` rounds a hair below the axis up to a full turn, which has no count of its own
+        @test ComplexInfinity(halfturns = -1e-300) ≡ ComplexInfinity(halfturns = 2.0) ≡ ComplexInfinity()
+        @test complex(1.0, -1e-17)*∞ ≡ ComplexInfinity()
+        # no count names a direction that is not one, so the conversion has to refuse
+        for h in (NaN, Inf, -Inf)
+            @test_throws InexactError ComplexInfinity(halfturns = h)
+        end
+        # the count runs forwards, `angle` reports it on `Base`'s branch of `(-π, π]`
+        for h in (0.0, 0.25, 0.5, 1.0, -0.25, -0.5, -0.75)
+            @test angle(ComplexInfinity(halfturns = h)) ≡ h*π
+            @test complex(cospi(h), sinpi(h))*∞ == ComplexInfinity(halfturns = h)
+        end
+        # off the axes the angle has to be rounded to reach a count
+        @test reinterpret(UInt64, exp(im*π/8)*∞) - reinterpret(UInt64, ComplexInfinity(halfturns = 1//8)) ≡
+            0x0000000000000100
+        @test angle(exp(im*0.3)*∞) ≈ angle(∞*exp(im*0.3)) ≈ 0.3
+        # the count is finer than an angle in a `Float64`, so equality has to read the count
+        @test ComplexInfinity(0x7fffffffffffffff) ≠ -ComplexInfinity()
+        @test im*∞ * ComplexInfinity(0x0000000000000001) ≠ im*∞
 
         @test isinf(ComplexInfinity())
         @test !isfinite(ComplexInfinity())
 
         @test promote(∞, RealInfinity(), ComplexInfinity()) ≡ ntuple(_ -> ComplexInfinity(), 3)
-        @test promote_type(Infinity, ComplexInfinity{Bool}) == promote_type(RealInfinity, ComplexInfinity{Bool}) == ComplexInfinity{Bool}
+        @test promote_type(Infinity, ComplexInfinity) == promote_type(RealInfinity, ComplexInfinity) == ComplexInfinity
 
 
         @test ComplexInfinity(∞) == ∞
@@ -268,27 +345,54 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
 
         @test ComplexInfinity() + ∞ ≡ ComplexInfinity() + RealInfinity() ≡
                 ∞ + ComplexInfinity() ≡ RealInfinity() + ComplexInfinity() ≡ ComplexInfinity()
-        @test ComplexInfinity(true) + ComplexInfinity(true) == ComplexInfinity(true)
-        @test ComplexInfinity(false) + ComplexInfinity(false) == ComplexInfinity(false)
-        @test ComplexInfinity(true)+1 == ComplexInfinity(true)
-        @test ComplexInfinity(false)+1 == ComplexInfinity(false)
+        @test ComplexInfinity(-∞) + ComplexInfinity(-∞) == ComplexInfinity(-∞)
+        @test ComplexInfinity() + ComplexInfinity() == ComplexInfinity()
+        @test ComplexInfinity(-∞)+1 == ComplexInfinity(-∞)
+        @test ComplexInfinity()+1 == ComplexInfinity()
 
         # An infinite summand reaches `_infadd` through `toinf`, which has to give half turns
         @test complex(Inf, 0.0) + ∞ ≡ ComplexInfinity()
         @test complex(-Inf, 0.0) + (-∞) ≡ -ComplexInfinity()
         @test complex(0.0, Inf) + im*∞ ≡ im*∞
         @test complex(0.0, -Inf) + (-im*∞) ≡ -im*∞
-        @test complex(0.0, Inf) + ∞ ≡ NotANumber()
+        @test complex(0.0, Inf) + ∞ ≡ (1+im)*∞
+        # on the eight rays the sum goes part by part, as the `Complex` sum does
+        rays = (∞, (1+im)*∞, im*∞, (-1+im)*∞, -∞, (-1-im)*∞, -im*∞, (1-im)*∞)
+        for x in rays, y in rays
+            z = float(x) + float(y)
+            @test isequal(x + y, !isnan(z) ? z*∞ :
+                                 z isa Complex ? complex(NotANumber(), NotANumber()) : NotANumber())
+        end
+        @test ∞ + im*∞ ≡ im*∞ + ∞ ≡ complex(∞, ∞) ≡ (1+im)*∞
+        @test exp(0.1im)*∞ + ∞ ≡ ComplexInfinity(0x7fffffffffffffff) + (-ComplexInfinity()) ≡
+              complex(NotANumber(), NotANumber())
         # two infinite parts are the only way an infinite `Complex` points off the axes
         for (z, inf) in ((complex(Inf, Inf), (1+im)*∞), (complex(-Inf, Inf), (-1+im)*∞),
                          (complex(-Inf, -Inf), (-1-im)*∞), (complex(Inf, -Inf), (1-im)*∞))
             @test z + inf ≡ inf
         end
 
+        # an infinite part makes the whole number infinite, pointing where the `Complex` would
+        @test complex(∞) ≡ complex(+∞) ≡ complex(ℵ₀) ≡ complex(∞, 0) ≡ complex(+∞, -2.5) ≡ ComplexInfinity()
+        @test complex(-∞) ≡ complex(-∞, 0) ≡ complex(-∞, -0.0) ≡ -ComplexInfinity()
+        @test complex(0, ∞) ≡ complex(-3, +∞) ≡ im*∞
+        @test complex(0.0, -∞) ≡ -im*∞
+        for (x, y, inf) in ((∞, ∞, (1+im)*∞), (0.5∞, ∞, (1+im)*∞), (-∞, +∞, (-1+im)*∞),
+                            (-∞, -∞, (-1-im)*∞), (ℵ₀, -∞, (1-im)*∞), (∞, Inf, (1+im)*∞),
+                            (-Inf, 0.5∞, (-1+im)*∞))
+            @test complex(x, y) ≡ inf
+        end
+        for nan in (NaN, NotANumber())
+            @test complex(∞, nan) ≡ complex(nan, -∞) ≡ complex(NotANumber(), NotANumber())
+        end
+        @test complex(ComplexInfinity()) ≡ ComplexInfinity() && complex(im*∞) ≡ im*∞
+        @test complex(Infinity) ≡ complex(RealInfinity) ≡ complex(PositiveInfinity) ≡
+              complex(InfiniteCardinal{0}) ≡ complex(ComplexInfinity) ≡ ComplexInfinity
+
         @test ∞ * ComplexInfinity() ≡ RealInfinity() * ComplexInfinity() ≡
              ComplexInfinity() * ∞ ≡ ComplexInfinity() * RealInfinity() ≡ ComplexInfinity()
 
-        @test  2.0im*∞ ≡ ∞*2.0im ≡ 2.0im * RealInfinity() ≡ RealInfinity() * 2.0im ≡ ComplexInfinity(1/2)
+        @test  2.0im*∞ ≡ ∞*2.0im ≡ 2.0im * RealInfinity() ≡ RealInfinity() * 2.0im ≡ im*∞
         @test 2ComplexInfinity() ≡ ComplexInfinity()*2 ≡ ComplexInfinity()
         # a factor gives the direction it actually has, so rescaling moves it once it rounds
         @test 4*(0.3+0.1im)*∞ ≡ (0.3+0.1im)*∞
@@ -301,68 +405,74 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test Inf == ComplexInfinity()
         @test ComplexInfinity() == Inf
 
-        @test isless(-ComplexInfinity(), ComplexInfinity())
-        @test isless(5, ComplexInfinity())
-        @test !isless(ComplexInfinity(), 5)
+        # the complex plane carries no order, so these are undefined as they are for `Complex`
+        for op in (isless, <, ≤, >, ≥, min, max),
+            y in (5, Inf, -Inf, NaN, ∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity(), (1+im)*∞)
 
-        @test 5 < ComplexInfinity() && 5 ≤ ComplexInfinity()
-        @test !(ComplexInfinity() < 5) && !(ComplexInfinity() ≤ 5)
-        @test 5 > -ComplexInfinity() && 5 ≥ -ComplexInfinity()
-        @test ComplexInfinity() > 5 && ComplexInfinity() ≥  5
+            @test_throws MethodError op(ComplexInfinity(), y)
+            @test_throws MethodError op(y, ComplexInfinity())
+        end
+        # a direction on the axis converts, as `Real(::Complex)` does
+        @test RealInfinity(ComplexInfinity()) ≡ +∞
+        @test RealInfinity(-ComplexInfinity()) ≡ -∞
+        @test_throws InexactError RealInfinity((1+im)*∞)
+        @test 5 < RealInfinity(ComplexInfinity())
 
         @test 1 + ComplexInfinity() ≡ 1.0 + ComplexInfinity() ≡ ComplexInfinity() + 1 ≡ ComplexInfinity() + 1.0 ≡ ComplexInfinity()
         @test 5 * ComplexInfinity() ≡ ComplexInfinity()
         @test (-5) * ComplexInfinity() ≡ -ComplexInfinity()
 
-        @test ComplexInfinity(0.25) * ComplexInfinity(0.5) ≡ ComplexInfinity(0.75)
-        @test ComplexInfinity(0.0) + ComplexInfinity() ≡ ComplexInfinity() + ComplexInfinity(0.0) ≡ ComplexInfinity(0.0)
+        @test (1+im)*∞ * (im*∞) ≡ (-1+im)*∞
+        @test (2.0+0.0im)*∞ + ComplexInfinity() ≡ ComplexInfinity() + (2.0+0.0im)*∞ ≡ ComplexInfinity()
 
-        @test mod(ComplexInfinity(), 5) ≡ NotANumber()
-
-        @test stringmime("text/plain", ComplexInfinity()) == "exp(false*im*π)∞"
-
-        @testset "min/max" begin
-            @test min(ComplexInfinity(), -ComplexInfinity()) ≡ -ComplexInfinity()
-            @test max(ComplexInfinity(), -ComplexInfinity()) ≡ ComplexInfinity()
-            @test min(ComplexInfinity(), 5) ≡ min(5,ComplexInfinity())  ≡ 5
-            @test max(ComplexInfinity(), 5) ≡ max(5,ComplexInfinity())  ≡ ComplexInfinity()
+        @test stringmime("text/plain", ComplexInfinity()) == "∞ + 0im"
+        @test map(x -> sprint(show, ComplexInfinity(x)), rays) ==
+              ("∞ + 0im", "∞ + ∞*im", "0 + ∞*im", "-∞ + ∞*im",
+               "-∞ + 0im", "-∞ - ∞*im", "0 - ∞*im", "∞ - ∞*im")
+        @test sprint(show, ComplexInfinity(halfturns = 0.1)) == "cispi(0.1)∞"
+        # a count an angle cannot name is shown as itself, so every form reads back
+        @test sprint(show, ComplexInfinity(0x5555555555555555)) == "ComplexInfinity(0x5555555555555555)"
+        for x in (ComplexInfinity.(rays)..., ComplexInfinity(0x0ccccccccccccd00),
+                  ComplexInfinity(0x5555555555555555), ComplexInfinity(0xdeadbeefdeadbeef))
+            @test Core.eval(@__MODULE__, Meta.parse(sprint(show, x))) ≡ x
         end
 
-        @testset "fld/cld/div" begin
-            @test div(ComplexInfinity(), 5) ≡ fld(ComplexInfinity(), 5) ≡ ComplexInfinity()
-            @test div(-ComplexInfinity(),2) ≡ -ComplexInfinity()
+        @testset "integer operations" begin
+            # an integer operation needs a real, and `Base` defines none of these for a `Complex`
+            for op in (div, fld, cld, mod, rem), x in (ComplexInfinity(), (1+im)*∞)
+                @test_throws MethodError op(x, 5)
+                @test_throws MethodError op(5, x)
+            end
+            @test div(RealInfinity(ComplexInfinity()), 5) ≡ +∞
         end
 
-        @test signbit(ComplexInfinity(3))
-        @test !signbit(ComplexInfinity(100))
+        @test signbit(ComplexInfinity(halfturns = 3))
+        @test !signbit(ComplexInfinity(halfturns = 100))
         # `signbit` returns a `Bool` for every angle, as it does over the reals
-        @test signbit(ComplexInfinity(1.0)) === signbit(-ComplexInfinity()) === true
-        @test signbit(ComplexInfinity(0.5)) === signbit(ComplexInfinity()) === false
+        @test signbit(ComplexInfinity(-∞)) === signbit(-ComplexInfinity()) === true
+        @test signbit(im*∞) === signbit(ComplexInfinity()) === false
 
         @testset "abs/sign/conj/-" begin
-            @test -ComplexInfinity(0.5) ≡ ComplexInfinity(1.5)
-            @test -(-ComplexInfinity(0.5)) ≡ ComplexInfinity(0.5)
-            @test -ComplexInfinity() ≡ ComplexInfinity(true)
-            @test abs(ComplexInfinity()) ≡ abs(ComplexInfinity(0.5)) ≡ ∞
-            @test sign(ComplexInfinity(0.5)) ≡ complex(0.0, 1.0)
-            @test sign(ComplexInfinity(0.0)) ≡ complex(1.0, 0.0)
-            @test sign(ComplexInfinity(1.0)) ≡ complex(-1.0, 0.0)
-            # an integer angle stays on the real line, where the sign is a real ±1
-            @test sign(ComplexInfinity(false)) ≡ 1
-            @test sign(ComplexInfinity(true)) ≡ -1
-            # off the axes conjugation and negation part company: `-ComplexInfinity(0.25)` is `ComplexInfinity(1.25)`
-            @test conj(ComplexInfinity(0.25)) ≡ ComplexInfinity(1.75)
-            @test conj(conj(ComplexInfinity(0.25))) ≡ ComplexInfinity(0.25)
-            @test conj(ComplexInfinity(true)) ≡ ComplexInfinity(true) # the narrow type survives
+            @test -(im*∞) ≡ -im*∞
+            @test -(-(im*∞)) ≡ im*∞
+            @test -ComplexInfinity() ≡ ComplexInfinity(-∞)
+            @test abs(ComplexInfinity()) ≡ abs(im*∞) ≡ ∞
+            @test sign(im*∞) ≡ complex(0.0, 1.0)
+            @test sign(ComplexInfinity()) ≡ complex(1.0, 0.0)
+            @test sign(ComplexInfinity(-∞)) ≡ complex(-1.0, 0.0)
+            # conjugation negates the direction, so on the real axis it changes nothing
+            @test conj((1+im)*∞) ≡ (1-im)*∞
+            @test conj(conj((1+im)*∞)) ≡ (1+im)*∞
+            @test conj(ComplexInfinity(-∞)) ≡ ComplexInfinity(-∞)
         end
 
         @testset "float" begin
-            @test float(ComplexInfinity()) ≡ float(ComplexInfinity(0.0)) ≡ complex(Inf, 0.0)
-            @test float(ComplexInfinity(1/2)) ≡ complex(0.0, Inf)
-            @test float(ComplexInfinity(1.0)) ≡ float(ComplexInfinity(true)) ≡ complex(-Inf, 0.0)
-            @test float(ComplexInfinity(-1/2)) ≡ float(ComplexInfinity(3/2)) ≡ complex(0.0, -Inf)
+            @test float(ComplexInfinity()) ≡ float((2.0+0.0im)*∞) ≡ complex(Inf, 0.0)
+            @test float(im*∞) ≡ complex(0.0, Inf)
+            @test float(ComplexInfinity(-∞)) ≡ complex(-Inf, 0.0)
+            @test float(-im*∞) ≡ float(ComplexInfinity(halfturns = 3/2)) ≡ complex(0.0, -Inf)
             # `Complex` points along eight rays only, so every other angle collapses onto the nearest
-            @test float(ComplexInfinity(1/4)) ≡ float(ComplexInfinity(0.3)) ≡ complex(Inf, Inf)
+            @test float((1+im)*∞) ≡ float(ComplexInfinity(0x1000000000000000)) ≡ complex(Inf, Inf)
         end
     end
 
@@ -375,8 +485,11 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
 
     @testset "hash" begin
         infinities = (∞, +∞, -∞, Inf, -Inf, Inf32, -Inf32, Inf16, -Inf16, big(Inf), -big(Inf),
-                      InfiniteCardinal{0}(), ComplexInfinity(false),
-                      ComplexInfinity(true), ComplexInfinity(0.1))
+                      InfiniteCardinal{0}(), ComplexInfinity(),
+                      ComplexInfinity(-∞), ComplexInfinity(0x1000000000000000),
+                      # counts that an angle in a `Float64` cannot tell apart
+                      ComplexInfinity(0x7fffffffffffffff),
+                      im*∞ * ComplexInfinity(0x0000000000000001))
 
         # isequal must imply equal hashes
         for a in infinities, b in infinities
@@ -417,9 +530,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test Base.literal_pow(^, -∞, Val(2)) ≡ (-∞)^2 ≡ +∞
         @test Base.literal_pow(^, -∞, Val(-2)) ≡ (-∞)^(-2) ≡ 0.0
 
-        @test Base.literal_pow(^, ComplexInfinity(0.1), Val(0)) ≡ ComplexInfinity(0.1)^0 ≡ 1.0+0.0im
-        @test Base.literal_pow(^, ComplexInfinity(0.1), Val(1)) ≡ (ComplexInfinity(0.1))^1 ≡ ComplexInfinity(0.1)
-        @test Base.literal_pow(^, ComplexInfinity(0.1), Val(-1)) ≡ (ComplexInfinity(0.1))^(-1) ≡ 0.0+0.0im
+        @test Base.literal_pow(^, ComplexInfinity(0x1000000000000000), Val(0)) ≡ ComplexInfinity(0x1000000000000000)^0 ≡ 1.0+0.0im
+        @test Base.literal_pow(^, ComplexInfinity(0x1000000000000000), Val(1)) ≡ (ComplexInfinity(0x1000000000000000))^1 ≡ ComplexInfinity(0x1000000000000000)
+        @test Base.literal_pow(^, ComplexInfinity(0x1000000000000000), Val(-1)) ≡ (ComplexInfinity(0x1000000000000000))^(-1) ≡ 0.0+0.0im
     end
 
     @testset "one/zero/oneunit" begin
@@ -433,9 +546,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     end
 
     @testset "isinteger/round" begin
-        infinities = (∞, +∞, -∞, ℵ₀, ComplexInfinity(), ComplexInfinity(1/4))
+        infinities = (∞, +∞, -∞, ℵ₀, ComplexInfinity(), (1+im)*∞)
         @test !isinteger(∞) && !isinteger(+∞) && !isinteger(-∞)
-        @test !isinteger(ComplexInfinity()) && !isinteger(ComplexInfinity(1/4))
+        @test !isinteger(ComplexInfinity()) && !isinteger((1+im)*∞)
         @test isinteger(ℵ₀) # an `InfiniteCardinal` is an `Integer`
         @test ∞ ∉ 1:5 # `in` asks a range for `isinteger` before comparing
         for f in (round, floor, ceil, trunc), x in infinities
@@ -452,16 +565,22 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         # a zero divisor keeps the direction, and its own sign is the one that counts
         @test ∞ / 0 ≡ ∞ / 0.0 ≡ (-∞) / (-0.0) ≡ +∞
         @test (-∞) / 0 ≡ (-∞) / 0.0 ≡ ∞ / (-0.0) ≡ -∞
-        @test ComplexInfinity(0.5) / 2 ≡ ComplexInfinity(0.5)
+        @test im*∞ / 2 ≡ im*∞
         # dividing by a complex turns the direction by its angle
         @test (+∞) / (1+im) ≡ (1-im)*∞
         @test 2 / -∞ ≡ -0.0
-        @test 2 / ∞ == ∞ \ 2 == 2 / ℵ₀ == 0 # the type follows `inv`, which returns an `Int` for `∞`
+        @test 2 / ∞ ≡ ∞ \ 2 ≡ 0 # the type follows `inv`, which returns an `Int` for `∞`
+        # `ℵ₀` is an `Integer`, and `Base` divides two of them in floating point
+        @test 2 / ℵ₀ ≡ ℵ₀ \ 2 ≡ true / ℵ₀ ≡ 0.0 && -2 / ℵ₀ ≡ -0.0
+        @test big(2) / ℵ₀ isa BigFloat && iszero(big(2) / ℵ₀)
         # `∞` is positive, so the quotient keeps the dividend exact; a signed infinity
         # needs a float to carry `-0.0`
         @test (2//3) / ∞ ≡ (2//3) / ℵ₀ ≡ 0//1
         @test (2//3) / (+∞) ≡ 0.0
         @test ∞ / ∞ isa NotANumber
+        # a complex operand on either side makes the undefined quotient complex
+        @test ComplexInfinity() / ∞ ≡ ∞ / ComplexInfinity() ≡
+              ComplexInfinity() / ComplexInfinity() ≡ complex(NotANumber(), NotANumber())
         @test isnan(NaN / ∞) && isnan(∞ / NaN)
     end
 
@@ -521,7 +640,7 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         # ℵ₁ points in the same direction as ∞, even though `ℵ₁ == ∞` is false
         positive = (∞, +∞, ℵ₀, ℵ₁, ComplexInfinity(), Inf, Inf32, Inf16, big(Inf))
         negative = (-∞, -ComplexInfinity(), -Inf, -Inf32, -Inf16, -big(Inf))
-        imaginary = (ComplexInfinity(0.5), complex(0.0, Inf))
+        imaginary = (im*∞, complex(0.0, Inf))
         others = (0, 1.5, -2, -1.5, 0.0, -0.0, NaN, NaN32, prevfloat(Inf), nextfloat(-Inf),
                   nextfloat(0.0), prevfloat(-0.0), "∞", "-∞")
 
@@ -560,14 +679,22 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
 
     @testset "NaN arithmetic" begin
         # the result is the package's own undefined value, as `Inf + ∞` is its own infinity
-        for nan in (NaN, NaN32, NaN16, big(NaN)),
-            inf in (∞, +∞, -∞, ℵ₀, ComplexInfinity(), -ComplexInfinity())
-
+        for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (∞, +∞, -∞, ℵ₀)
             for op in (+, -, *, div, fld, cld)
                 @test op(nan, inf) ≡ op(inf, nan) ≡ NotANumber()
             end
             # `mod(inf, x)` discards `x`, so only one order is needed
             @test mod(nan, inf) ≡ NotANumber()
+        end
+        for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (ComplexInfinity(), -ComplexInfinity())
+            # arithmetic is defined for a complex operand, so the undefined result is complex
+            for op in (+, -, *)
+                @test op(nan, inf) ≡ op(inf, nan) ≡ complex(NotANumber(), NotANumber())
+            end
+            # `Base` defines no integer operation for a `Complex`, and neither do we
+            for op in (div, fld, cld, mod, rem)
+                @test_throws MethodError op(nan, inf)
+            end
         end
         for nan in (NaN, NaN32, NaN16, big(NaN)), inf in (+∞, -∞)
             @test inf^nan ≡ NotANumber()
@@ -577,7 +704,9 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
     @testset "NotANumber" begin
         nan = NotANumber()
         # every operand it can meet, itself included
-        operands = (nan, 0, 1.5, ∞, +∞, -∞, ℵ₀, ComplexInfinity(), NaN, NaN32)
+        reals = (nan, 0, 1.5, ∞, +∞, -∞, ℵ₀, NaN, NaN32)
+        complexes = (ComplexInfinity(), (1+im)*∞, complex(1.0, 2.0), complex(true, false))
+        operands = (reals..., complexes...)
         @test isnan(nan) && !isinf(nan) && !isfinite(nan) && !iszero(nan) && !isone(nan) && !signbit(nan)
         @test !isinteger(nan)
         # a `NaN` of any real type is real, and this is the type-independent one
@@ -610,15 +739,18 @@ Base.iterate(s::CharString, i::Integer=1) = i ≤ length(s.chars) ? (s.chars[i],
         @test isnan(BigFloat(nan))
 
         # anything computed from it is undefined again
-        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in operands
+        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in reals
             @test op(nan, x) ≡ op(x, nan) ≡ nan
         end
         # a complex operand makes the undefined result complex, as it does over the floats
-        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in (complex(1.0, 2.0), complex(true, false))
+        for op in (+, -, *, /, ^, div, fld, cld, mod, rem, min, max), x in complexes
             @test op(nan, x) ≡ op(x, nan) ≡ complex(nan, nan)
         end
-        for x in operands
+        for x in reals
             @test divrem(nan, x) ≡ divrem(x, nan) ≡ (nan, nan)
+        end
+        for x in complexes
+            @test divrem(nan, x) ≡ divrem(x, nan) ≡ (complex(nan, nan), complex(nan, nan))
         end
         @test nan^(1//2) ≡ (1//2)^nan ≡ ℯ^nan ≡ nan
         @test -nan ≡ +nan ≡ abs(nan) ≡ inv(nan) ≡ sign(nan) ≡ conj(nan) ≡ nan
@@ -700,8 +832,13 @@ end
 
 include("test_cardinality.jl")
 include("test_ambiguity.jl")
+include("test_static.jl")
+
+include("test_real_infinity.jl")
 
 @testset "Project quality" begin
     Aqua.test_all(Infinities)
     test_package(Infinities)
 end
+
+include("test_forwarddiff.jl")

@@ -3,7 +3,7 @@ module Infinities
 import Base: angle, isone, iszero, isinf, isfinite, isnan, isreal, abs, one, oneunit, zero, isless, isequal, inv,
                 +, -, *, /, ^, ==, <, ≤, >, ≥, fld, cld, div, mod, rem, divrem, min, max,
                 sign, signbit, isapprox,
-                string, show, promote_rule, convert, getindex, tryparse, conj,
+                string, show, promote_rule, convert, getindex, tryparse, conj, complex,
                 isinteger, round, floor, ceil, trunc, float,
                 Bool, Integer
 
@@ -44,7 +44,7 @@ _convert(::Type{T}, ::Infinity) where {T<:Real} = convert(T, Inf)::T
 (::Type{T})(x::Infinity) where {T<:Real} = _convert(T, x)
 
 sign(y::Infinity) = 1
-angle(x::Infinity) = 0
+angle(x::Infinity) = 0.0
 signbit(::Infinity) = false
 
 one(::Type{Infinity}) = 1
@@ -53,10 +53,29 @@ oneunit(::Infinity) = 1
 zero(::Infinity) = 0
 zero(::Type{Infinity}) = 0
 
+"""
+    RealInfinity <: Real
+
+Represent a signed real infinity by subtyping `RealInfinity` and implementing `Base.signbit`.
+
+Every instance must represent exactly positive or negative infinity. Define
+`Base.signbit(x::YourInfinity)::Bool` directly, without relying on comparisons that
+use `signbit`. Additional fields do not affect numeric equality or hashing.
+
+Inherited operations follow the built-in signed infinities' value semantics, but
+need not preserve the concrete type or its metadata. A subtype need not represent
+both signs. Finite identities are `0.0` and `1.0`, including `zero`, `one`, and
+`oneunit` called on the type. Define constructors and specialize Base operations
+separately when representation preservation is needed.
+
+Use `RealInfinity(negative::Bool)` to construct from a sign bit. This is not a numeric
+conversion: `convert(RealInfinity, negative)` throws `InexactError`.
+"""
 abstract type RealInfinity <: Real end
 struct PositiveInfinity <: RealInfinity end
 struct NegativeInfinity <: RealInfinity end
 
+signbit(x::RealInfinity) = throw(ArgumentError("$(typeof(x)) must implement Base.signbit"))
 signbit(::PositiveInfinity) = false
 signbit(::NegativeInfinity) = true
 one(::RealInfinity) = 1.0
@@ -65,6 +84,7 @@ RealInfinity() = PositiveInfinity()
 RealInfinity(::Infinity) = PositiveInfinity()
 RealInfinity(x::RealInfinity) = x
 RealInfinity(x::Bool) = ifelse(x, NegativeInfinity(), PositiveInfinity())
+convert(::Type{RealInfinity}, x::Bool) = throw(InexactError(:convert, RealInfinity, x))
 PositiveInfinity(::Infinity) = PositiveInfinity() # otherwise the generic `(::Type{T})(::Infinity) where T<:Real` would route through `Inf`
 
 _convert(::Type{Float16}, x::RealInfinity) = sign(x)*Inf16
@@ -85,83 +105,131 @@ show(io::IO, y::RealInfinity) = print(io, string(y))
 
 Base.to_index(i::RealInfinity) = convert(Integer, i)
 
-one(::Type{RealInfinity}) = 1.0
-oneunit(::Type{RealInfinity}) = 1.0
+one(::Type{<:RealInfinity}) = 1.0
+oneunit(::Type{<:RealInfinity}) = 1.0
 oneunit(::RealInfinity) = 1.0
 zero(::RealInfinity) = 0.0
-zero(::Type{RealInfinity}) = 0.0
+zero(::Type{<:RealInfinity}) = 0.0
 
 
 #######
 # ComplexInfinity
 #######
 
-# angle is π*a where a is (false==0) and (true==1)
-
 """
-ComplexInfinity(signbit)
+    ComplexInfinity(turns::UInt64)
+    ComplexInfinity(; halfturns::Real = 0)
 
-represents an infinity in the complex plane with the angle
-specified by `π * signbit`. The use of the name `signbit` is
-for consistency with `RealInfinity`.
+Construct an infinity in the complex plane, pointing in a direction held as a count of
+`2^-64` turns.
+
+The count wraps at a full turn, so the stored `UInt64` and the directions are bijective.
+`0x0` points along the positive real axis. Values increase counterclockwise.
+`0x8000000000000000` points along the negative real axis. Use `reinterpret(UInt64, x)` to
+read out the exact value.
+
+Pass a `UInt64` directly to construct from a direction count. `convert(ComplexInfinity, count)`
+throws `InexactError`, because the finite numeric value of the count is not an infinity.
+
+The complex plane carries no order, so `isless`, `<`, `≤`, `min` and `max` have no method
+here, just as they have none for `Complex`. A direction along the real axis is no exception.
+Convert it with `RealInfinity` to compare it.
+
+Multiplying by `∞` takes the direction from the other operand, which usually reads better
+than naming an angle:
+
+    im*∞            # 0 + ∞*im
+    (1+im)*∞        # ∞ + ∞*im
+    exp(im*π/4)*∞   # the same direction again
+
+Those forms and the `halfturns` keyword go through `angle`, so they round. It is exact on
+the axes and at a quarter turn, but `exp(im*π/8)*∞` lands 256 counts past an eighth turn.
+Provide the `UInt64` when you have an off-axis value where accuracy matters.
 """
-struct ComplexInfinity{T<:Real} <: Number
-    signbit::T
+struct ComplexInfinity <: Number
+    turns::UInt64
+    ComplexInfinity(turns::UInt64) = new(turns)
 end
 
-ComplexInfinity{T}() where T = ComplexInfinity(zero(T))
-ComplexInfinity() = ComplexInfinity{Bool}()
-ComplexInfinity{T}(::Infinity) where T<:Real = ComplexInfinity{T}()
+# Half of the `typemax(UInt64) + 1` counts of a full turn, a number that would overflow.
+const _HALFTURN = typemax(UInt64) ÷ 2 + 1 # the negative real axis
+# The signs of the parts along each of the eight rays, the axes and diagonals.
+const _EIGHTH = _HALFTURN ÷ 4
+const _RAYPARTS = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
+# `_turns` and `_halfturns` are inverse: half turns in, count out, and back again.
+# `mod` returns 2 itself for a tiny negative angle, since 2 + x rounds back to 2. A full
+# turn is the direction zero. Testing `== 2` rather than `< 2` still lets `NaN` throw.
+@inline _turns(halfturns::Real) = round(UInt64, (h = mod(halfturns, 2); h == 2 ? zero(h) : h) * 0x1p63)
+# Scaling by 2^63 needs 63 bits beyond the numerator, so `Int128` has room for any `Int64`.
+_turns(halfturns::Rational) = round(BigInt, mod(halfturns, 2) * big(2)^63) % UInt64
+_turns(halfturns::Rational{<:Base.BitInteger64}) =
+    round(Int128, mod(halfturns, 2) * Int128(2)^63) % UInt64
+# `Base` puts an angle in `(-π, π]`, so past the half turn the count reads as negative.
+@inline _halfturns(x::ComplexInfinity) =
+    x.turns == _HALFTURN ? 1.0 : reinterpret(Int64, x.turns) / 0x1p63
+
+ComplexInfinity(; halfturns::Real = 0) = ComplexInfinity(_turns(halfturns))
 ComplexInfinity(::Infinity) = ComplexInfinity()
-ComplexInfinity{T}(x::RealInfinity) where T<:Real = ComplexInfinity{T}(signbit(x))
-ComplexInfinity(x::RealInfinity) = ComplexInfinity(signbit(x))
-ComplexInfinity{T}(x::ComplexInfinity) where T<:Real = ComplexInfinity(T(x.signbit)) # ambiguity fix
+ComplexInfinity(x::RealInfinity) = ComplexInfinity(_directionof(x))
+ComplexInfinity(x::ComplexInfinity) = x
 
-signbit(y::ComplexInfinity) = mod(y.signbit, 2) == 1
+signbit(y::ComplexInfinity) = y.turns == _HALFTURN
+isreal(y::ComplexInfinity) = iszero(y.turns) || signbit(y)
 
-convert(::Type{ComplexInfinity{T}}, ::Infinity) where T = ComplexInfinity{T}()
+# `Base` converts a `Complex` to a `Real` the same way, and throws the same error off the axis.
+RealInfinity(x::ComplexInfinity) = isreal(x) ? RealInfinity(signbit(x)) :
+                                   throw(InexactError(:RealInfinity, RealInfinity, x))
+
 convert(::Type{ComplexInfinity}, ::Infinity) = ComplexInfinity()
-convert(::Type{ComplexInfinity{T}}, x::RealInfinity) where T = ComplexInfinity{T}(x)
 convert(::Type{ComplexInfinity}, x::RealInfinity) = ComplexInfinity(x)
+convert(::Type{ComplexInfinity}, x::UInt64) = throw(InexactError(:convert, ComplexInfinity, x))
 
 
-sign(y::ComplexInfinity{<:Integer}) = mod(y.signbit, 2) == 0 ? 1 : -1
-sign(y::ComplexInfinity) = cispi(y.signbit)
-angle(x::ComplexInfinity) = π*x.signbit
+sign(y::ComplexInfinity) = cispi(_halfturns(y))
+angle(x::ComplexInfinity) = _halfturns(x) * π
 abs(::ComplexInfinity) = ∞
-conj(y::ComplexInfinity{<:Integer}) = y # an integer factor points along the real axis
-conj(y::ComplexInfinity) = ComplexInfinity(mod(-y.signbit, 2))
+conj(y::ComplexInfinity) = ComplexInfinity(-y.turns)
 
 # An exact zero has to stay finite, `Inf * 0` being a `NaN`.
 @inline _ray(c) = iszero(c) ? c : copysign(Inf, c)
 # `Complex` reaches only the eight rays of its two saturating parts, so the direction lands on the nearest of them.
 function float(x::ComplexInfinity)
-    s, c = sincospi(x.signbit)
+    s, c = sincospi(_halfturns(x))
     complex(_ray(c), _ray(s))
 end
 
-show(io::IO, x::ComplexInfinity) = print(io, "exp($(x.signbit)*im*π)∞")
+# The rays print as `Base` prints an infinite `Complex`. Off the rays the readable form
+# names an angle, which recovers most counts but not all, so it is used only where reading
+# it back gives the same direction.
+function show(io::IO, x::ComplexInfinity)
+    k, offset = divrem(x.turns, _EIGHTH)
+    if iszero(offset)
+        r, i = _RAYPARTS[k + 1]
+        return print(io, ("-∞", "0", "∞")[r + 2], (" - ∞*im", " + 0im", " + ∞*im")[i + 2])
+    end
+    h = _halfturns(x)
+    _directionof(cispi(h)) == x.turns ? print(io, "cispi($h)∞") :
+                                    print(io, "ComplexInfinity(", repr(x.turns), ")")
+end
 
-one(::Type{<:ComplexInfinity}) = one(ComplexF64)
-oneunit(::Type{<:ComplexInfinity}) = oneunit(ComplexF64)
+one(::Type{ComplexInfinity}) = one(ComplexF64)
+oneunit(::Type{ComplexInfinity}) = oneunit(ComplexF64)
 oneunit(::ComplexInfinity) = oneunit(ComplexF64)
 zero(::ComplexInfinity) = zero(ComplexF64)
-zero(::Type{<:ComplexInfinity}) = zero(ComplexF64)
+zero(::Type{ComplexInfinity}) = zero(ComplexF64)
 
 
 # `isequal` implies equal hashes, so the infinities have to hash like the float
 # infinities they compare equal to. The interface requires implementing `hash(x, h::UInt)`.
 
 Base.hash(::Infinity, h::UInt)::UInt = hash(Inf, h)
-Base.hash(::PositiveInfinity, h::UInt)::UInt = hash(Inf, h)
-Base.hash(::NegativeInfinity, h::UInt)::UInt = hash(-Inf, h)
+Base.hash(x::RealInfinity, h::UInt)::UInt = hash(signbit(x) ? -Inf : Inf, h)
 
-# Equality of ComplexInfinity is equality of the angle, hence so is the hash.
+# The two real directions have to hash like the real infinities they compare equal to.
 function Base.hash(x::ComplexInfinity, h::UInt)::UInt
-    θ = angle(x)
-    θ == angle(PositiveInfinity()) && return hash(Inf, h)
-    θ == angle(NegativeInfinity()) && return hash(-Inf, h)
-    hash(ComplexInfinity, hash(θ, h))
+    iszero(x.turns) && return hash(Inf, h)
+    x.turns == _HALFTURN && return hash(-Inf, h)
+    hash(ComplexInfinity, hash(x.turns, h))
 end
 
 
