@@ -10,6 +10,7 @@ import Base: angle, isone, iszero, isinf, isfinite, isnan, isreal, abs, one, one
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
 # The following is commented out for now to avoid conflicts with Infinity.jl
 # export Infinity
+VERSION >= v"1.11.0-DEV.469" && eval(Meta.parse("public @archimedean"))
 
 """
     NotANumber()
@@ -237,5 +238,6 @@ include("cardinality.jl")
 include("interface.jl")
 include("compare.jl")
 include("algebra.jl")
+include("archimedean.jl")
 include("ambiguities.jl")
 end # module

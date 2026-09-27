@@ -1,5 +1,6 @@
 const AllInfinities = Union{Infinity, RealInfinity, ComplexInfinity, InfiniteCardinal}
 const AllRealInfinities = Union{Infinity, RealInfinity}
+const PositiveRealInfinities = Union{Infinity, PositiveInfinity}
 const IntegerInfinities = Union{Infinity, RealInfinity, InfiniteCardinal}
 # The infinities that lie on the real line and so have a place in the numeric ordering.
 const OrderedInfinities = Union{Infinity, RealInfinity, InfiniteCardinal}

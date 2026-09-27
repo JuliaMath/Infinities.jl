@@ -825,6 +825,7 @@ end
 include("test_cardinality.jl")
 include("test_ambiguity.jl")
 include("test_static.jl")
+include("test_archimedean.jl")
 
 include("test_real_infinity.jl")
 
