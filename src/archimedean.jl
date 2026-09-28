@@ -4,43 +4,41 @@
     @archimedean +∞ T₁ T₂ ...
     @archimedean -∞ T₁ T₂ ...
 
-Declare each listed type `T` to model an Archimedean scale, so that its values lie
-strictly between `-∞` and `+∞`.
+Declare each listed type `T` to model magnitudes or positions on an Archimedean scale, so that
+its values lie strictly between `-∞` and `+∞`.
+
+Each type must define `Base.isless(x::T, y::T)` as a strict total order consistent with `isequal`.
+The optional direction names the unbounded ends of the scale. Without it, both ends are unbounded.
 
 The declaration defines `isless`, `+` and `-` between `T` and the real infinities `∞`, `+∞`
 and `-∞`. `Base` builds `<`, `≤`, `>`, `≥`, `min`, `max` and sorting on `isless`.
 On a scale unbounded in both directions, an infinity absorbs every value of `T`, so a sum or
 difference is the infinity itself, negated when it is subtracted: `x + ∞ == ∞ ± x == ∞` and
-`x - ∞ == -∞ ± x == -∞`.
-For a position such as a `Date`, the `∞` in `x + ∞` is an infinitely long step, and the `∞`
-in `∞ - x` is the end of the scale. Multiplication and division are left out, because a
-position cannot be meaningfully scaled.
-
-List types as separate macro arguments. The direction is optional. Without it, both ends are
-unbounded.
-
-Each type must define `Base.isless(x::T, y::T)` as a strict total order consistent with `isequal`.
+`x - ∞ == -∞ ± x == -∞`. Multiplication and division are left out, because a position cannot be
+meaningfully scaled.
 
 # When to declare
 
-Declare `T` if its values are magnitudes or positions on a scale that is unbounded in both
-directions and on which adding the same positive step repeatedly gets past any value. A
-magnitude has a natural zero, like a `Period`. A position is measured from an arbitrary origin,
-like a `Date`, and the difference of two positions is a magnitude, as the difference of two
-`Date`s is a `Period`. In measurement theory, a magnitude scale is a ratio scale, and a position
-scale is an interval scale. For magnitudes, the condition on steps is the Archimedean property:
-for every `x > 0` and every `y`, some multiple `n*x` exceeds `y`. For positions, it holds for
-their differences. Hölder's theorem shows that, up to the choice of unit and origin, such a
-scale fits into the real line. So `-∞` lies below and `+∞` above all of its values in every unit.
+Declare `T` if adding the same positive step to its values repeatedly gets past any value.
+A magnitude has a natural zero, like a `Period`. For magnitudes, the condition is the
+Archimedean property: for every `x > 0` and every `y`, some multiple `n*x` exceeds `y`.
+A position is measured from an arbitrary origin, like a `Date`. Positions need not form a group
+themselves, as adding two `Date`s has no meaning. It suffices that their differences are
+magnitudes with the Archimedean property, as the differences of `Date`s are `Period`s. In
+algebraic terms, the positions form a torsor of the group of their differences. In measurement
+theory, magnitudes form a ratio scale and positions an interval scale. For a position, the `∞`
+in `x + ∞` is an infinitely long step, and the `∞` in `∞ - x` is the end of the scale.
+
+Hölder's theorem shows that, up to the choice of unit and origin, such a scale fits into the real
+line, or into a half-line if it is bounded on one side. So `-∞` lies below and `+∞` above all of
+its values in every unit.
 
 # Scales bounded on one side
 
-Some scales end at one of their own values on one side and go on without limit on the other.
-Absolute temperature, for example, ends at absolute zero. Hölder's theorem also covers such
-scales and fits them into a half-line. Then only one infinity lies on the unbounded side, and
-the optional direction names it. Comparisons are the same as on a scale unbounded in both
-directions. For `@archimedean +∞ T`, `-∞ < x` still holds for every value `x`. `+` and `-` are
-defined only where the result is `+∞`: `x + ∞`, `∞ + x` and `∞ - x` give `∞`, and `x - (-∞)`
+Some scales end at one of their own values on one side and go on without limit on the other,
+like absolute temperature, which ends at absolute zero. The direction names the infinity on the
+unbounded side. Comparisons stay the same, but `+` and `-` are defined only where the result is
+that infinity. For `@archimedean +∞ T`, `x + ∞`, `∞ + x` and `∞ - x` give `∞`, and `x - (-∞)`
 gives `+∞`. `x - ∞`, `x + (-∞)`, `-∞ + x` and `-∞ - x` have no method, because their result
 `-∞` would lie below the end of the scale. `@archimedean -∞ T` mirrors this.
 

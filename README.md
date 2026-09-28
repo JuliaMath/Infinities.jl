@@ -45,12 +45,13 @@ Specialize standard Base operations when representation preservation is needed.
 
 ## Comparing other types with infinity
 
-With `Infinities.@archimedean` you can opt-in a non-`Real` type to compare with `∞`, `+∞`
-and `-∞`, and support `+` and `-` with them. The name refers to
+With `Infinities.@archimedean` you can opt in a non-`Real` type to compare with `∞`, `+∞`
+and `-∞`, and support `+` and `-` with them. The type has to define `isless` and _model_ an
+unbounded additive scale. The name refers to
 [Archimedean groups](https://en.wikipedia.org/wiki/Archimedean_group), in which adding any
-positive value often enough exceeds every other value. Declare a type whose values lie on an
-unbounded additive scale, i.e. it _models_ something unbounded, such as lengths or dates, and
-which defines `isless`:
+positive value often enough exceeds every other value. Lengths form such a group. Dates don't,
+but they qualify as positions in time (the underlying model), because the durations between
+them form one.
 
 ```julia
 struct Meter
@@ -63,11 +64,10 @@ Infinities.@archimedean Meter
 Meter(3//2) - ∞ === -∞                # true
 ```
 
-A scale bounded on one side, i.e. something which is bounded on one side and unbounded on the
-other, names its unbounded end, as in `@archimedean +∞ Kelvin` where positive temperatures can
-go to infinity, but negative temperatures aren't a thing (neglecting thermodynamic temperature).
-Cyclic types such as a time of day and orders without a fixed step such as strings do not
-qualify. The docstring of `@archimedean` explains when a declaration is valid.
+A scale bounded on one side, i.e. a model which is bounded on one side and unbounded on the
+other, names its unbounded end, as in `@archimedean +∞ Kelvin` where positive temperatures
+can go to infinity, but negative temperatures aren't a thing (neglecting thermodynamic
+temperature).
 
 Loading Dates enables an extension that declares the periods, `Date` and `DateTime`:
 
@@ -78,7 +78,9 @@ Date(2026, 9, 27) < ∞                 # true
 Day(3) + ∞ === ∞                      # true
 ```
 
-`Dates.Time` is left out, because a time of day wraps at midnight.
+Cyclic types such as a time of day and orders without a fixed step such as strings do not
+qualify, so the extension leaves out `Dates.Time`. The docstring of `@archimedean` explains when
+a declaration is valid.
 
 ## Static.jl integration
 
