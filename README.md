@@ -53,23 +53,30 @@ positive value often enough exceeds every other value. Lengths form such a group
 but they qualify as positions in time (the underlying model), because the durations between
 them form one.
 
+`@archimedean` declares positions. `Infinities.@archimedean_magnitude` declares magnitudes, which
+require a natural, i.e. non-arbitrary, `zero`, and also defines scaling by the infinities:
+
 ```julia
 struct Meter
     value::Rational{Int}
 end
 Base.isless(a::Meter, b::Meter) = isless(a.value, b.value)
-Infinities.@archimedean Meter
+Base.zero(::Type{Meter}) = Meter(0)
+Infinities.@archimedean_magnitude Meter
 
 -∞ < Meter(3//2) < ∞                  # true
 Meter(3//2) - ∞ === -∞                # true
+Meter(-3//2) * ∞ === -∞               # true
+Meter(3//2) / ∞ === zero(Meter)       # true
 ```
 
 A scale bounded on one side, i.e. a model which is bounded on one side and unbounded on the
-other, names its unbounded end, as in `@archimedean +∞ Kelvin` where positive temperatures
-can go to infinity, but negative temperatures aren't a thing (neglecting thermodynamic
-temperature).
+other, names its unbounded end, as in `@archimedean_magnitude +∞ Kelvin` where positive
+temperatures can go to infinity, but negative temperatures aren't a thing (neglecting
+thermodynamic temperature).
 
-Loading Dates enables an extension that declares the periods, `Date` and `DateTime`:
+Loading Dates enables an extension that declares the periods as magnitudes and `Date` and
+`DateTime` as positions:
 
 ```julia
 using Infinities, Dates

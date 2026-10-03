@@ -5,21 +5,24 @@ struct Meters
     value::Rational{Int}
 end
 Base.isless(a::Meters, b::Meters) = isless(a.value, b.value)
-Infinities.@archimedean ±∞ Meters
+Base.zero(::Type{Meters}) = Meters(0)
+Infinities.@archimedean_magnitude ±∞ Meters
 
 # bounded below by absolute zero
 struct Kelvin
     value::Rational{Int}
 end
 Base.isless(a::Kelvin, b::Kelvin) = isless(a.value, b.value)
-Infinities.@archimedean +∞ Kelvin
+Base.zero(::Type{Kelvin}) = Kelvin(0)
+Infinities.@archimedean_magnitude +∞ Kelvin
 
 # bounded above by zero
 struct Depth
     value::Rational{Int}
 end
 Base.isless(a::Depth, b::Depth) = isless(a.value, b.value)
-Infinities.@archimedean -∞ Depth
+Base.zero(::Type{Depth}) = Depth(0)
+Infinities.@archimedean_magnitude -∞ Depth
 
 @testset "Archimedean types" begin
     @testset "declared with the macro" begin
@@ -62,6 +65,41 @@ Infinities.@archimedean -∞ Depth
         @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean Kelvin +∞))
         @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean ∞ Kelvin))
         @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean +∞))
+        @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean_magnitude +∞))
+        @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean_magnitude Kelvin -∞))
+    end
+
+    @testset "magnitudes" begin
+        @test Meters(3) * ∞ ≡ ∞ * Meters(3) ≡ Meters(-3) * -∞ ≡ +∞
+        @test Meters(-3) * ∞ ≡ -∞ * Meters(3) ≡ Meters(3) * -∞ ≡ -∞
+        @test Meters(0) * ∞ ≡ -∞ * Meters(0) ≡ NotANumber()
+        @test Meters(3) / ∞ ≡ Meters(-3) / -∞ ≡ zero(Meters)
+        @test Meters(-3) ÷ ∞ ≡ fld(Meters(-3), ∞) ≡ cld(Meters(3), -∞) ≡ zero(Meters)
+        @test div(Meters(3), ∞, RoundNearest) ≡ div(Meters(-3), -∞, RoundUp) ≡ zero(Meters)
+        @test_throws MethodError ∞ / Meters(3)
+        @test rem(Meters(-3), ∞) ≡ rem(Meters(-3), -∞) ≡ mod(Meters(-3), -∞) ≡ Meters(-3)
+        @test mod(Meters(3), ∞) ≡ Meters(3) && mod(Meters(0), -∞) ≡ Meters(0)
+        @test divrem(Meters(-3), ∞) ≡ (zero(Meters), Meters(-3))
+        @test fldmod(Meters(3), ∞) ≡ (zero(Meters), Meters(3))
+        @test_throws ArgumentError mod(Meters(-3), ∞)
+        @test_throws ArgumentError mod(Meters(3), -∞)
+        @test_throws ArgumentError fldmod(Meters(-3), ∞)
+
+        @test Kelvin(300) * ∞ ≡ +∞ * Kelvin(300) ≡ +∞ && Kelvin(0) * ∞ ≡ NotANumber()
+        @test Depth(-5) * ∞ ≡ +∞ * Depth(-5) ≡ -∞
+        @test Kelvin(300) / ∞ ≡ zero(Kelvin) && Depth(-5) / +∞ ≡ zero(Depth)
+        @test fld(Kelvin(300), ∞) ≡ zero(Kelvin) && fld(Depth(-5), +∞) ≡ zero(Depth)
+        @test mod(Kelvin(300), ∞) ≡ Kelvin(300) && rem(Depth(-5), +∞) ≡ Depth(-5)
+        @test_throws ArgumentError mod(Depth(-5), ∞)
+        # a negative factor leaves a scale bounded at zero
+        for value in (Kelvin(300), Depth(-5))
+            @test_throws MethodError value * -∞
+            @test_throws MethodError -∞ * value
+            @test_throws MethodError value / -∞
+            @test_throws MethodError value ÷ -∞
+            @test_throws MethodError rem(value, -∞)
+            @test_throws MethodError mod(value, -∞)
+        end
     end
 
     @testset "Dates extension" begin
@@ -78,6 +116,13 @@ Infinities.@archimedean -∞ Depth
             @test max(x, ∞) ≡ ∞ && min(x, -∞) ≡ -∞ && isequal(min(x, ∞), x)
             @test x + ∞ ≡ ∞ + x ≡ ∞ - x ≡ ∞ && x - ∞ ≡ -∞ + x ≡ -∞
         end
+        @test Day(-3) * -∞ ≡ ∞ * Year(14) ≡ -∞ * Hour(-2) ≡ +∞ * Nanosecond(1) ≡ +∞
+        @test Month(5) / ∞ ≡ Month(0) && Second(0) * ∞ ≡ NotANumber()
+        @test Day(3) ÷ ∞ ≡ fld(Day(-3), ∞) ≡ cld(Day(3), ∞) ≡ Day(0)
+        @test rem(Day(-3), ∞) ≡ mod(Day(-3), -∞) ≡ Day(-3) && divrem(Day(3), ∞) ≡ (Day(0), Day(3))
+        # a position cannot be scaled
+        @test_throws MethodError Date(2026, 9, 25) * ∞
+        @test_throws MethodError DateTime(2026, 9, 25, 12) / ∞
         # a time of day wraps at midnight
         @test_throws MethodError Time(12) < ∞
     end
