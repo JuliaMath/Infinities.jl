@@ -10,7 +10,7 @@ import Base: angle, isone, iszero, isinf, isfinite, isnan, isreal, abs, one, one
 export ∞,  ℵ₀,  ℵ₁, RealInfinity, ComplexInfinity, InfiniteCardinal, NotANumber, PositiveInfinity, NegativeInfinity
 # The following is commented out for now to avoid conflicts with Infinity.jl
 # export Infinity
-VERSION >= v"1.11.0-DEV.469" && eval(Meta.parse("public @archimedean, @archimedean_magnitude"))
+VERSION >= v"1.11.0-DEV.469" && eval(Meta.parse("public @archimedean, @archimedean_magnitude, RealInfinities"))
 
 """
     NotANumber()
@@ -75,6 +75,17 @@ conversion: `convert(RealInfinity, negative)` throws `InexactError`.
 abstract type RealInfinity <: Real end
 struct PositiveInfinity <: RealInfinity end
 struct NegativeInfinity <: RealInfinity end
+
+"""
+    Infinities.RealInfinities = Union{NegativeInfinity, PositiveInfinity}
+
+The two built-in signed infinities, `-∞` and `+∞`, which `RealInfinity(negative::Bool)` returns.
+
+Unlike the abstract type `RealInfinity`, this union excludes user-defined subtypes, which
+may carry metadata, and `∞` itself, which is an `Infinity`. Dispatch on it to handle only
+the canonical values.
+"""
+const RealInfinities = Union{NegativeInfinity, PositiveInfinity}
 
 signbit(x::RealInfinity) = throw(ArgumentError("$(typeof(x)) must implement Base.signbit"))
 signbit(::PositiveInfinity) = false

@@ -38,8 +38,9 @@ Some scales end at one of their own values on one side and go on without limit o
 like absolute temperature, which ends at absolute zero. The direction names the infinity on the
 unbounded side. Comparisons stay the same, but `+` and `-` are defined only where the result is
 that infinity. For `@archimedean +∞ T`, `x + ∞`, `∞ + x` and `∞ - x` give `∞`, and `x - (-∞)`
-gives `+∞`. `x - ∞`, `x + (-∞)`, `-∞ + x` and `-∞ - x` have no method, because their result
-`-∞` would lie below the end of the scale. `@archimedean -∞ T` mirrors this.
+gives `+∞`. `x - ∞`, `x + (-∞)`, `-∞ + x` and `-∞ - x` throw a `MethodError`, because their
+result `-∞` would lie below the end of the scale. `@archimedean -∞ T` mirrors this. A
+subtype of `RealInfinity` acts as the built-in infinity of its sign.
 
 # The model decides, not the representation
 
@@ -146,6 +147,7 @@ macro arguments `direction` and `args...`.
 """
 function archimedean(magnitude::Bool, direction::Union{Symbol, Expr}, args::Union{Symbol, Expr}...)
     direction === :∞ && throw(ArgumentError("the direction has to be `±∞`, `+∞` or `-∞`"))
+    onesided = direction in (:(+∞), :(-∞))
     unbounded, negated_unbounded, scalars =
         direction == :(+∞) ? (PositiveRealInfinities, NegativeInfinity, PositiveRealInfinities) :
         direction == :(-∞) ? (NegativeInfinity, PositiveRealInfinities, PositiveRealInfinities) :
@@ -160,7 +162,8 @@ function archimedean(magnitude::Bool, direction::Union{Symbol, Expr}, args::Unio
     definitions = map(types) do type
         T = esc(type)
         position = positioning(T, unbounded, negated_unbounded)
-        magnitude ? Expr(:block, position, scaling(T, scalars)) : position
+        definition = magnitude ? Expr(:block, position, scaling(T, scalars)) : position
+        onesided ? Expr(:block, definition, redispatching(T, magnitude)) : definition
     end
     Expr(:block, definitions..., nothing)
 end
@@ -200,6 +203,39 @@ function scaling(T::Expr, scalars::Type)
         Base.rem(x::$T, ::$scalars) = x
         Base.mod(x::$T, y::$scalars) = _modulo(x, y)
     end
+end
+
+"""
+    redispatching(T::Expr, magnitude::Bool) -> Expr
+
+Build the expression defining the methods of a scale bounded on one side that pass an operand
+of a user-defined subtype of `RealInfinity` on as the built-in infinity of the same sign, as the
+sign of such a subtype need not be part of its type.
+"""
+function redispatching(T::Expr, magnitude::Bool)
+    position = quote
+        Base.:+(x::$T, y::RealInfinity) = _redispatch(+, x, y)
+        Base.:+(x::RealInfinity, y::$T) = _redispatch(+, x, y)
+        Base.:-(x::RealInfinity, y::$T) = _redispatch(-, x, y)
+        Base.:-(x::$T, y::RealInfinity) = _redispatch(-, x, y)
+    end
+    magnitude || return position
+    quote
+        $position
+        Base.:*(x::$T, y::RealInfinity) = _redispatch(*, x, y)
+        Base.:*(x::RealInfinity, y::$T) = _redispatch(*, x, y)
+        Base.:/(x::$T, y::RealInfinity) = _redispatch(/, x, y)
+        Base.div(x::$T, y::RealInfinity, r::RoundingMode) = _redispatch(div, x, y, r)
+        Base.rem(x::$T, y::RealInfinity) = _redispatch(rem, x, y)
+        Base.mod(x::$T, y::RealInfinity) = _redispatch(mod, x, y)
+    end
+end
+
+# Built-in infinities reach here only with the sign that leaves the scale.
+function _redispatch(f, args...)
+    canonical = map(a -> a isa RealInfinity ? RealInfinity(signbit(a)) : a, args)
+    canonical === args && throw(MethodError(f, args))
+    f(canonical...)
 end
 
 # As for a `Real` factor, a zero magnitude times an infinity is undefined.

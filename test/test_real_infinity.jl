@@ -10,6 +10,14 @@ Base.signbit(::FixedInfinity{Negative}) where {Negative} = Negative
 
 struct MissingSignInfinity <: RealInfinity end
 
+@testset "RealInfinities" begin
+    @test RealInfinity(false) isa Infinities.RealInfinities
+    @test RealInfinity(true) isa Infinities.RealInfinities
+    @test !(∞ isa Infinities.RealInfinities)
+    @test !(SignedInfinity(true) isa Infinities.RealInfinities)
+    @test Infinities.RealInfinities <: RealInfinity
+end
+
 @testset "RealInfinity interface" begin
     for negative in (false, true), custom in (SignedInfinity(negative), FixedInfinity{negative}())
         canonical = RealInfinity(negative)

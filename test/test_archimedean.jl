@@ -24,6 +24,13 @@ Base.isless(a::Depth, b::Depth) = isless(a.value, b.value)
 Base.zero(::Type{Depth}) = Depth(0)
 Infinities.@archimedean_magnitude -∞ Depth
 
+struct TaggedInfinity <: RealInfinity
+    negative::Bool
+    # The default constructor accepting `Any` is ambiguous with `(::Type{<:Real})(::RealInfinity)`.
+    TaggedInfinity(negative::Bool) = new(negative)
+end
+Base.signbit(x::TaggedInfinity) = x.negative
+
 @testset "Archimedean types" begin
     @testset "declared with the macro" begin
         @test Meters(1) < Meters(2)
@@ -51,8 +58,9 @@ Infinities.@archimedean_magnitude -∞ Depth
             @test value - subtrahend ≡ result
         end
 
-        # Operations producing the other infinity have no method.
+        # Operations producing the other infinity throw a `MethodError`.
         for (value, end_infinity) in ((Kelvin(300), +∞), (Depth(-5), -∞)),
+            infinity in (end_infinity, TaggedInfinity(signbit(end_infinity))),
             operation in (
                 (scale_value, infinity) -> scale_value - infinity,
                 (scale_value, infinity) -> scale_value + (-infinity),
@@ -60,7 +68,15 @@ Infinities.@archimedean_magnitude -∞ Depth
                 (scale_value, infinity) -> -infinity - scale_value,
             )
 
-            @test_throws MethodError operation(value, end_infinity)
+            @test_throws MethodError operation(value, infinity)
+        end
+        for (value, end_infinity) in ((Kelvin(300), +∞), (Depth(-5), -∞))
+            tagged, opposite = TaggedInfinity(signbit(end_infinity)), TaggedInfinity(!signbit(end_infinity))
+            @test value + tagged ≡ tagged + value ≡ tagged - value ≡ value - opposite ≡ end_infinity
+            @test_throws MethodError value - tagged
+            @test_throws MethodError value + opposite
+            @test_throws MethodError opposite + value
+            @test_throws MethodError opposite - value
         end
         @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean Kelvin +∞))
         @test_throws ArgumentError macroexpand(@__MODULE__, :(Infinities.@archimedean ∞ Kelvin))
@@ -92,14 +108,19 @@ Infinities.@archimedean_magnitude -∞ Depth
         @test mod(Kelvin(300), ∞) ≡ Kelvin(300) && rem(Depth(-5), +∞) ≡ Depth(-5)
         @test_throws ArgumentError mod(Depth(-5), ∞)
         # a negative factor leaves a scale bounded at zero
-        for value in (Kelvin(300), Depth(-5))
-            @test_throws MethodError value * -∞
-            @test_throws MethodError -∞ * value
-            @test_throws MethodError value / -∞
-            @test_throws MethodError value ÷ -∞
-            @test_throws MethodError rem(value, -∞)
-            @test_throws MethodError mod(value, -∞)
+        for value in (Kelvin(300), Depth(-5)), negative in (-∞, TaggedInfinity(true))
+            @test_throws MethodError value * negative
+            @test_throws MethodError negative * value
+            @test_throws MethodError value / negative
+            @test_throws MethodError value ÷ negative
+            @test_throws MethodError rem(value, negative)
+            @test_throws MethodError mod(value, negative)
         end
+        positive = TaggedInfinity(false)
+        @test Kelvin(300) * positive ≡ positive * Kelvin(300) ≡ +∞ && Depth(-5) * positive ≡ -∞
+        @test Kelvin(300) / positive ≡ Kelvin(300) ÷ positive ≡ zero(Kelvin)
+        @test rem(Depth(-5), positive) ≡ Depth(-5) && mod(Kelvin(300), positive) ≡ Kelvin(300)
+        @test_throws ArgumentError mod(Depth(-5), positive)
     end
 
     @testset "Dates extension" begin
