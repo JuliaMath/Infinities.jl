@@ -220,8 +220,7 @@ function redispatching(T::Expr, magnitude::Bool)
         Base.:-(x::$T, y::RealInfinity) = _redispatch(-, x, y)
     end
     magnitude || return position
-    quote
-        $position
+    factors = quote
         Base.:*(x::$T, y::RealInfinity) = _redispatch(*, x, y)
         Base.:*(x::RealInfinity, y::$T) = _redispatch(*, x, y)
         Base.:/(x::$T, y::RealInfinity) = _redispatch(/, x, y)
@@ -229,6 +228,7 @@ function redispatching(T::Expr, magnitude::Bool)
         Base.rem(x::$T, y::RealInfinity) = _redispatch(rem, x, y)
         Base.mod(x::$T, y::RealInfinity) = _redispatch(mod, x, y)
     end
+    Expr(:block, position, factors)
 end
 
 # Built-in infinities reach here only with the sign that leaves the scale.
