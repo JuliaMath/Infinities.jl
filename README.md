@@ -16,6 +16,132 @@ This Julia package is used to represent infinities, including:
 
 Note that we subtype based on interfaces, rather than strict mathematical definitions. For example,  `ℵ₀ isa Integer` as `Integer` is often used to represent the size of a set or vector. Similarly, `∞ isa Real`.
 
+## Extending `RealInfinity`
+
+To add another representation of positive or negative infinity, subtype `RealInfinity`
+and define `Base.signbit`: return `false` for positive infinity and `true` for negative infinity.
+
+```julia
+struct SignedInfinity <: RealInfinity
+	negative::Bool
+end
+Base.signbit(inf::SignedInfinity) = inf.negative
+
+SignedInfinity(true) == -∞            # true
+SignedInfinity(true)^2 === +∞         # true
+```
+
+Read the sign from your representation in `signbit`. Do not define it as `x < 0`,
+because the inherited comparisons call `signbit` and would cause infinite recursion.
+You do not need to implement arithmetic, comparisons, floating-point conversion, or
+hashing: your subtype inherits these operations from `RealInfinity`. Any additional
+fields you store are ignored when comparing or hashing values. Calling `zero` on your
+type or an instance returns `0.0`. Calling `one` or `oneunit` returns `1.0`.
+
+A subtype may represent only one sign. Results need not retain its concrete type or
+metadata: negation and powers may return `PositiveInfinity` or `NegativeInfinity`.
+Constructors and representation-preserving conversions are the subtype's responsibility.
+Specialize standard Base operations when representation preservation is needed.
+
+## Comparing other types with infinity
+
+With `Infinities.@archimedean` you can opt in a non-`Real` type to compare with `∞`, `+∞`
+and `-∞`, and support `+` and `-` with them. The type has to define `isless` and _model_ an
+unbounded additive scale. The name refers to
+[Archimedean groups](https://en.wikipedia.org/wiki/Archimedean_group), in which adding any
+positive value often enough exceeds every other value. Lengths form such a group. Dates don't,
+but they qualify as positions in time (the underlying model), because the durations between
+them form one.
+
+`@archimedean` declares positions. `Infinities.@archimedean_magnitude` declares magnitudes, which
+require a natural, i.e. non-arbitrary, `zero`, and also defines scaling by the infinities:
+
+```julia
+struct Meter
+    value::Rational{Int}
+end
+Base.isless(a::Meter, b::Meter) = isless(a.value, b.value)
+Base.zero(::Type{Meter}) = Meter(0)
+Infinities.@archimedean_magnitude Meter
+
+-∞ < Meter(3//2) < ∞                  # true
+Meter(3//2) - ∞ === -∞                # true
+Meter(-3//2) * ∞ === -∞               # true
+Meter(3//2) / ∞ === zero(Meter)       # true
+```
+
+A scale bounded on one side, i.e. a model which is bounded on one side and unbounded on the
+other, names its unbounded end, as in `@archimedean_magnitude +∞ Kelvin` where positive
+temperatures can go to infinity, but negative temperatures aren't a thing (neglecting
+thermodynamic temperature).
+
+Loading Dates enables an extension that declares the periods as magnitudes and `Date` and
+`DateTime` as positions:
+
+```julia
+using Infinities, Dates
+
+Date(2026, 9, 27) < ∞                 # true
+Day(3) + ∞ === ∞                      # true
+```
+
+Cyclic types such as a time of day and orders without a fixed step such as strings do not
+qualify, so the extension leaves out `Dates.Time`. The docstring of `@archimedean` explains when
+a declaration is valid.
+
+## Static.jl integration
+
+Loading [Static.jl](https://github.com/SciML/Static.jl) enables an optional package extension.
+The values `∞`, `+∞`, `-∞`, `InfiniteCardinal{k}()`, and `NotANumber()` are already
+fully determined by their types, so they need no separate static representation:
+
+```julia
+using Infinities, Static
+
+static(∞) === ∞                       # true
+is_static(typeof(-∞)) === True()      # true
+known(typeof(ℵ₀)) === ℵ₀               # true
+Static.lt(static(2), ∞) === True()     # true
+static(2) + ℵ₀ === ℵ₀                 # true
+```
+
+Mixed arithmetic and comparisons use the same rules as the corresponding ordinary
+numbers, including undefined results and NaN propagation. Base operations retain their
+ordinary return types: `one(∞)` is `1` and `isinf(∞)` is `true`. Use `static` on a result
+or Static.jl's comparison functions when a static result type is needed.
+
+`ComplexInfinity` stores its direction as a value, not in its type. Its arithmetic
+accepts static operands, but `is_static(ComplexInfinity)` is `False()` and
+`static(im*∞)` is unsupported.
+
+## ForwardDiff.jl integration
+
+Loading [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) enables an optional
+extension for mixed `+`, `-`, `*`, `/`, `mod`, `rem`, `min`, `max`, and comparisons
+of dual numbers with `∞`, `+∞`, `-∞`, and `NotANumber()`. Primal values retain
+Infinities' scalar results and exceptions, without converting infinities to floats.
+Derivative rules use the same scalar arithmetic, so a zero tangent multiplied by an
+infinity becomes `NotANumber()`. Bounded `mod` and `rem` preserve the dividend's
+tangents, while an undefined remainder has undefined tangents.
+
+```julia
+using Infinities, ForwardDiff
+
+ForwardDiff.derivative(input -> input * ∞, 2.0) # +∞
+ForwardDiff.derivative(input -> input + ∞, 2.0) # 1.0
+ForwardDiff.derivative(input -> input / ∞, 2.0) # 0.0
+```
+
+`Dual(∞)` preserves the infinity. Explicitly requesting a floating scalar type, such
+as `Dual{Nothing, Float64}(∞)`, converts it. Mixed symbolic results can use `Real`
+as the dual's scalar parameter, with a corresponding loss of type specialization.
+
+This is not general support for arbitrary symbolic differentiation: ForwardDiff
+operations such as unary negation can reject heterogeneous symbolic partials, and
+powers remain subject to the existing scalar and ForwardDiff limitations. There is
+no floating-point fallback. The extension does not define mixed dual-number operations
+for `InfiniteCardinal` or `ComplexInfinity`.
+
 ## Similar packages
 
 This package is meant to eventually replace [Infinity.jl](https://github.com/cjdoris/Infinity.jl) and the definitions of `∞` in [InfiniteArrays.jl](https://github.com/JuliaArrays/InfiniteArrays.jl). We do not yet support Infinity.jl's notions of `InfExtendedReal` but we hope to add this soon.
