@@ -703,5 +703,5 @@ include("test_ambiguity.jl")
 
 @testset "Project quality" begin
     Aqua.test_all(Infinities)
-    test_package(Infinities)
+    test_package(Infinities; target_modules=(Infinities,))
 end
